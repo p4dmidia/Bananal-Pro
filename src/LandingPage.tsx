@@ -22,12 +22,19 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
+import heroBg from './assets/hero-bg.png';
+import mascote from './assets/mascote.png';
+import logo from './assets/logo.png';
+import duvidas from './assets/duvidas.png';
+import mascote2 from './assets/mascote2.png';
+import profissional from './assets/profissional.png';
+
 const Header = () => (
   <header className="sticky top-0 z-50 w-full bg-background-light/80 backdrop-blur-md border-b border-primary/10">
     <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <div className="flex items-center justify-center">
-          <img src="/src/assets/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+          <img src={logo} alt="Logo" className="w-10 h-10 object-contain" />
         </div>
         <span className="text-xl font-extrabold tracking-tight text-slate-900 uppercase">
           Bananicultura <span className="text-primary">de Valor</span>
@@ -50,7 +57,7 @@ const Hero = () => (
     <div className="absolute inset-0 z-0 rounded-b-[4rem] overflow-hidden">
       <div className="absolute inset-0 bg-black/40 z-10"></div>
       <img
-        src="/src/assets/hero-bg.png"
+        src={heroBg}
         alt="Banana plantation"
         className="w-full h-full object-cover"
         referrerPolicy="no-referrer"
@@ -93,7 +100,7 @@ const Hero = () => (
             </p>
           </div>
           <img
-            src="/src/assets/mascote.png"
+            src={mascote}
             alt="Intelligent monkey mascot"
             className="w-64 h-64 object-cover rounded-full border-4 border-white shadow-xl"
             referrerPolicy="no-referrer"
@@ -115,7 +122,7 @@ const Challenges = () => (
           className="md:w-1/2"
         >
           <img
-            src="/src/assets/logo.png"
+            src={logo}
             alt="Logo"
             className="w-full max-w-md mx-auto rounded-3xl shadow-2xl"
             referrerPolicy="no-referrer"
@@ -200,7 +207,7 @@ const Benefits = () => (
         </div>
         <div className="hidden md:block">
           <img
-            src="/src/assets/duvidas.png"
+            src={duvidas}
             alt="Dúvidas"
             className="w-32 h-32 rounded-full border-4 border-primary/20 shadow-lg"
             referrerPolicy="no-referrer"
@@ -371,7 +378,7 @@ const Expert = () => (
       <div className="lg:w-1/2 relative">
         <div className="absolute -bottom-6 -right-6 bg-accent-yellow p-4 rounded-2xl shadow-xl z-10 flex items-center gap-3">
           <img
-            src="/src/assets/profissional.png"
+            src={profissional}
             alt="Profissional"
             className="w-16 h-16 rounded-full object-cover border-2 border-white"
             referrerPolicy="no-referrer"
@@ -382,7 +389,7 @@ const Expert = () => (
           </div>
         </div>
         <img
-          src="/src/assets/mascote2.png"
+          src={mascote2}
           alt="Expert in field"
           className="w-full h-[600px] object-cover rounded-[3rem] shadow-2xl"
           referrerPolicy="no-referrer"
@@ -448,7 +455,7 @@ const Footer = () => (
         <div className="col-span-1 md:col-span-2 space-y-6">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center">
-              <img src="/src/assets/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+              <img src={logo} alt="Logo" className="w-10 h-10 object-contain" />
             </div>
             <span className="text-xl font-extrabold tracking-tight uppercase">
               Bananicultura <span className="text-primary">de Valor</span>
