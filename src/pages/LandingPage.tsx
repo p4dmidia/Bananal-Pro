@@ -93,9 +93,9 @@ export default function LandingPage() {
         <div className="glow-spot glow-yellow top-[40%] left-[-15%] md:left-[-5%]" />
         <div className="glow-spot glow-primary bottom-[10%] right-[20%]" />
 
-        <div className="max-w-7xl mx-auto px-6 md:px-10 grid lg:grid-cols-12 gap-16 items-center w-full relative z-10">
+        <div className="max-w-7xl mx-auto px-6 md:px-10 grid lg:grid-cols-12 gap-y-10 lg:gap-16 items-center w-full relative z-10 min-w-0">
           {/* Left Text Column */}
-          <div className="lg:col-span-5 space-y-8 text-left">
+          <div className="lg:col-span-5 space-y-8 text-left w-full min-w-0">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary-container/20 border border-secondary/30 backdrop-blur-md">
               <span className="w-1.5 h-1.5 rounded-full bg-secondary-fixed animate-pulse"></span>
               <span className="text-[9px] font-bold tracking-widest text-secondary-fixed uppercase font-inter">
@@ -103,7 +103,7 @@ export default function LandingPage() {
               </span>
             </div>
 
-            <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl text-white font-extrabold tracking-tight leading-[1.1] text-balance">
+            <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-extrabold tracking-tight leading-[1.1] text-balance">
               O ecossistema completo para a <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary-fixed to-tertiary-fixed font-black">produtividade</span> da sua bananicultura.
             </h1>
 
@@ -145,12 +145,12 @@ export default function LandingPage() {
           </div>
 
           {/* Right Interactive Dashboard Mockup & Floating Cards */}
-          <div className="lg:col-span-7 relative flex justify-center items-center">
+          <div className="lg:col-span-7 relative flex justify-center items-center w-full min-w-0">
             {/* Ambient Shadow behind Dashboard */}
             <div className="absolute inset-0 bg-secondary/5 rounded-[2.5rem] blur-[80px] -z-10"></div>
 
             {/* High Fidelity Mockup */}
-            <div className="w-full max-w-[620px] dark-glass rounded-[2rem] p-3 shadow-2xl relative border-glow overflow-hidden transition-all duration-500 hover:scale-[1.01] hover:shadow-secondary/5">
+            <div className="w-full max-w-[620px] dark-glass rounded-[2rem] p-3 shadow-2xl relative border-glow overflow-hidden transition-all duration-500 hover:scale-[1.01] hover:shadow-secondary/5 min-w-0">
               <div className="w-full rounded-[1.5rem] bg-[#020d08] border border-outline-variant/30 flex flex-col sm:flex-row overflow-hidden min-h-[380px] text-white">
                 
                 {/* Mockup Sidebar */}
@@ -209,18 +209,18 @@ export default function LandingPage() {
                   {dashboardTab === "Dashboard" && (
                     <div className="space-y-4 flex-1 flex flex-col justify-between">
                       {/* Grid Stats */}
-                      <div className="grid grid-cols-3 gap-2">
-                        <div className="p-2.5 rounded-lg bg-surface-container/60 border border-outline-variant/20">
-                          <p className="text-[7px] text-on-surface-variant uppercase font-inter">Produtividade Anual</p>
-                          <p className="text-xs font-bold font-headline text-secondary-fixed">+24.8%</p>
+                      <div className="grid grid-cols-3 gap-1.5 xs:gap-2">
+                        <div className="p-2 rounded-lg bg-surface-container/60 border border-outline-variant/20 min-w-0">
+                          <p className="text-[6px] xs:text-[7px] text-on-surface-variant uppercase font-inter truncate">Produtividade</p>
+                          <p className="text-[10px] xs:text-xs font-bold font-headline text-secondary-fixed truncate">+24.8%</p>
                         </div>
-                        <div className="p-2.5 rounded-lg bg-surface-container/60 border border-outline-variant/20">
-                          <p className="text-[7px] text-on-surface-variant uppercase font-inter">Adubação NPK</p>
-                          <p className="text-xs font-bold font-headline text-white">Estável</p>
+                        <div className="p-2 rounded-lg bg-surface-container/60 border border-outline-variant/20 min-w-0">
+                          <p className="text-[6px] xs:text-[7px] text-on-surface-variant uppercase font-inter truncate">Adubação NPK</p>
+                          <p className="text-[10px] xs:text-xs font-bold font-headline text-white truncate">Estável</p>
                         </div>
-                        <div className="p-2.5 rounded-lg bg-surface-container/60 border border-outline-variant/20">
-                          <p className="text-[7px] text-on-surface-variant uppercase font-inter">Custo por Cacho</p>
-                          <p className="text-xs font-bold font-headline text-tertiary-fixed">R$ 8.42</p>
+                        <div className="p-2 rounded-lg bg-surface-container/60 border border-outline-variant/20 min-w-0">
+                          <p className="text-[6px] xs:text-[7px] text-on-surface-variant uppercase font-inter truncate">Custo Cacho</p>
+                          <p className="text-[10px] xs:text-xs font-bold font-headline text-tertiary-fixed truncate">R$ 8.42</p>
                         </div>
                       </div>
                       {/* Chart Widget */}
@@ -300,15 +300,15 @@ export default function LandingPage() {
                   {dashboardTab === "Clima" && (
                     <div className="space-y-3 flex-1 flex flex-col justify-between">
                       <div className="grid grid-cols-2 gap-2">
-                        <div className="p-2.5 rounded-lg bg-surface-container/60 border border-outline-variant/20 flex flex-col justify-between">
-                          <p className="text-[7px] text-on-surface-variant uppercase font-inter">Precipitação Prevista</p>
-                          <h5 className="text-base font-bold text-white font-headline">120mm</h5>
-                          <p className="text-[7px] text-on-surface-variant">Próximos 7 dias</p>
+                        <div className="p-2.5 rounded-lg bg-surface-container/60 border border-outline-variant/20 flex flex-col justify-between min-w-0">
+                          <p className="text-[7px] text-on-surface-variant uppercase font-inter truncate">Precipitação Prevista</p>
+                          <h5 className="text-sm font-bold text-white font-headline truncate">120mm</h5>
+                          <p className="text-[7px] text-on-surface-variant truncate">Próximos 7 dias</p>
                         </div>
-                        <div className="p-2.5 rounded-lg bg-surface-container/60 border border-outline-variant/20 flex flex-col justify-between">
-                          <p className="text-[7px] text-on-surface-variant uppercase font-inter">Janela de Pulverização</p>
-                          <h5 className="text-xs font-bold text-secondary-fixed uppercase font-headline">Excelente</h5>
-                          <p className="text-[7px] text-on-surface-variant">Umidade Relativa: 64%</p>
+                        <div className="p-2.5 rounded-lg bg-surface-container/60 border border-outline-variant/20 flex flex-col justify-between min-w-0">
+                          <p className="text-[7px] text-on-surface-variant uppercase font-inter truncate">Janela Pulverização</p>
+                          <h5 className="text-xs font-bold text-secondary-fixed uppercase font-headline truncate">Excelente</h5>
+                          <p className="text-[7px] text-on-surface-variant truncate">Umidade Relativa: 64%</p>
                         </div>
                       </div>
                       <div className="p-3 bg-amber-950/20 border border-amber-500/10 rounded-lg flex items-center gap-2">
@@ -385,7 +385,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 md:px-10">
           <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
             <span className="text-secondary font-semibold uppercase tracking-widest text-xs font-inter block">Ecossistema Operacional & Educação</span>
-            <h2 className="font-headline text-3xl md:text-4xl text-primary font-bold tracking-tight">Capacitação, comunidade ativa e precisão técnica.</h2>
+            <h2 className="font-headline text-2xl sm:text-3xl md:text-4xl text-primary font-bold tracking-tight">Capacitação, comunidade ativa e precisão técnica.</h2>
             <p className="text-zinc-600 font-sans text-sm md:text-base leading-relaxed">
               Substitua a incerteza pela exatidão técnica. No Bananal PRO, o produtor de banana conta com agrônomos dedicados, cursos práticos de manejo e um sistema completo de gestão.
             </p>
@@ -443,10 +443,10 @@ export default function LandingPage() {
       <section className="py-24 relative overflow-hidden bg-surface-container/40 border-y border-outline-variant/20 reveal">
         <div className="glow-spot glow-primary top-[20%] right-[-10%]" />
         
-        <div className="max-w-7xl mx-auto px-6 md:px-10 grid md:grid-cols-2 gap-16 items-center">
-          <div className="space-y-8">
+        <div className="max-w-7xl mx-auto px-6 md:px-10 grid md:grid-cols-2 gap-y-10 md:gap-16 items-center w-full min-w-0">
+          <div className="space-y-8 w-full min-w-0">
             <span className="text-secondary-fixed font-semibold uppercase tracking-widest text-xs font-inter block">Módulos Avançados</span>
-            <h2 className="font-headline text-3xl md:text-4xl text-white font-extrabold tracking-tight leading-tight">
+            <h2 className="font-headline text-2xl sm:text-3xl md:text-4xl text-white font-extrabold tracking-tight leading-tight">
               Análise Química Otimizada & Diagnóstico de Campo.
             </h2>
             <p className="font-sans text-sm md:text-base text-on-surface-variant leading-relaxed">
@@ -517,7 +517,7 @@ export default function LandingPage() {
           </div>
 
           {/* Interactive Screen Preview */}
-          <div className="glass p-5 rounded-[2rem] border-glow shadow-2xl relative w-full min-h-[320px] bg-[#020d08] flex flex-col justify-between">
+          <div className="glass p-5 rounded-[2rem] border-glow shadow-2xl relative w-full min-h-[320px] bg-[#020d08] flex flex-col justify-between min-w-0">
             {activeTool === "solo" ? (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
@@ -571,12 +571,12 @@ export default function LandingPage() {
       </section>
 
       {/* The Intelligence Hub: Slack/Discord Style Community Showcase (Circle/Slack Style) — BLOCK 4 (White Background) */}
-      <section className="py-24 relative overflow-hidden bg-white text-zinc-900 border-b border-zinc-200/50 reveal">
-        <div className="max-w-7xl mx-auto px-6 md:px-10 grid lg:grid-cols-12 gap-16 items-center">
+      <section className="py-24 relative overflow-hidden bg-white text-zinc-900 border-b border-zinc-200/50 reveal" id="comunidade">
+        <div className="max-w-7xl mx-auto px-6 md:px-10 grid lg:grid-cols-12 gap-y-10 lg:gap-16 items-center w-full min-w-0">
           
           {/* Slack/Discord Workspace Mockup */}
-          <div className="lg:col-span-7 w-full flex justify-center items-center">
-            <div className="w-full max-w-[620px] dark-glass rounded-[2rem] p-3 shadow-2xl relative border-glow overflow-hidden">
+          <div className="lg:col-span-7 w-full flex justify-center items-center min-w-0">
+            <div className="w-full max-w-[620px] dark-glass rounded-[2rem] p-3 shadow-2xl relative border-glow overflow-hidden min-w-0">
               <div className="w-full rounded-[1.5rem] bg-[#010905] border border-outline-variant/20 flex flex-col sm:flex-row overflow-hidden min-h-[350px] text-white">
                 
                 {/* Channels list */}
@@ -655,9 +655,9 @@ export default function LandingPage() {
           </div>
 
           {/* Right Text Column */}
-          <div className="lg:col-span-5 space-y-8 text-left">
+          <div className="lg:col-span-5 space-y-8 text-left w-full min-w-0">
             <span className="text-secondary font-semibold uppercase tracking-widest text-xs font-inter block">Inteligência Coletiva</span>
-            <h2 className="font-headline text-3xl md:text-4xl text-primary font-bold tracking-tight">O epicentro de conexões e capacitação rural.</h2>
+            <h2 className="font-headline text-2xl sm:text-3xl md:text-4xl text-primary font-bold tracking-tight">O epicentro de conexões e capacitação rural.</h2>
             <p className="font-sans text-sm md:text-base text-zinc-600 leading-relaxed">
               Não produza isolado. Participe de debates técnicos com outros agricultores, participe de lives semanais exclusivas com engenheiros agrônomos convidados e acesse cotações de preços de caixas de banana em tempo real por região.
             </p>
@@ -689,7 +689,7 @@ export default function LandingPage() {
             <div className="absolute top-0 right-0 w-80 h-80 bg-secondary/15 blur-[120px] transition-all duration-700 group-hover:bg-secondary/25"></div>
             
             <div className="relative z-10">
-              <h2 className="font-headline text-3xl font-bold mb-16 tracking-tight text-white">Resultados Reais Operacionais</h2>
+              <h2 className="font-headline text-2xl sm:text-3xl font-bold mb-16 tracking-tight text-white">Resultados Reais Operacionais</h2>
               <div className="grid md:grid-cols-3 gap-12">
                 <div className="space-y-4 border-r md:border-outline-variant/30 last:border-0 pr-4">
                   <Counter target={35} prefix="+" suffix="%" />
@@ -714,7 +714,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 md:px-10 text-center">
           <div className="max-w-3xl mx-auto mb-16 space-y-4">
             <span className="text-secondary font-semibold uppercase tracking-widest text-xs font-inter block">Investimento Otimizado</span>
-            <h2 className="font-headline text-3xl md:text-4xl text-primary font-bold tracking-tight">O ecossistema completo ao seu alcance.</h2>
+            <h2 className="font-headline text-2xl sm:text-3xl md:text-4xl text-primary font-bold tracking-tight">O ecossistema completo ao seu alcance.</h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -853,7 +853,7 @@ export default function LandingPage() {
               </summary>
               <div className="overflow-hidden transition-all duration-300">
                 <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed">
-                  Sim, o Bananal PRO é estruturado como PWA (Progressive Web App). Você pode inserir dados de custos, manejos e controle de estoque sem sinal de celular. Os dados são sincronizados com o banco de dados Supabase automaticamente assim que você se conectar à rede.
+                  Sim! Você pode registrar seus custos, manejos e controle de estoque mesmo sem sinal de internet ou de celular no campo. Todas as suas informações ficam salvas de forma segura e são atualizadas automaticamente com o sistema assim que você se conectar a uma rede.
                 </p>
               </div>
             </details>

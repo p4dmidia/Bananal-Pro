@@ -69,23 +69,27 @@ export default function Tools() {
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest text-primary"
+            className="inline-flex items-center gap-2 bg-secondary-container/20 border border-secondary/30 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest text-secondary-fixed backdrop-blur-sm"
           >
+            <span className="w-1.5 h-1.5 rounded-full bg-secondary-fixed animate-pulse"></span>
             Tecnologia de Precisão
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-5xl md:text-6xl font-display font-bold leading-tight max-w-4xl mx-auto text-primary"
+            className="text-5xl md:text-6xl font-display font-bold leading-tight max-w-4xl mx-auto text-white"
           >
-            Ferramentas Agrícolas <br /><span className="text-gradient">que otimizam seu campo.</span>
+            Ferramentas Agrícolas <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary-fixed to-tertiary-fixed font-black">
+              que otimizam seu campo.
+            </span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-zinc-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed"
+            className="text-zinc-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed"
           >
             Substitua planilhas complexas por painéis práticos desenhados exclusivamente para a bananicultura brasileira.
           </motion.p>
