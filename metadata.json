@@ -1,5 +1,6 @@
 {
-  "name": "Bananicultura de Valor",
-  "description": "Uma landing page moderna para produtores de banana, unindo tecnologia, IA e conhecimento especializado para transformar a produtividade no campo.",
-  "requestFramePermissions": []
+  "name": "Bananal PRO",
+  "description": "Uma plataforma SaaS premium para produtores de banana, focada em gestão técnica, calagem, monitoramento climático e capacitação.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
 }

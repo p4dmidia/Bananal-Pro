@@ -1,17 +1,191 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --color-primary: #4bbe4f;
-  --color-accent-yellow: #facc15;
-  --color-background-light: #f6f8f6;
-  --color-background-dark: #141e15;
+  --font-headline: "Manrope", sans-serif;
+  --font-inter: "Inter", sans-serif;
+
+  --color-surface-tint: #3c6753;
+  --color-on-primary: #ffffff;
+  --color-primary: #002417;
+  --color-tertiary-fixed: #ffe17a;
+  --color-on-secondary-fixed-variant: #00522b;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-primary-fixed-variant: #234f3c;
+  --color-primary-fixed-dim: #a2d1b9;
+  --color-on-tertiary: #ffffff;
+  --color-secondary: #006d3b;
+  --color-on-error-container: #93000a;
+  --color-surface: #020c08;
+  --color-surface-container: #05160f;
+  --color-surface-container-highest: #082418;
+  --color-on-primary-container: #beedd4;
+  --color-on-tertiary-fixed-variant: #ffe17a;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-fixed: #00210e;
+  --color-background: #020c08;
+  --color-surface-variant: #082016;
+  --color-inverse-on-surface: #0a2f20;
+  --color-inverse-primary: #75fca7;
+  --color-on-background: #f0fdf4;
+  --color-on-secondary-container: #75fca7;
+  --color-secondary-fixed: #75fca7;
+  --color-surface-bright: #051a11;
+  --color-on-tertiary-container: #ffe17a;
+  --color-secondary-container: #00522b;
+  --color-primary-container: #002417;
+  --color-surface-container-high: #062015;
+  --color-on-surface: #ecfdf5;
+  --color-error-container: #ffdad6;
+  --color-secondary-fixed-dim: #57df8d;
+  --color-tertiary: #715c00;
+  --color-on-primary-fixed: #002115;
+  --color-on-error: #ffffff;
+  --color-primary-fixed: #beedd4;
+  --color-surface-container-low: #03110b;
+  --color-error: #ba1a1a;
+  --color-inverse-surface: #ecfdf5;
+  --color-on-surface-variant: #a2b5ab;
+  --color-tertiary-container: #c7a938;
+  --color-surface-dim: #010805;
+  --color-on-tertiary-fixed: #231b00;
+  --color-outline: #3d5248;
+  --color-outline-variant: #26382f;
+  --color-tertiary-fixed-dim: #e4c451;
 }
 
-@layer base {
-  body {
-    @apply font-sans bg-background-light text-slate-900 antialiased;
+/* Base Body Styles */
+body {
+  @apply bg-background text-on-surface antialiased font-sans overflow-x-hidden selection:bg-secondary/40 selection:text-white;
+}
+
+/* High Precision Grid Background */
+.bg-grid {
+  background-size: 50px 50px;
+  background-image: 
+    linear-gradient(to right, rgba(117, 252, 167, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(117, 252, 167, 0.03) 1px, transparent 1px);
+}
+
+/* Glassmorphism Classes */
+.glass {
+  background: rgba(2, 20, 13, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(117, 252, 167, 0.1);
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+}
+
+.dark-glass {
+  background: rgba(1, 14, 9, 0.8);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(117, 252, 167, 0.08);
+  box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.7);
+}
+
+/* Volumetric Atmospheric Glows */
+.glow-spot {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+}
+
+.glow-green {
+  background: radial-gradient(circle, rgba(117, 252, 167, 0.18) 0%, transparent 70%);
+}
+
+.glow-yellow {
+  background: radial-gradient(circle, rgba(255, 225, 122, 0.12) 0%, transparent 70%);
+}
+
+.glow-primary {
+  background: radial-gradient(circle, rgba(0, 109, 59, 0.25) 0%, transparent 70%);
+}
+
+/* Smooth Floating Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(0.5deg);
   }
 }
 
+.animate-float-1 {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: float 7s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+.animate-float-3 {
+  animation: float 8s ease-in-out infinite;
+  animation-delay: 3s;
+}
+
+/* Border Gradient Glow effect */
+.border-glow {
+  position: relative;
+}
+.border-glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(117, 252, 167, 0.25), transparent 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.border-glow:hover::before {
+  background: linear-gradient(135deg, rgba(117, 252, 167, 0.5), rgba(255, 225, 122, 0.3) 50%, transparent);
+}
+
+/* Scroll reveal animations */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Organic Leaf Texture Background lines overlay */
+.leaf-accent {
+  position: relative;
+}
+.leaf-accent::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M0 100 C 30 70, 70 30, 100 0' stroke='rgba(117, 252, 167, 0.02)' stroke-width='1.5' fill='none'/%3E%3Cpath d='M0 100 C 40 80, 80 40, 100 0' stroke='rgba(117, 252, 167, 0.015)' stroke-width='1' fill='none'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* Custom Scrollbar for premium vibe */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #020c08;
+}
+::-webkit-scrollbar-thumb {
+  background: #082418;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #006d3b;
+}

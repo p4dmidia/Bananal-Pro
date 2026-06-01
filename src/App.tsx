@@ -1,10 +1,33 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+import React, { useEffect } from "react";
+import AppRoutes from "./routes/AppRoutes";
+import "./index.css";
 
-import LandingPage from './LandingPage';
+import InstallPWA from "./components/PWA/InstallPWA";
 
-export default function App() {
-  return <LandingPage />;
+import { Toaster } from "react-hot-toast";
+
+function App() {
+  useEffect(() => {
+    document.title = "Bananal PRO";
+  }, []);
+
+  return (
+    <>
+      <AppRoutes />
+      <InstallPWA />
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: '#18181b',
+            color: '#fff',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '1rem',
+          },
+        }}
+      />
+    </>
+  );
 }
+
+export default App;
