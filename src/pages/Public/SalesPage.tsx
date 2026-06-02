@@ -184,7 +184,16 @@ export default function SalesPage() {
                 </div>
               </div>
             </div>
-
+            <div className="pt-4">
+              <a
+                href="#oferta-pricing"
+                onClick={scrollToOffer}
+                className="bg-secondary hover:bg-secondary-fixed text-white hover:text-primary-container px-10 py-5 rounded-2xl font-headline font-extrabold text-base tracking-wide transition-all border-glow duration-300 shadow-2xl shadow-secondary/30 hover:scale-[1.03] active:scale-95 inline-flex items-center gap-3 cursor-pointer uppercase"
+              >
+                Quero Garantir Meu Acesso Fundador Agora!
+                <ArrowRight size={20} />
+              </a>
+            </div>
             {/* Subtext call to action below video */}
             <p className="text-xs text-zinc-500 font-inter">
               ATENÇÃO: Essa condição especial ficará disponível por tempo limitado e poderá ser encerrada sem aviso prévio após o fechamento desta campanha.
