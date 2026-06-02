@@ -117,12 +117,15 @@ export default function SalesPage() {
         <section className="py-16 bg-surface-container/20 border-y border-outline-variant/10 relative">
           <div className="max-w-4xl mx-auto px-6 text-center space-y-10">
             
-            <div className="space-y-3">
+            <div className="space-y-4 max-w-3xl mx-auto">
               <h2 className="font-headline text-2xl md:text-3xl font-extrabold text-white">
-                Antes de tomar qualquer decisão, assista esta apresentação.
+                Antes de fechar esta página, assista ao vídeo abaixo.
               </h2>
-              <p className="font-sans text-sm md:text-base text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                Em poucos minutos você vai entender por que o Bananal PRO é o projeto mais importante que já criamos para produtores de banana.
+              <p className="font-sans text-sm md:text-base text-zinc-400 leading-relaxed">
+                Nos próximos minutos, você vai descobrir como produtores estão deixando de depender de informações soltas e passando a administrar suas lavouras com método, acompanhamento técnico e ferramentas práticas para aumentar a produtividade e o lucro.
+              </p>
+              <p className="font-sans text-sm md:text-base text-zinc-400 leading-relaxed">
+                O Bananal PRO não é apenas mais um curso. É o próximo passo para quem quer produzir melhor, gastar menos e tomar decisões com mais segurança.
               </p>
             </div>
 
@@ -178,108 +181,222 @@ export default function SalesPage() {
 
             {/* Subtext call to action below video */}
             <p className="text-xs text-zinc-500 font-inter">
-              ⚠️ Assista até o final. Condições especiais reveladas no fechamento da apresentação.
+              🚨 ATENÇÃO: Essa condição especial ficará disponível por tempo limitado e poderá ser encerrada sem aviso prévio após o fechamento desta campanha.
             </p>
           </div>
         </section>
 
-        {/* QUEBRA DE CRENÇAS (Belief Shattering) SECTION */}
+        {/* QUEBRA DE CRENÇAS / DIAGNÓSTICO DA REALIDADE */}
         <section className="py-24 bg-white text-zinc-900 border-y border-zinc-200/50 relative z-10">
-          <div className="max-w-6xl mx-auto px-6 space-y-16">
+          <div className="max-w-6xl mx-auto px-6 space-y-20">
+            
+            {/* Header / Intro */}
             <div className="text-center max-w-3xl mx-auto space-y-4">
-              <span className="text-secondary font-bold uppercase tracking-widest text-xs font-inter block">O Grande Obstáculo</span>
+              <span className="text-secondary font-bold uppercase tracking-widest text-xs font-inter block">Diagnóstico Real</span>
               <h2 className="font-headline text-3xl md:text-5xl font-extrabold tracking-tight text-zinc-950 leading-tight">
-                A verdade é que informação nunca foi o problema.
+                A Verdade Que Poucos Produtores Gostam de Admitir
               </h2>
-              <p className="text-zinc-600 font-sans text-sm md:text-base leading-relaxed">
-                Hoje você encontra vídeos no YouTube. Grupos no WhatsApp. Conteúdos espalhados pela internet. Mas mesmo assim a maioria dos produtores continua enfrentando gargalos operacionais diários.
-              </p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
-              {[
-                "Baixa produtividade nas colheitas",
-                "Custos de adubação cada vez maiores",
-                "Falta de planejamento a médio prazo",
-                "Erros recorrentes de manejo cultural",
-                "Problemas nutricionais de solo ocultos",
-                "Decisões agronômicas tomadas no escuro"
-              ].map((problem, i) => (
-                <div 
-                  key={i}
-                  className="p-6 rounded-2xl bg-red-50/60 border border-red-200/50 flex items-start gap-4 transition-all duration-300 hover:border-red-300 hover:bg-red-50"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shrink-0 border border-red-200">
-                    <XCircle className="text-red-600" size={20} />
-                  </div>
-                  <div>
-                    <h4 className="font-headline font-bold text-sm text-red-800 mt-0.5">Problema Crítico</h4>
-                    <p className="text-xs text-zinc-600 font-sans mt-1 leading-relaxed">{problem}</p>
-                  </div>
+            {/* Stacked layout: Trabalho duro under/above Realidade Financeira */}
+            <div className="flex flex-col gap-10 bg-zinc-50 border border-zinc-200/80 p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-32 h-32 bg-secondary/5 blur-[60px] rounded-full" />
+              
+              {/* Part 1: Você trabalha duro */}
+              <div className="space-y-4 relative z-10">
+                <h3 className="font-headline text-2xl font-extrabold text-zinc-900">Você trabalha duro.</h3>
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    { label: "Investe em adubo", icon: "🌱" },
+                    { label: "Investe em irrigação", icon: "💧" },
+                    { label: "Investe em defensivos", icon: "🛡️" },
+                    { label: "Investe em mão de obra", icon: "👥" },
+                    { label: "Passa o ano inteiro cuidando da lavoura", icon: "📅" }
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl border border-zinc-200 shadow-sm transition-all hover:scale-[1.01] hover:border-zinc-300 shrink-0">
+                      <span className="text-lg">{item.icon}</span>
+                      <span className="text-sm font-semibold text-zinc-700">{item.label}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
 
-            <div className="p-8 rounded-[2rem] bg-zinc-50 border border-zinc-200/80 text-center max-w-3xl mx-auto relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-secondary/5 blur-[80px] rounded-full" />
-              <div className="relative z-10 space-y-4">
-                <p className="text-base md:text-lg text-zinc-700 font-sans">
-                  O problema não é falta de informação.
+              {/* Horizontal Divider */}
+              <div className="h-px bg-zinc-200 w-full relative z-10" />
+
+              {/* Part 2: Mas quando chega... */}
+              <div className="space-y-6 relative z-10">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center border border-red-200/60 shrink-0">
+                    <TrendingUp className="text-red-500 transform rotate-180" size={24} />
+                  </div>
+                  <h4 className="font-headline text-xl md:text-2xl font-bold text-red-700 leading-tight">
+                    Mas quando chega o momento de fechar as contas...
+                  </h4>
+                </div>
+                <p className="text-2xl md:text-3xl font-headline font-black text-zinc-950 leading-tight">
+                  O lucro não acompanha o esforço.
                 </p>
-                <h3 className="font-headline text-2xl md:text-3xl font-extrabold text-secondary">
-                  O problema é falta de um SISTEMA.
-                </h3>
+                <div className="space-y-2 max-w-3xl">
+                  <p className="text-sm font-bold text-zinc-800 flex items-center gap-2">
+                    💔 E o mais frustrante?
+                  </p>
+                  <p className="text-sm md:text-base text-zinc-600 leading-relaxed font-sans">
+                    Muitas vezes você nem sabe exatamente onde está perdendo dinheiro.
+                  </p>
+                </div>
               </div>
             </div>
+
+            {/* Sub-section: 4 cards of "Talvez..." */}
+            <div className="space-y-8">
+              <div className="text-center max-w-2xl mx-auto">
+                <h3 className="font-headline text-xl font-bold text-zinc-900">Os Gargalos Silenciosos</h3>
+                <p className="text-xs text-zinc-500 mt-1">Os vazamentos de lucro acontecem de forma sutil</p>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-6">
+                {[
+                  { title: "Limitação de Potencial", desc: "Talvez a produtividade esteja abaixo do potencial da sua área." },
+                  { title: "Desperdício de Insumos", desc: "Talvez você esteja aplicando mais insumos do que deveria." },
+                  { title: "Falta de Nutrição Oculta", desc: "Talvez problemas nutricionais estejam limitando o desenvolvimento das plantas sem que você perceba." },
+                  { title: "Timing Incorreto", desc: "Talvez decisões importantes estejam sendo tomadas tarde demais." }
+                ].map((item, index) => (
+                  <div key={index} className="p-6 rounded-2xl bg-zinc-50/50 border border-zinc-200/80 hover:border-amber-500/40 hover:bg-amber-50/10 transition-all duration-300 flex gap-4 items-start group">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0 border border-amber-500/20 group-hover:bg-amber-500/20 transition-colors">
+                      <HelpCircle className="text-amber-600" size={20} />
+                    </div>
+                    <div>
+                      <h4 className="font-headline font-bold text-sm text-zinc-900">{item.title}</h4>
+                      <p className="text-xs text-zinc-600 font-sans mt-1.5 leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Sub-section: Custos Crescentes */}
+            <div className="p-8 md:p-12 rounded-[2.5rem] bg-gradient-to-r from-red-50 to-orange-50 border border-red-200/60 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-red-500/5 blur-[80px] rounded-full" />
+              <div className="relative z-10 grid md:grid-cols-3 gap-8 items-center">
+                <div className="md:col-span-1 space-y-3">
+                  <span className="text-red-600 font-bold uppercase tracking-widest text-[10px] font-inter block">Cenário Macroeconômico</span>
+                  <h3 className="font-headline text-2xl font-extrabold text-red-950 leading-tight">
+                    E enquanto isso acontece, os custos continuam aumentando.
+                  </h3>
+                </div>
+                <div className="md:col-span-2 grid sm:grid-cols-2 gap-4">
+                  {[
+                    { label: "O preço dos fertilizantes sobe.", icon: "📈" },
+                    { label: "O custo da mão de obra aumenta.", icon: "👥" },
+                    { label: "Os defensivos ficam mais caros.", icon: "🧪" },
+                    { label: "E cada erro custa mais caro do que custava no ano passado.", icon: "⚠️", highlight: true }
+                  ].map((item, index) => (
+                    <div key={index} className={`p-4 rounded-xl border flex items-center gap-3 ${item.highlight ? 'bg-red-600 text-white border-red-700 shadow-lg shadow-red-600/10 col-span-full sm:col-span-1' : 'bg-white text-zinc-800 border-zinc-200'}`}>
+                      <span className="text-lg">{item.icon}</span>
+                      <p className={`text-xs leading-relaxed font-semibold font-sans ${item.highlight ? 'text-white' : 'text-zinc-700'}`}>{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
           </div>
         </section>
 
-        {/* AGITAÇÃO SECTION (Pain Agitation) */}
+        {/* AGITAÇÃO / REALIDADE DO PRODUTOR */}
         <section className="py-24 bg-surface-container/10 border-y border-outline-variant/10 relative">
-          <div className="max-w-5xl mx-auto px-6 space-y-16">
+          {/* Volumetric ambient light */}
+          <div className="absolute top-[20%] left-[-10%] w-[40%] aspect-square rounded-full bg-red-500/5 blur-[120px] pointer-events-none" />
+          
+          <div className="max-w-5xl mx-auto px-6 space-y-20 relative z-10">
+            
+            {/* Header */}
             <div className="text-center max-w-3xl mx-auto space-y-4">
-              <span className="text-secondary-fixed font-bold uppercase tracking-widest text-xs font-inter block">O Custo da Inação</span>
+              <span className="text-secondary-fixed font-bold uppercase tracking-widest text-xs font-inter block">A Falta de Controle</span>
               <h2 className="font-headline text-3xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
-                Quanto custa continuar administrando sua lavoura apenas na memória?
+                A realidade é que muitos produtores passam meses trabalhando sem saber exatamente:
               </h2>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            {/* List of 5 items with ❌ */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
               {[
-                { q: "Quanto custa uma adubação mal planejada?", desc: "Desperdiçar sacos de fertilizantes caros e ver a bananeira sofrer por falta ou excesso de NPK." },
-                { q: "Quanto custa uma análise de solo mal interpretada?", desc: "Aplicar calcário ou gesso na dose errada, atrasando o desenvolvimento do talhão por meses." },
-                { q: "Quanto custa perder produtividade durante uma safra inteira?", desc: "Deixar de colher caixas premium de banana prata ou nanica por falta de manejo sistemático." },
-                { q: "Quanto custa não ter suporte quando surge um problema na propriedade?", desc: "Pesquisar soluções genéricas no Google enquanto a Sigatoka ou o Mal do Panamá se espalham." }
-              ].map((item, i) => (
-                <div 
-                  key={i}
-                  className="p-8 rounded-3xl dark-glass border border-outline-variant/30 flex gap-5 items-start transition-all hover:scale-[1.01]"
-                >
-                  <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0 border border-amber-500/25">
-                    <AlertTriangle className="text-amber-400" size={22} />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="font-headline font-bold text-base text-white">{item.q}</h3>
-                    <p className="text-xs text-zinc-400 font-sans leading-relaxed">{item.desc}</p>
+                { title: "Custo por hectare", text: "Qual o custo real de produção por hectare.", icon: "❌" },
+                { title: "Desperdícios invisíveis", text: "Onde estão os maiores desperdícios da propriedade.", icon: "❌" },
+                { title: "Manejos eficientes", text: "Quais manejos realmente aumentam a produtividade.", icon: "❌" },
+                { title: "Decisões prejudiciais", text: "Quais decisões estão reduzindo seus resultados.", icon: "❌" },
+                { title: "Correções urgentes", text: "O que precisa ser corrigido antes da próxima safra.", icon: "❌" }
+              ].map((item, index) => (
+                <div key={index} className="p-6 rounded-2xl bg-zinc-900/40 border border-outline-variant/20 hover:border-red-500/30 transition-all duration-300 flex flex-col justify-between group">
+                  <div className="space-y-4">
+                    <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center border border-red-500/20 text-red-500 font-bold">
+                      {item.icon}
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="font-headline font-bold text-sm text-white group-hover:text-red-400 transition-colors">{item.title}</h4>
+                      <p className="text-xs text-zinc-400 font-sans leading-relaxed">{item.text}</p>
+                    </div>
                   </div>
                 </div>
               ))}
+              <div className="p-6 rounded-2xl bg-red-950/20 border border-red-900/40 flex flex-col justify-center items-center text-center space-y-3 group hover:border-red-500/40 transition-all md:col-span-2 lg:col-span-1">
+                <span className="text-3xl animate-bounce">🚨</span>
+                <h4 className="font-headline font-bold text-sm text-red-300">Margem sob risco</h4>
+                <p className="text-[10px] text-zinc-500">Trabalhar sem essas respostas é jogar com a sorte a cada safra.</p>
+              </div>
             </div>
 
-            <div className="text-center max-w-2xl mx-auto pt-4">
-              <p className="text-base md:text-lg font-headline font-bold text-zinc-300">
-                Um único erro pode custar <span className="text-red-400 font-extrabold">muito mais</span> do que o valor investido no Bananal PRO.
-              </p>
+            {/* Timeline: E quando os problemas aparecem... */}
+            <div className="space-y-8 max-w-4xl mx-auto pt-6 border-t border-outline-variant/10">
+              <div className="text-center space-y-2">
+                <h3 className="font-headline text-xl font-bold text-white">E quando os problemas aparecem...</h3>
+                <p className="text-xs text-zinc-400">Normalmente já é tarde demais.</p>
+              </div>
+
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { text: "A planta já perdeu potencial.", icon: "🥀", color: "text-amber-400" },
+                  { text: "A produtividade já foi comprometida.", icon: "📉", color: "text-orange-400" },
+                  { text: "O dinheiro já foi gasto.", icon: "💸", color: "text-red-400" },
+                  { text: "O prejuízo já aconteceu.", icon: "⚠️", color: "text-red-500", highlight: true }
+                ].map((item, index) => (
+                  <div key={index} className={`p-5 rounded-2xl border transition-all ${item.highlight ? 'bg-red-500/10 border-red-500/30' : 'bg-zinc-900/30 border-outline-variant/10 hover:border-outline-variant/30'}`}>
+                    <div className="flex justify-between items-start mb-3">
+                      <span className="text-2xl">{item.icon}</span>
+                      <span className="text-[10px] font-mono text-zinc-600 font-bold">FASE 0{index + 1}</span>
+                    </div>
+                    <p className="text-xs font-semibold text-zinc-200 leading-relaxed font-sans">{item.text}</p>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {/* Final Agitation Callout: A pergunta é... */}
+            <div className="p-8 md:p-12 rounded-[2.5rem] bg-gradient-to-br from-[#0c0f0e] via-[#052014] to-black border-2 border-secondary/20 text-center max-w-3xl mx-auto relative overflow-hidden group shadow-2xl">
+              <div className="absolute inset-0 bg-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+              <div className="absolute -top-12 -right-12 w-40 h-40 bg-secondary/10 blur-[80px] rounded-full" />
+              
+              <div className="relative z-10 space-y-6">
+                <span className="text-secondary-fixed font-bold uppercase tracking-widest text-[10px] font-inter block">Reflexão Necessária</span>
+                <p className="text-lg md:text-xl text-zinc-300 font-sans">
+                  A pergunta é:
+                </p>
+                <h3 className="font-headline text-2xl md:text-4xl font-extrabold text-white leading-tight">
+                  Quanto custa repetir os mesmos erros por mais uma safra?
+                </h3>
+              </div>
+            </div>
+
           </div>
         </section>
 
         {/* APRESENTAÇÃO DA SOLUÇÃO (The Solution) SECTION */}
-        <section className="py-24 max-w-5xl mx-auto px-6 space-y-16">
-          <div className="grid lg:grid-cols-12 gap-16 items-center">
-            
-            {/* Left side text copy */}
-            <div className="lg:col-span-6 space-y-8 text-left">
+        <section className="py-24 max-w-6xl mx-auto px-6 space-y-24">
+          
+          {/* Header & Imagine Block */}
+          <div className="space-y-12">
+            <div className="text-center max-w-3xl mx-auto space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary-container/20 border border-secondary/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-secondary-fixed animate-pulse"></span>
                 <span className="text-[10px] font-bold tracking-widest text-secondary-fixed uppercase font-inter">
@@ -287,63 +404,132 @@ export default function SalesPage() {
                 </span>
               </div>
               <h2 className="font-headline text-3xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
-                Foi por isso que criamos o Bananal PRO.
+                Existe Uma Forma Melhor de Produzir.
               </h2>
-              <div className="space-y-4 font-sans text-sm md:text-base text-zinc-300 leading-relaxed">
-                <p className="font-bold text-white">
-                  Não é apenas um curso. Não é apenas uma comunidade. Não é apenas um software.
-                </p>
-                <p>
-                  É o primeiro ecossistema completo criado exclusivamente para produtores de banana.
-                </p>
-                <p className="text-secondary-fixed font-semibold">
-                  Um ambiente onde você encontra conhecimento, ferramentas, suporte e acompanhamento em um único lugar.
-                </p>
-              </div>
+              <p className="text-sm text-zinc-400 font-sans max-w-2xl mx-auto">
+                Imagine gerenciar sua produção com total segurança, sabendo exatamente o que fazer em cada etapa.
+              </p>
             </div>
 
-            {/* Right side visual representation */}
-            <div className="lg:col-span-6 relative flex justify-center">
-              <div className="absolute inset-0 bg-secondary/5 rounded-[2.5rem] blur-[80px] -z-10" />
-              
-              <div className="w-full max-w-[420px] dark-glass rounded-[2.5rem] p-6 border border-outline-variant/30 space-y-6">
-                <div className="flex items-center gap-3 pb-4 border-b border-outline-variant/20">
-                  <span className="material-symbols-outlined text-secondary-fixed text-2xl">eco</span>
-                  <h4 className="font-headline font-bold text-sm text-white uppercase tracking-wider">A Tríade Bananal PRO</h4>
+            {/* Imagine Cards Grid */}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { title: "Clareza Total", desc: "Imagine ter clareza sobre o que está acontecendo na sua propriedade.", icon: "🔍" },
+                { title: "Decisões Direcionadas", desc: "Saber exatamente quais decisões precisam ser tomadas.", icon: "🧠" },
+                { title: "Evolução Segura", desc: "Acompanhar a evolução da lavoura com confiança.", icon: "📈" },
+                { title: "Prevenção Ativa", desc: "Ter acesso às informações certas antes que os problemas apareçam.", icon: "🚨" },
+                { title: "Apoio do Especialista", desc: "Contar com orientação técnica quando surgir uma dúvida importante.", icon: "👨‍🌾" },
+                { title: "Fim do Olhômetro", desc: "E parar de depender da tentativa e erro para conduzir sua produção.", icon: "🛑" }
+              ].map((item, idx) => (
+                <div key={idx} className="p-6 rounded-2xl dark-glass border border-outline-variant/20 hover:border-secondary/30 transition-all duration-300">
+                  <span className="text-2xl mb-4 block">{item.icon}</span>
+                  <h4 className="font-headline font-bold text-sm text-white mb-2">{item.title}</h4>
+                  <p className="text-xs text-zinc-400 font-sans leading-relaxed">{item.desc}</p>
                 </div>
-                
+              ))}
+            </div>
+          </div>
+
+          {/* Creation & Manifesto Block */}
+          <div className="flex flex-col gap-10 bg-secondary/5 border border-secondary/20 p-8 md:p-12 rounded-[2.5rem] relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-60 h-60 bg-secondary/10 blur-[100px] rounded-full" />
+            
+            {/* Part 1: Foi para isso que criamos... */}
+            <div className="space-y-4 relative z-10">
+              <h3 className="font-headline text-2xl md:text-3xl font-extrabold text-white leading-tight">
+                Foi para isso que criamos o Bananal PRO.
+              </h3>
+              <p className="text-sm md:text-base text-zinc-300 font-sans leading-relaxed max-w-4xl">
+                Uma plataforma desenvolvida exclusivamente para produtores de banana que querem produzir mais, reduzir desperdícios e tomar decisões com mais segurança.
+              </p>
+            </div>
+
+            {/* Horizontal Divider */}
+            <div className="h-px bg-white/10 w-full relative z-10" />
+
+            {/* Part 2: Nosso Manifesto */}
+            <div className="space-y-6 relative z-10">
+              <div>
+                <span className="text-secondary-fixed font-bold uppercase tracking-widest text-[10px] font-inter block mb-2">Nosso Manifesto</span>
+                <p className="text-lg md:text-xl font-headline font-extrabold text-white leading-tight">
+                  Porque acreditamos que o produtor não precisa trabalhar mais.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-4">
                 {[
-                  { title: "Educação Técnica de Elite", desc: "Trilhas de aprendizagem do plantio à colheita.", icon: <Award className="text-secondary-fixed" size={18} /> },
-                  { title: "Ferramentas Agro-Digitais", desc: "Calculadoras de solo, controle de NPK e finanças.", icon: <Database className="text-secondary-fixed" size={18} /> },
-                  { title: "Suporte e Rede Ativa", desc: "Chat com agrônomos e comunidade VIP de produtores.", icon: <Users className="text-secondary-fixed" size={18} /> }
+                  { label: "Mais controle.", icon: "🎛️" },
+                  { label: "Mais conhecimento.", icon: "📚" },
+                  { label: "Mais acompanhamento.", icon: "🤝" },
+                  { label: "Mais previsibilidade.", icon: "🔮" },
+                  { label: "Mais resultado.", icon: "🏆" }
                 ].map((item, idx) => (
-                  <div key={idx} className="flex gap-4 items-start">
-                    <div className="w-8 h-8 rounded-lg bg-secondary/15 flex items-center justify-center shrink-0 border border-secondary/20 mt-0.5">
-                      {item.icon}
-                    </div>
-                    <div>
-                      <h5 className="text-xs font-bold text-white">{item.title}</h5>
-                      <p className="text-[10px] text-zinc-400 font-sans mt-0.5 leading-relaxed">{item.desc}</p>
-                    </div>
+                  <div key={idx} className="p-3.5 rounded-xl bg-black/40 border border-white/5 flex items-center gap-2.5 shrink-0">
+                    <span className="text-lg">{item.icon}</span>
+                    <span className="text-xs font-bold text-zinc-300">{item.label}</span>
                   </div>
                 ))}
               </div>
             </div>
-
           </div>
+
+          {/* O Método Bananal PRO */}
+          <div className="space-y-12">
+            <div className="text-center max-w-2xl mx-auto space-y-3">
+              <span className="text-secondary font-bold uppercase tracking-widest text-xs font-inter block">A Metodologia</span>
+              <h2 className="font-headline text-2xl md:text-4xl font-extrabold text-white">
+                O Método Bananal PRO
+              </h2>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              {[
+                { 
+                  title: "🍌 Conhecimento Aplicado ao Campo", 
+                  desc: "Aprenda exatamente o que fazer, quando fazer e por que fazer. Sem teoria desnecessária. Apenas o que realmente impacta produtividade, qualidade e rentabilidade.", 
+                  icon: "field" 
+                },
+                { 
+                  title: "📊 Gestão e Controle da Propriedade", 
+                  desc: "Acompanhe indicadores, organize atividades, monitore custos e tome decisões baseadas em dados reais da sua operação.", 
+                  icon: "dashboard" 
+                },
+                { 
+                  title: "👨‍🌾 Suporte e Acompanhamento Contínuo", 
+                  desc: "Não enfrente os desafios da produção sozinho. Tenha acesso a especialistas, conteúdos atualizados e uma comunidade formada por produtores que vivem os mesmos desafios que você.", 
+                  icon: "group" 
+                }
+              ].map((pillar, idx) => (
+                <div key={idx} className="p-8 rounded-[2rem] bg-zinc-900/40 border border-outline-variant/10 hover:border-secondary/30 transition-all duration-300 flex flex-col justify-between space-y-6">
+                  <div className="space-y-4">
+                    <h4 className="font-headline font-bold text-base text-white">{pillar.title}</h4>
+                    <p className="text-xs text-zinc-400 font-sans leading-relaxed">{pillar.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </section>
 
         {/* O QUE VOCÊ RECEBE (Value Stack Grid) SECTION */}
         <section className="py-24 bg-slate-50 text-zinc-900 border-y border-zinc-200/50 relative z-10">
           <div className="max-w-7xl mx-auto px-6 space-y-16">
-            <div className="text-center max-w-3xl mx-auto space-y-4">
+            <div className="text-center max-w-4xl mx-auto space-y-6">
               <span className="text-secondary font-bold uppercase tracking-widest text-xs font-inter block">O Ecossistema</span>
               <h2 className="font-headline text-3xl md:text-5xl font-extrabold tracking-tight text-zinc-950 leading-tight">
-                Tudo o que você recebe ao entrar hoje.
+                Um ambiente criado para eliminar os gargalos que travam o crescimento de milhares de produtores todos os anos.
               </h2>
-              <p className="text-zinc-600 font-sans text-sm md:text-base leading-relaxed">
-                Desenvolvemos cada recurso pensando na realidade do produtor rural que quer otimizar custos e acelerar ganhos.
-              </p>
+              <div className="max-w-3xl mx-auto space-y-4">
+                <p className="font-headline text-lg font-extrabold text-secondary">
+                  E o melhor: Você não precisa descobrir tudo sozinho.
+                </p>
+                <p className="text-zinc-600 font-sans text-sm md:text-base leading-relaxed">
+                  Ao entrar hoje, terá acesso imediato a um conjunto de recursos que foram desenvolvidos para ajudar você a produzir melhor, reduzir custos e tomar decisões mais inteligentes.
+                </p>
+                <p className="font-headline text-sm font-extrabold tracking-widest text-zinc-800 uppercase pt-2">
+                  Veja Tudo o Que Está Incluído no Seu Acesso
+                </p>
+              </div>
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -379,64 +565,127 @@ export default function SalesPage() {
           </div>
         </section>
 
-        {/* FUTURO SECTION (Two Groups) */}
-        <section className="py-24 max-w-5xl mx-auto px-6 space-y-16">
-          <div className="text-center max-w-3xl mx-auto space-y-4">
-            <span className="text-secondary-fixed font-bold uppercase tracking-widest text-xs font-inter block">O Próximo Ano</span>
-            <h2 className="font-headline text-3xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
-              Daqui a 12 meses existirão apenas dois tipos de produtores.
-            </h2>
-          </div>
+        {/* FUTURO SECTION (Two Paths Comparison) */}
+        <section className="py-24 bg-[#03150d] text-white border-y border-outline-variant/10 relative overflow-hidden">
+          {/* Volumetric Lights */}
+          <div className="absolute top-[30%] left-[-10%] w-[40%] aspect-square rounded-full bg-secondary/5 blur-[120px] pointer-events-none" />
+          <div className="absolute bottom-[20%] right-[-10%] w-[40%] aspect-square rounded-full bg-red-500/5 blur-[120px] pointer-events-none" />
 
-          <div className="grid md:grid-cols-2 gap-8 pt-4">
+          <div className="max-w-6xl mx-auto px-6 space-y-16 relative z-10">
             
-            {/* Group 1 */}
-            <div className="p-8 rounded-[2.5rem] bg-slate-900/40 border border-outline-variant/20 flex flex-col justify-between space-y-6 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 blur-[50px] rounded-full" />
-              <div className="space-y-4">
-                <span className="bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest font-inter">
-                  GRUPO 1: ESTAGNADO
-                </span>
-                <h3 className="font-headline text-lg font-bold text-white leading-tight">
-                  Os que continuarão tomando decisões sem método e no escuro.
-                </h3>
-                <p className="text-xs text-zinc-400 font-sans leading-relaxed">
-                  Continuarão anotando os gastos em papéis perdidos, calculando adubação no olhômetro, dependendo da sorte com o clima e sem saber qual é a real margem de lucro por hectare da lavoura.
+            {/* Header */}
+            <div className="text-center max-w-4xl mx-auto space-y-6">
+              <span className="text-secondary-fixed font-bold uppercase tracking-widest text-xs font-inter block">O Próximo Ano</span>
+              <h2 className="font-headline text-3xl md:text-5xl font-extrabold tracking-tight text-white leading-tight">
+                Daqui a Um Ano, Sua Lavoura Não Estará no Mesmo Lugar.
+              </h2>
+              <div className="max-w-2xl mx-auto p-4 bg-white/5 border border-white/10 rounded-2xl">
+                <p className="font-headline text-lg md:text-xl font-bold text-secondary-fixed leading-relaxed">
+                  A única questão é: Ela estará melhor ou pior do que está hoje?
                 </p>
-              </div>
-              <div className="flex items-center gap-2 text-xs font-bold text-red-300">
-                <XCircle size={16} /> Risco alto de perdas financeiras
               </div>
             </div>
 
-            {/* Group 2 */}
-            <div className="p-8 rounded-[2.5rem] bg-secondary-container/10 border border-secondary/40 flex flex-col justify-between space-y-6 relative overflow-hidden shadow-xl shadow-secondary/5">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/15 blur-[60px] rounded-full" />
+            {/* Narrative Context */}
+            <div className="grid md:grid-cols-2 gap-8 text-sm md:text-base text-zinc-300 font-sans leading-relaxed max-w-4xl mx-auto pt-4 border-t border-white/5">
               <div className="space-y-4">
-                <span className="bg-secondary/20 text-secondary-fixed border border-secondary/30 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest font-inter">
-                  GRUPO 2: BANANAL PRO
-                </span>
-                <h3 className="font-headline text-lg font-bold text-white leading-tight">
-                  Os que terão dados, planejamento, conhecimento e acompanhamento.
-                </h3>
-                <p className="text-xs text-zinc-400 font-sans leading-relaxed">
-                  Operarão com calculadoras precisas de solo, planejarão os tratos culturais no calendário digital, terão previsões agroclimáticas confiáveis, controlarão insumos rigidamente e consultarão agrônomos na plataforma.
+                <p>
+                  Porque o tempo vai passar de qualquer forma. A próxima adubação vai acontecer. A próxima safra vai chegar.
+                </p>
+                <p>
+                  Novos desafios vão surgir. Novas decisões precisarão ser tomadas.
                 </p>
               </div>
-              <div className="flex items-center gap-2 text-xs font-bold text-secondary-fixed">
-                <CheckCircle2 size={16} /> Crescimento técnico e financeiro guiado
+              <div className="space-y-4 md:border-l md:border-white/10 md:pl-8">
+                <p className="font-semibold text-white">
+                  E a diferença entre crescer ou continuar enfrentando os mesmos problemas quase nunca está no esforço.
+                </p>
+                <p className="text-secondary-fixed font-bold">
+                  Está nas decisões tomadas ao longo do caminho.
+                </p>
               </div>
             </div>
 
-          </div>
+            {/* Comparison Cards */}
+            <div className="grid md:grid-cols-2 gap-8 pt-8 items-stretch max-w-5xl mx-auto">
+              
+              {/* Path 1: Estagnado */}
+              <div className="p-8 rounded-[2.5rem] bg-zinc-950/60 border border-red-500/20 flex flex-col justify-between space-y-6 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 blur-[50px] rounded-full" />
+                
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <span className="bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest font-inter inline-block">
+                      Caminho 1: Sem Mudança
+                    </span>
+                    <h3 className="font-headline text-xl font-bold text-white leading-tight">
+                      Talvez daqui a 12 meses você continue enfrentando as mesmas dúvidas que enfrenta hoje:
+                    </h3>
+                  </div>
 
-          <div className="text-center max-w-2xl mx-auto space-y-4 pt-6">
-            <p className="text-lg md:text-xl text-zinc-400 font-sans">
-              A pergunta é:
-            </p>
-            <h3 className="font-headline text-2xl md:text-4xl font-extrabold text-white">
-              Em qual grupo você estará?
-            </h3>
+                  <ul className="space-y-3.5 text-xs text-zinc-400 font-sans">
+                    {[
+                      "Sem saber exatamente onde estão os gargalos da produção.",
+                      "Sem clareza sobre seus custos reais.",
+                      "Sem um planejamento estruturado para a propriedade.",
+                      "Apagando incêndios todos os dias e tentando resolver problemas conforme eles aparecem."
+                    ].map((item, i) => (
+                      <li key={i} className="flex gap-2.5 items-start">
+                        <XCircle className="text-red-500 shrink-0 mt-0.5" size={14} />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Path 2: Evolução */}
+              <div className="p-8 rounded-[2.5rem] bg-secondary-container/10 border border-secondary/40 flex flex-col justify-between space-y-6 relative overflow-hidden shadow-xl shadow-secondary/5 group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/15 blur-[60px] rounded-full" />
+                
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <span className="bg-secondary/20 text-secondary-fixed border border-secondary/30 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest font-inter inline-block">
+                      Caminho 2: Controle
+                    </span>
+                    <h3 className="font-headline text-xl font-bold text-white leading-tight">
+                      Ou talvez daqui a 12 meses você olhe para trás e perceba que finalmente assumiu o controle da sua operação:
+                    </h3>
+                  </div>
+
+                  <ul className="space-y-3 text-xs text-zinc-300 font-sans">
+                    {[
+                      "Que passou a tomar decisões com mais segurança.",
+                      "Que reduziu desperdícios.",
+                      "Que organizou melhor sua produção.",
+                      "Que evoluiu tecnicamente.",
+                      "Que deixou de depender da tentativa e erro.",
+                      "E que começou a construir uma propriedade mais eficiente, mais previsível e mais lucrativa."
+                    ].map((item, i) => (
+                      <li key={i} className="flex gap-2.5 items-start">
+                        <CheckCircle2 className="text-secondary shrink-0 mt-0.5" size={14} />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Bottom Callout */}
+            <div className="text-center max-w-2xl mx-auto space-y-6 pt-8 border-t border-white/5">
+              <p className="text-base md:text-lg font-sans text-zinc-300">
+                A verdade é que nenhuma transformação acontece por acaso.
+              </p>
+              <p className="font-headline text-xl md:text-2xl font-extrabold text-white leading-relaxed">
+                Ela começa no momento em que você decide fazer algo diferente.
+              </p>
+              <p className="text-secondary-fixed font-bold text-sm tracking-wide uppercase font-inter">
+                ✨ E é exatamente por isso que queremos fazer um convite especial para você hoje.
+              </p>
+            </div>
+
           </div>
         </section>
 
@@ -524,7 +773,7 @@ export default function SalesPage() {
 
                   {/* Micro Cost justification */}
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-50 border border-zinc-200 text-zinc-700 font-medium text-[10px] tracking-wide">
-                    💰 Menos de R$ 1 por dia.
+                    💰 Menos de um café por dia.
                   </div>
                 </div>
 
@@ -537,7 +786,7 @@ export default function SalesPage() {
                   </Link>
 
                   <p className="text-[9.5px] text-zinc-500 leading-relaxed font-sans mt-2">
-                    ⚠️ <strong>Escassez:</strong> Esta oferta de lançamento é por tempo limitado e exclusiva para quem fechar primeiro. Quando estas poucas vagas terminarem, o lote será encerrado e o valor será reajustado.
+                    ⚠️ Esta oferta de lançamento é por tempo limitado e exclusiva para quem fechar primeiro. Quando estas poucas vagas terminarem, o lote será encerrado e o valor será reajustado.
                   </p>
                 </div>
 
