@@ -731,15 +731,14 @@ export default function SalesPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <p className="text-[10px] text-zinc-500">Por Apenas:</p>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-headline font-black text-zinc-900">R$ 347</span>
-                      <span className="text-zinc-500 text-xs">/ano</span>
+                  <div className="space-y-2">
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Por Apenas:</p>
+                    <div className="flex items-baseline gap-1.5 leading-none">
+                      <span className="text-lg md:text-xl font-headline font-extrabold text-secondary">12x de</span>
+                      <span className="text-4xl md:text-5xl font-headline font-black text-secondary">R$ 34,70</span>
                     </div>
-                    <p className="text-[10px] text-zinc-500 mt-1">ou em até</p>
-                    <p className="text-xl font-headline font-extrabold text-secondary">
-                      12x de R$ 34,70
+                    <p className="text-xs text-zinc-500 font-medium font-sans">
+                      ou <span className="font-bold text-zinc-800">R$ 347 à vista</span> por um ano de acesso
                     </p>
                   </div>
 
