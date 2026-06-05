@@ -32,6 +32,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "sonner";
 import { getUserDisplayName } from "../../lib/utils";
 import CertificateModal from "../../components/Courses/CertificateModal";
+import YouTubePlayer from "../../components/Courses/YouTubePlayer";
 
 type Course = Tables<'courses'> & {
   instructor?: { full_name: string } | null;
@@ -198,6 +199,36 @@ export default function CoursePlayer() {
       fetchMaterials(Number(currentLesson.id));
     }
   }, [currentLesson]);
+
+  // Bloqueio do botão direito e atalhos de desenvolvedor (F12, Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+Shift+J, Ctrl+U)
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Impede tecla F12
+      if (e.key === "F12") {
+        e.preventDefault();
+      }
+      // Impede Ctrl+Shift+I, Ctrl+Shift+C e Ctrl+Shift+J
+      if (e.ctrlKey && e.shiftKey && ["I", "C", "J"].includes(e.key.toUpperCase())) {
+        e.preventDefault();
+      }
+      // Impede Ctrl+U (Exibir código-fonte)
+      if (e.ctrlKey && e.key.toUpperCase() === "U") {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   const fetchMaterials = async (lessonId: number) => {
     setLoadingMaterials(true);
@@ -404,11 +435,9 @@ export default function CoursePlayer() {
             {/* Cinematic Player Wrapper */}
             <div className="aspect-video bg-black rounded-[2.5rem] overflow-hidden shadow-2xl shadow-emerald-500/5 border border-white/5 relative group">
               {currentLesson?.video_url ? (
-                <iframe
-                  src={currentLesson.video_url}
-                  className="w-full h-full"
-                  allow="autoplay; fullscreen; picture-in-picture"
-                  allowFullScreen
+                <YouTubePlayer
+                  url={currentLesson.video_url}
+                  title={currentLesson.title}
                 />
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900/50">

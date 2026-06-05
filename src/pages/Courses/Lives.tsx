@@ -20,6 +20,7 @@ import {
 import { supabase as supabaseClient } from "../../lib/supabase";
 import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "sonner";
+import YouTubePlayer from "../../components/Courses/YouTubePlayer";
 
 const supabase = supabaseClient as any;
 
@@ -358,6 +359,36 @@ export default function Lives() {
     };
   }, [activeSession?.id]);
 
+  // Bloqueio do botão direito e atalhos de desenvolvedor (F12, Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+Shift+J, Ctrl+U)
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Impede tecla F12
+      if (e.key === "F12") {
+        e.preventDefault();
+      }
+      // Impede Ctrl+Shift+I, Ctrl+Shift+C e Ctrl+Shift+J
+      if (e.ctrlKey && e.shiftKey && ["I", "C", "J"].includes(e.key.toUpperCase())) {
+        e.preventDefault();
+      }
+      // Impede Ctrl+U (Exibir código-fonte)
+      if (e.ctrlKey && e.key.toUpperCase() === "U") {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
   // Auto-scroll chat to bottom
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -461,13 +492,9 @@ export default function Lives() {
                     poster={activeSession.videoUrl}
                   />
                 ) : (
-                  <iframe
-                    src={getYoutubeEmbedUrl(activeSession.replay_url)}
+                  <YouTubePlayer
+                    url={activeSession.replay_url}
                     title={activeSession.title}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    className="w-full h-full object-cover"
                   />
                 )
               ) : (

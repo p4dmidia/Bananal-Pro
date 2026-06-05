@@ -44,6 +44,7 @@ interface LessonInput {
   description: string;
   thumbnailFile: File | null;
   videoFile: File | null;
+  videoUrlInput?: string;
   materials: { id?: string; title: string; url: string; file?: File }[];
   isUploading?: boolean;
   progress?: number;
@@ -302,7 +303,7 @@ export default function ProducerDashboard() {
         for (let j = 0; j < mod.lessons.length; j++) {
           const lesson = mod.lessons[j] as any;
           const isExistingLesson = !isNaN(Number(lesson.id));
-          let lessonVideoUrl = lesson.existingVideoUrl || "";
+          let lessonVideoUrl = lesson.videoUrlInput || lesson.existingVideoUrl || "";
           let lessonThumbUrl = lesson.existingThumbUrl || "";
 
           // Upload de arquivos da aula se houver novos
@@ -429,6 +430,7 @@ export default function ProducerDashboard() {
           thumbnailFile: null,
           videoFile: null,
           existingVideoUrl: lesson.video_url,
+          videoUrlInput: lesson.video_url || "",
           existingThumbUrl: lesson.thumbnail_url,
           materials: (lesson.materials || []).map((m: any) => ({
             id: m.id.toString(),
@@ -498,6 +500,7 @@ export default function ProducerDashboard() {
             description: "",
             thumbnailFile: null,
             videoFile: null,
+            videoUrlInput: "",
             materials: []
           }]
         };
@@ -619,22 +622,23 @@ export default function ProducerDashboard() {
                     
                     <div className="flex items-center gap-3 w-full md:w-auto justify-center md:justify-end">
                       <button 
+                        onClick={() => handleEditCourse(course.id.toString())}
+                        className="bg-primary hover:bg-primary/95 text-white px-5 py-3 rounded-2xl text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-md active:scale-95 whitespace-nowrap"
+                        title="Editar Aulas e Conteúdo"
+                      >
+                        <Settings size={14} />
+                        Editar Aulas
+                      </button>
+                      <button 
                         onClick={() => navigate(`/cursos/detalhes/${course.id}`)}
-                        className="p-3 bg-white/5 hover:bg-white/10 rounded-xl text-slate-300 transition-colors"
+                        className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-slate-300 transition-all"
                         title="Ver no Catálogo"
                       >
                         <Eye size={18} />
                       </button>
                       <button 
-                        onClick={() => handleEditCourse(course.id.toString())}
-                        className="p-3 bg-white/5 hover:bg-white/10 rounded-xl text-slate-300 transition-colors"
-                        title="Configurações e Aulas"
-                      >
-                        <Settings size={18} />
-                      </button>
-                      <button 
                         onClick={() => handleDeleteCourse(course.id.toString())}
-                        className="p-3 bg-white/5 hover:bg-primary/20 rounded-xl text-slate-300 hover:text-primary transition-colors"
+                        className="p-3 bg-white/5 hover:bg-primary/20 rounded-2xl text-slate-300 hover:text-primary transition-all"
                         title="Excluir Curso"
                       >
                         <Trash2 size={18} />
@@ -880,12 +884,13 @@ export default function ProducerDashboard() {
                                 />
                              </div>
                              <div className="flex items-center gap-3">
-                                <button 
-                                  onClick={() => addLesson(mod.id)}
-                                  className="text-[10px] font-black text-primary bg-primary/10 px-4 py-2 rounded-xl hover:bg-primary hover:text-white transition-all uppercase tracking-widest"
-                                >
-                                  + Aula
-                                </button>
+                                 <button 
+                                   onClick={() => addLesson(mod.id)}
+                                   className="text-xs font-extrabold text-white bg-primary px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-all uppercase tracking-wider shadow-md active:scale-95 flex items-center gap-1"
+                                 >
+                                   <Plus size={14} />
+                                   Aula
+                                 </button>
                                 <button 
                                   onClick={() => setModules(modules.filter(m => m.id !== mod.id))}
                                   className="p-2 text-zinc-700 hover:text-primary transition-colors"
@@ -927,8 +932,15 @@ export default function ProducerDashboard() {
                                       onChange={(e) => updateLesson(mod.id, lesson.id, { title: e.target.value })}
                                       className="w-full bg-transparent border-none text-white font-bold p-0 focus:ring-0 text-lg placeholder:text-zinc-800"
                                     />
+                                    <input 
+                                       type="text" 
+                                       placeholder="Link do Vídeo (Ex: YouTube ou Vimeo)"
+                                       value={lesson.videoUrlInput || ""}
+                                       onChange={(e) => updateLesson(mod.id, lesson.id, { videoUrlInput: e.target.value })}
+                                       className="w-full bg-black/20 border border-white/5 rounded-2xl px-4 py-2.5 text-zinc-300 text-xs focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-zinc-800"
+                                     />
                                     <textarea 
-                                      rows={4}
+                                      rows={3}
                                       placeholder="Descreva o que será ensinado nesta aula..."
                                       value={lesson.description}
                                       onChange={(e) => updateLesson(mod.id, lesson.id, { description: e.target.value })}
