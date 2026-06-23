@@ -34,12 +34,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           <Link to="/" className="flex items-center gap-3">
             <img
               alt="Bananal PRO Logo"
-              className="h-[56px] sm:h-[80px] w-auto object-contain"
+              className="h-[44px] sm:h-[60px] w-auto object-contain"
               src={logoImg}
             />
-            <span className="hidden sm:inline text-xl font-headline font-bold text-primary">
-              Bananal PRO
-            </span>
           </Link>
 
           {/* Desktop Links (Dark text for white header) */}

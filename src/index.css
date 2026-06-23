@@ -7,8 +7,61 @@
 
   --color-surface-tint: #3c6753;
   --color-on-primary: #ffffff;
-  --color-primary: #002417;
+  --color-primary: #0a2413;
+  --color-emerald-500: #0d2f19;
+  --color-emerald-600: #0a2413;
+  --color-emerald-700: #07190d;
   --color-tertiary-fixed: #ffe17a;
+  --color-on-secondary-fixed-variant: #00522b;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-primary-fixed-variant: #234f3c;
+  --color-primary-fixed-dim: #a2d1b9;
+  --color-on-tertiary: #ffffff;
+  --color-secondary: #0c4d2d;
+  --color-on-error-container: #93000a;
+  --color-surface: #ffffff;
+  --color-surface-container: #f4fbf7;
+  --color-surface-container-highest: #cbd5e1;
+  --color-on-primary-container: #00210e;
+  --color-on-tertiary-fixed-variant: #ffe17a;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-fixed: #00210e;
+  --color-background: #f8fafc;
+  --color-surface-variant: #f1f5f9;
+  --color-inverse-on-surface: #0a2f20;
+  --color-inverse-primary: #75fca7;
+  --color-on-background: #0b1f13;
+  --color-on-secondary-container: #75fca7;
+  --color-secondary-fixed: #006d3b;
+  --color-surface-bright: #ffffff;
+  --color-on-tertiary-container: #ffe17a;
+  --color-secondary-container: #e8f5e9;
+  --color-primary-container: #e8f5e9;
+  --color-surface-container-high: #e2e8f0;
+  --color-on-surface: #0b1f13;
+  --color-error-container: #ffdad6;
+  --color-secondary-fixed-dim: #57df8d;
+  --color-tertiary: #715c00;
+  --color-on-primary-fixed: #002115;
+  --color-on-error: #ffffff;
+  --color-primary-fixed: #beedd4;
+  --color-surface-container-low: #f8fafc;
+  --color-error: #ba1a1a;
+  --color-inverse-surface: #0b1f13;
+  --color-on-surface-variant: #475569;
+  --color-tertiary-container: #ffe17a;
+  --color-surface-dim: #f1f5f9;
+  --color-on-tertiary-fixed: #231b00;
+  --color-outline: #cbd5e1;
+  --color-outline-variant: #cbd5e1;
+  --color-tertiary-fixed-dim: #e4c451;
+}
+
+.dark-theme {
+  --color-surface: #020c08;
+  --color-surface-container: #05160f;
+  --color-surface-container-highest: #082418;
+  --color-on-primary-container: #beedd4;
   --color-on-secondary-fixed-variant: #00522b;
   --color-surface-container-lowest: #ffffff;
   --color-on-primary-fixed-variant: #234f3c;
@@ -16,11 +69,6 @@
   --color-on-tertiary: #ffffff;
   --color-secondary: #006d3b;
   --color-on-error-container: #93000a;
-  --color-surface: #020c08;
-  --color-surface-container: #05160f;
-  --color-surface-container-highest: #082418;
-  --color-on-primary-container: #beedd4;
-  --color-on-tertiary-fixed-variant: #ffe17a;
   --color-on-secondary: #ffffff;
   --color-on-secondary-fixed: #00210e;
   --color-background: #020c08;
@@ -180,12 +228,112 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #020c08;
+  background: var(--color-background);
 }
 ::-webkit-scrollbar-thumb {
-  background: #082418;
+  background: var(--color-surface-container-high, #e2e8f0);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #006d3b;
+  background: var(--color-secondary);
+}
+
+/* Dynamic Logo Inversion for Dark Theme */
+.dark-theme .logo-img {
+  filter: invert(1);
+}
+
+/* Light mode overrides for hardcoded Tailwind classes */
+body:not(.dark-theme) .bg-black,
+body:not(.dark-theme) .bg-zinc-950,
+body:not(.dark-theme) .bg-\[\#06150c\],
+body:not(.dark-theme) .bg-\[\#051109\],
+body:not(.dark-theme) .bg-zinc-900\/50,
+body:not(.dark-theme) .bg-zinc-900\/30,
+body:not(.dark-theme) .bg-zinc-900\/40,
+body:not(.dark-theme) .bg-zinc-900\/20,
+body:not(.dark-theme) .bg-zinc-900\/10,
+body:not(.dark-theme) .bg-zinc-950\/40,
+body:not(.dark-theme) .bg-zinc-950\/20,
+body:not(.dark-theme) .bg-zinc-950\/10,
+body:not(.dark-theme) .bg-black\/40,
+body:not(.dark-theme) .bg-black\/30,
+body:not(.dark-theme) .bg-black\/20,
+body:not(.dark-theme) .bg-black\/10,
+body:not(.dark-theme) .bg-white\/10,
+body:not(.dark-theme) .bg-white\/5,
+body:not(.dark-theme) .bg-white\/\[0\.01\] {
+  background-color: var(--color-surface) !important;
+}
+
+body:not(.dark-theme) .bg-zinc-900 {
+  background-color: var(--color-surface-container) !important;
+}
+
+body:not(.dark-theme) .text-white {
+  color: var(--color-on-surface) !important;
+}
+
+/* Retain white text on solid background components */
+body:not(.dark-theme) button.text-white,
+body:not(.dark-theme) .btn.text-white,
+body:not(.dark-theme) .bg-emerald-600.text-white,
+body:not(.dark-theme) .bg-emerald-600 .text-white,
+body:not(.dark-theme) .bg-emerald-700.text-white,
+body:not(.dark-theme) .bg-emerald-700 .text-white,
+body:not(.dark-theme) .bg-primary.text-white,
+body:not(.dark-theme) .bg-primary .text-white,
+body:not(.dark-theme) .bg-secondary.text-white,
+body:not(.dark-theme) .bg-secondary .text-white,
+body:not(.dark-theme) .bg-secondary-fixed.text-white,
+body:not(.dark-theme) .bg-secondary-fixed .text-white {
+  color: #ffffff !important;
+}
+
+body:not(.dark-theme) .text-zinc-300,
+body:not(.dark-theme) .text-zinc-200,
+body:not(.dark-theme) .text-zinc-100,
+body:not(.dark-theme) .text-zinc-50,
+body:not(.dark-theme) .text-slate-300 {
+  color: var(--color-on-surface) !important;
+}
+
+body:not(.dark-theme) .text-zinc-450,
+body:not(.dark-theme) .text-zinc-400,
+body:not(.dark-theme) .text-zinc-500,
+body:not(.dark-theme) .text-slate-400 {
+  color: var(--color-on-surface-variant) !important;
+}
+
+body:not(.dark-theme) .border-white\/10,
+body:not(.dark-theme) .border-white\/5,
+body:not(.dark-theme) .border-outline-variant\/20,
+body:not(.dark-theme) .border-outline-variant\/30,
+body:not(.dark-theme) .border-zinc-200\/80 {
+  border-color: var(--color-outline-variant) !important;
+}
+
+body:not(.dark-theme) .divide-white\/5 > * + * {
+  border-color: var(--color-outline-variant) !important;
+}
+
+body:not(.dark-theme) .glass,
+body:not(.dark-theme) .glass-card {
+  background: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid var(--color-outline-variant) !important;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.04) !important;
+}
+
+body:not(.dark-theme) .dark-glass {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(24px) !important;
+  border: 1px solid var(--color-outline-variant) !important;
+  box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.05) !important;
+}
+
+body:not(.dark-theme) .glow-green,
+body:not(.dark-theme) .glow-yellow,
+body:not(.dark-theme) .glow-primary {
+  opacity: 0.15 !important;
 }

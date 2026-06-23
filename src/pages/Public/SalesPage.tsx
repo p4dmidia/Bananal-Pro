@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Zap,
@@ -38,6 +38,13 @@ import videoCoverImg from "../../assets/video-cover.jpg";
 export default function SalesPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+
+  useEffect(() => {
+    document.body.classList.add("dark-theme");
+    return () => {
+      document.body.classList.remove("dark-theme");
+    };
+  }, []);
 
   const scrollToOffer = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -750,7 +757,7 @@ export default function SalesPage() {
 
                 <div className="space-y-4 mt-8">
                   <Link
-                    to="/auth/register"
+                    to="/auth/register?offer=padrao"
                     className="w-full bg-secondary hover:bg-secondary-fixed text-white hover:text-primary-container py-3.5 rounded-xl font-headline font-extrabold text-xs tracking-wider uppercase transition-all duration-300 shadow-xl shadow-secondary/15 hover:scale-[1.01] active:scale-95 block text-center cursor-pointer border-glow"
                   >
                     Quero Garantir Meu Acesso Fundador Agora!
@@ -803,7 +810,7 @@ export default function SalesPage() {
 
             <div className="pt-4">
               <Link
-                to="/auth/register"
+                to="/auth/register?offer=padrao"
                 className="bg-secondary hover:bg-secondary-fixed text-white hover:text-primary-container px-12 py-5 rounded-2xl font-headline font-extrabold text-sm tracking-wider uppercase transition-all duration-300 shadow-2xl shadow-secondary/20 hover:scale-[1.02] active:scale-95 inline-block text-center cursor-pointer border-glow"
               >
                 Quero Garantir Meu Acesso Fundador Agora!

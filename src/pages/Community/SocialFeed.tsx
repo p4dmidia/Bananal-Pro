@@ -373,11 +373,11 @@ export default function SocialFeed() {
         
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-display font-bold text-white mb-2 flex items-center gap-3">
+          <h1 className="text-4xl font-display font-bold text-on-surface mb-2 flex items-center gap-3">
             <Users className="text-primary w-10 h-10" />
             Comunidade Bananal PRO
           </h1>
-          <p className="text-slate-400 text-lg">
+          <p className="text-on-surface-variant text-lg">
             Compartilhe experiências, tire dúvidas com agrônomos especializados e conecte-se com produtores de todo o país.
           </p>
         </div>
@@ -391,7 +391,7 @@ export default function SocialFeed() {
               className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all border shrink-0 cursor-pointer ${
                 selectedCategory === cat
                   ? "bg-primary border-primary text-white shadow-lg shadow-primary/20"
-                  : "bg-zinc-950 border-white/5 text-zinc-500 hover:text-white hover:border-white/10"
+                  : "bg-surface border-outline/15 text-on-surface-variant hover:text-on-surface hover:border-outline/30"
               }`}
             >
               {cat === "Todos" ? "Todas as Discussões" : cat}
@@ -405,10 +405,10 @@ export default function SocialFeed() {
           <div className="lg:col-span-2 space-y-6">
             
             {/* Create Post Card */}
-            <div className="glass-card p-6 rounded-[2rem] border-white/5 bg-zinc-900/40 space-y-4">
+            <div className="bg-surface p-6 rounded-[2rem] border border-outline/10 shadow-sm space-y-4">
               <form onSubmit={handleCreatePost} className="space-y-4">
                 <div className="flex gap-4">
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-white/5 border border-primary/20 flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-surface border border-primary/20 flex-shrink-0">
                     <img 
                       src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.full_name || "user"}`} 
                       alt="Avatar" 
@@ -418,17 +418,17 @@ export default function SocialFeed() {
                     value={newPostContent}
                     onChange={(e) => setNewPostContent(e.target.value)}
                     placeholder="Compartilhe uma dúvida, manejo ou dica agrícola..."
-                    className="flex-1 bg-black/30 border border-white/5 rounded-2xl p-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-primary/50 resize-none min-h-[100px]"
+                    className="flex-1 bg-surface border border-outline/15 rounded-2xl p-4 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none min-h-[100px] transition-all"
                   />
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-white/5">
+                <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-outline/10">
                   <div className="flex gap-3 flex-wrap">
                     {/* Category Select */}
                     <select
                       value={postCategory}
                       onChange={(e) => setPostCategory(e.target.value as any)}
-                      className="bg-black/40 border border-white/10 rounded-xl text-xs text-zinc-400 px-3 py-2 focus:outline-none cursor-pointer"
+                      className="bg-surface border border-outline/15 rounded-xl text-xs text-on-surface px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer"
                     >
                       <option value="Geral">Categoria: Geral</option>
                       <option value="Manejo">Manejo</option>
@@ -442,8 +442,8 @@ export default function SocialFeed() {
                       onClick={() => setIsQuestion(!isQuestion)}
                       className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border cursor-pointer ${
                         isQuestion 
-                          ? "bg-amber-500/20 border-amber-500 text-amber-400 shadow-sm" 
-                          : "bg-black/40 border-white/10 text-zinc-500 hover:text-white"
+                          ? "bg-amber-500/20 border-amber-500 text-amber-600 shadow-sm" 
+                          : "bg-surface border-outline/15 text-on-surface-variant hover:text-on-surface"
                       }`}
                     >
                       <HelpCircle size={14} />
@@ -468,7 +468,7 @@ export default function SocialFeed() {
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-3">
                   <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                  <p className="text-zinc-500 text-xs font-bold animate-pulse">Carregando feed...</p>
+                  <p className="text-on-surface-variant text-xs font-bold animate-pulse">Carregando feed...</p>
                 </div>
               ) : filteredPosts.length > 0 ? (
                 filteredPosts.map((post) => (
@@ -476,14 +476,14 @@ export default function SocialFeed() {
                     key={post.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`glass-card p-6 rounded-[2.5rem] border-white/5 bg-zinc-900/30 space-y-5 relative overflow-hidden ${
+                    className={`bg-surface p-6 rounded-[2.5rem] border border-outline/10 shadow-sm space-y-5 relative overflow-hidden ${
                       post.isQuestionToAgronomist ? "border-amber-500/20 bg-amber-500/[0.01]" : ""
                     }`}
                   >
                     {/* Post Header */}
                     <div className="flex justify-between items-start gap-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-full overflow-hidden bg-white/5 border border-primary/20">
+                        <div className="w-11 h-11 rounded-full overflow-hidden bg-surface border border-primary/20">
                           <img 
                             src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author.avatarSeed}`} 
                             alt="Avatar" 
@@ -491,44 +491,44 @@ export default function SocialFeed() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-bold text-white text-sm">{post.author.name}</h4>
+                            <h4 className="font-bold text-on-surface text-sm">{post.author.name}</h4>
                             <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded border ${getReputationBadgeColor(post.author.reputation)}`}>
                               {post.author.reputation}
                             </span>
                           </div>
-                          <p className="text-[10px] text-zinc-500 font-semibold">{post.author.role}</p>
+                          <p className="text-[10px] text-on-surface-variant font-semibold">{post.author.role}</p>
                         </div>
                       </div>
                       
-                      <span className="text-[10px] text-zinc-600 font-bold bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                      <span className="text-[10px] text-primary font-bold bg-primary-container px-3 py-1 rounded-full border border-primary/10">
                         {post.category}
                       </span>
                     </div>
 
                     {/* Post Content */}
-                    <p className="text-zinc-300 text-sm leading-relaxed whitespace-pre-line">
+                    <p className="text-on-surface text-sm leading-relaxed whitespace-pre-line">
                       {post.content}
                     </p>
 
                     {/* Q&A Section */}
                     {post.isQuestionToAgronomist && post.agronomistAnswer && (
                       <div className="bg-amber-500/[0.03] border border-amber-500/10 p-5 rounded-2xl space-y-3 mt-4 relative">
-                        <div className="flex items-center gap-2 text-amber-400 font-bold text-xs">
+                        <div className="flex items-center gap-2 text-amber-600 font-bold text-xs">
                           <Sprout size={14} />
                           Resposta do Agrônomo Bananal PRO
                         </div>
-                        <p className="text-zinc-400 text-xs leading-relaxed">
+                        <p className="text-on-surface-variant text-xs leading-relaxed">
                           {post.agronomistAnswer}
                         </p>
                       </div>
                     )}
 
                     {/* Post Actions */}
-                    <div className="flex gap-6 border-t border-white/5 pt-4">
+                    <div className="flex gap-6 border-t border-outline/10 pt-4">
                       <button
                         onClick={() => handleLike(post.id)}
                         className={`flex items-center gap-2 text-xs font-bold transition-colors cursor-pointer ${
-                          post.isLikedByUser ? "text-red-500" : "text-zinc-500 hover:text-white"
+                          post.isLikedByUser ? "text-red-500" : "text-on-surface-variant hover:text-on-surface"
                         }`}
                       >
                         <Heart size={16} fill={post.isLikedByUser ? "currentColor" : "none"} />
@@ -538,22 +538,22 @@ export default function SocialFeed() {
                       <button 
                         onClick={() => handleToggleComments(post.id)}
                         className={`flex items-center gap-2 text-xs font-bold transition-colors cursor-pointer ${
-                          expandedPostId === post.id ? "text-primary" : "text-zinc-500 hover:text-white"
+                          expandedPostId === post.id ? "text-primary" : "text-on-surface-variant hover:text-on-surface"
                         }`}
                       >
                         <MessageSquare size={16} />
                         <span>{post.commentsCount} Comentários</span>
                       </button>
 
-                      <span className="text-[10px] text-zinc-600 ml-auto font-medium self-center">
+                      <span className="text-[10px] text-on-surface-variant ml-auto font-medium self-center">
                         {post.timeAgo}
                       </span>
                     </div>
 
                     {/* Comments Section */}
                     {expandedPostId === post.id && (
-                      <div className="mt-4 pt-4 border-t border-white/5 space-y-4">
-                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Comentários</p>
+                      <div className="mt-4 pt-4 border-t border-outline/10 space-y-4">
+                        <p className="text-[10px] font-black text-on-surface-variant uppercase tracking-widest">Comentários</p>
                         
                         {commentsLoading ? (
                           <div className="flex items-center justify-center py-4">
@@ -563,22 +563,22 @@ export default function SocialFeed() {
                           <div className="space-y-3 max-h-60 overflow-y-auto no-scrollbar pr-2">
                             {comments.length > 0 ? (
                               comments.map((comment) => (
-                                <div key={comment.id} className="flex gap-2 items-start text-xs bg-white/[0.02] p-3 rounded-xl border border-white/5">
-                                  <div className="w-6 h-6 rounded-full overflow-hidden bg-white/5 shrink-0">
+                                <div key={comment.id} className="flex gap-2 items-start text-xs bg-surface-variant/40 p-3 rounded-xl border border-outline/10">
+                                  <div className="w-6 h-6 rounded-full overflow-hidden bg-surface shrink-0">
                                     <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.author.avatarSeed}`} alt="" />
                                   </div>
                                   <div className="space-y-1">
                                     <div className="flex items-center gap-2">
-                                      <span className="font-bold text-white">{comment.author.name}</span>
-                                      <span className="text-[8px] bg-white/10 px-1.5 py-0.5 rounded text-zinc-400 font-bold uppercase">{comment.author.role}</span>
-                                      <span className="text-[8px] text-zinc-600">{comment.timeAgo}</span>
+                                      <span className="font-bold text-on-surface">{comment.author.name}</span>
+                                      <span className="text-[8px] bg-primary-container px-1.5 py-0.5 rounded text-primary font-bold uppercase">{comment.author.role}</span>
+                                      <span className="text-[8px] text-on-surface-variant">{comment.timeAgo}</span>
                                     </div>
-                                    <p className="text-zinc-300">{comment.content}</p>
+                                    <p className="text-on-surface">{comment.content}</p>
                                   </div>
                                 </div>
                               ))
                             ) : (
-                              <p className="text-xs text-zinc-600 italic">Nenhum comentário ainda. Seja o primeiro a comentar!</p>
+                              <p className="text-xs text-on-surface-variant italic">Nenhum comentário ainda. Seja o primeiro a comentar!</p>
                             )}
                           </div>
                         )}
@@ -590,7 +590,7 @@ export default function SocialFeed() {
                             placeholder="Escreva um comentário..."
                             value={newCommentText}
                             onChange={(e) => setNewCommentText(e.target.value)}
-                            className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-primary/50"
+                            className="flex-1 bg-surface border border-outline/15 rounded-xl px-3 py-2 text-xs text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-primary/50"
                           />
                           <button
                             type="submit"
@@ -605,8 +605,8 @@ export default function SocialFeed() {
                   </motion.div>
                 ))
               ) : (
-                <div className="py-20 text-center bg-zinc-900/10 rounded-[3rem] border border-dashed border-white/5">
-                  <p className="text-zinc-500 font-bold text-xs uppercase tracking-widest">Nenhuma publicação nesta categoria.</p>
+                <div className="py-20 text-center bg-surface rounded-[3rem] border border-dashed border-outline/25 shadow-sm">
+                  <p className="text-on-surface-variant font-bold text-xs uppercase tracking-widest">Nenhuma publicação nesta categoria.</p>
                 </div>
               )}
             </div>
@@ -616,44 +616,44 @@ export default function SocialFeed() {
           <div className="space-y-8">
             
             {/* Ask the Agronomist Info */}
-            <div className="glass-card p-6 rounded-[2.5rem] border-white/5 bg-zinc-900/40 space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-400">
+            <div className="bg-surface p-6 rounded-[2.5rem] border border-outline/10 shadow-sm space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600">
                 <HelpCircle size={24} />
               </div>
               <div className="space-y-2">
-                <h3 className="text-lg font-bold text-white">Suporte Humano com Agrônomo</h3>
-                <p className="text-xs text-zinc-400 leading-relaxed">
+                <h3 className="text-lg font-bold text-on-surface">Suporte Humano com Agrônomo</h3>
+                <p className="text-xs text-on-surface-variant leading-relaxed">
                   Como assinante Premium, você tem prioridade absoluta. Marque a opção **"Enviar ao Agrônomo"** ao criar um post para que nossa equipe técnica analise seu problema foliar, praga ou deficiência nutricional diretamente.
                 </p>
               </div>
               
               <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-2xl flex items-center gap-3">
-                <CheckCircle2 className="text-amber-500 shrink-0" size={16} />
-                <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Resposta em até 24h úteis</span>
+                <CheckCircle2 className="text-amber-600 shrink-0" size={16} />
+                <span className="text-[10px] text-amber-600 font-bold uppercase tracking-wider">Resposta em até 24h úteis</span>
               </div>
             </div>
 
             {/* Top Active Producers (Reputation) */}
-            <div className="glass-card p-6 rounded-[2.5rem] border-white/5 bg-zinc-900/40 space-y-6">
+            <div className="bg-surface p-6 rounded-[2.5rem] border border-outline/10 shadow-sm space-y-6">
               <div className="flex items-center gap-2.5">
                 <Award className="text-primary w-5 h-5" />
-                <h3 className="text-sm font-bold text-zinc-300 uppercase tracking-widest">Membros em Destaque</h3>
+                <h3 className="text-sm font-bold text-on-surface-variant uppercase tracking-widest">Membros em Destaque</h3>
               </div>
 
               <div className="space-y-4">
                 {featuredMembers.map((member, idx) => (
                   <div key={idx} className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full overflow-hidden bg-white/5 border border-white/5 flex-shrink-0">
+                    <div className="w-9 h-9 rounded-full overflow-hidden bg-surface border border-outline/10 flex-shrink-0">
                       <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${member.seed}`} alt="" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-white">{member.name}</span>
+                        <span className="text-xs font-bold text-on-surface">{member.name}</span>
                         <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded border ${getReputationBadgeColor(member.rep)}`}>
                           {member.rep}
                         </span>
                       </div>
-                      <p className="text-[9px] text-zinc-500 font-medium">{member.desc}</p>
+                      <p className="text-[9px] text-on-surface-variant font-medium">{member.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -664,11 +664,11 @@ export default function SocialFeed() {
             </div>
 
             {/* Community Rules */}
-            <div className="p-6 bg-white/[0.02] border border-white/5 rounded-3xl space-y-3">
-              <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+            <div className="p-6 bg-surface-variant/40 border border-outline/10 rounded-3xl space-y-3">
+              <h4 className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-2">
                 <BookOpen size={14} className="text-primary" /> Regras da Comunidade
               </h4>
-              <ul className="text-[10px] text-zinc-500 space-y-1.5 list-disc list-inside leading-relaxed">
+              <ul className="text-[10px] text-on-surface-variant space-y-1.5 list-disc list-inside leading-relaxed">
                 <li>Respeito mútuo entre todos os produtores e técnicos.</li>
                 <li>Foco exclusivo em bananicultura e agronegócio.</li>
                 <li>Evitar propagandas de defensivos ou marcas não homologadas.</li>

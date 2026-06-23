@@ -22,7 +22,8 @@ const resources = {
         "logout": "Sair da Conta",
         "my_account": "Minha Conta",
         "profile": "Meu Perfil",
-        "notifications": "Notificações"
+        "notifications": "Notificações",
+        "settings": "Configurações"
       },
       "partners_page": {
         "title": "Clube de Vantagens",
@@ -84,7 +85,8 @@ const resources = {
         "logout": "Sign Out",
         "my_account": "My Account",
         "profile": "My Profile",
-        "notifications": "Notifications"
+        "notifications": "Notifications",
+        "settings": "Settings"
       },
       "partners_page": {
         "title": "Benefits Club",
@@ -146,7 +148,8 @@ const resources = {
         "logout": "Cerrar Sesión",
         "my_account": "Mi Cuenta",
         "profile": "Mi Perfil",
-        "notifications": "Notificaciones"
+        "notifications": "Notificaciones",
+        "settings": "Configuración"
       },
       "partners_page": {
         "title": "Club de Beneficios",

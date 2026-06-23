@@ -173,50 +173,56 @@ export default function Lives() {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        const mapped: LiveSession[] = data.map((item: any) => {
-          const dateObj = new Date(item.scheduled_at);
-          const formattedDate = dateObj.toLocaleDateString("pt-BR", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          });
-          const formattedTime = dateObj.toLocaleTimeString("pt-BR", {
-            hour: "2-digit",
-            minute: "2-digit",
+        const filtered = data.filter((item: any) => item.status !== "finished");
+        if (filtered.length > 0) {
+          const mapped: LiveSession[] = filtered.map((item: any) => {
+            const dateObj = new Date(item.scheduled_at);
+            const formattedDate = dateObj.toLocaleDateString("pt-BR", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            });
+            const formattedTime = dateObj.toLocaleTimeString("pt-BR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+
+            return {
+              id: item.id,
+              title: item.title,
+              host: item.host || "Dr. Carlos Silva",
+              date: formattedDate,
+              duration: item.status === "live" ? "Ao Vivo" : item.status === "scheduled" ? `Agendada para às ${formattedTime}` : "Gravação",
+              category: item.category || "Geral",
+              videoUrl: getSessionThumbnail(item),
+              isLive: item.status === "live",
+              description: item.description,
+              live_url: item.live_url,
+              replay_url: item.replay_url,
+              materials: item.materials || [],
+              chat_enabled: item.chat_enabled,
+              raw_status: item.status
+            };
           });
 
-          return {
-            id: item.id,
-            title: item.title,
-            host: item.host || "Dr. Carlos Silva",
-            date: formattedDate,
-            duration: item.status === "live" ? "Ao Vivo" : item.status === "scheduled" ? `Agendada para às ${formattedTime}` : "Gravação",
-            category: item.category || "Geral",
-            videoUrl: getSessionThumbnail(item),
-            isLive: item.status === "live",
-            description: item.description,
-            live_url: item.live_url,
-            replay_url: item.replay_url,
-            materials: item.materials || [],
-            chat_enabled: item.chat_enabled,
-            raw_status: item.status
-          };
-        });
-
-        setSessions(mapped);
-        
-        // Define activeSession: prioriza a que está ao vivo, senão a selecionada anteriormente se ainda existir na lista, senão a primeira
-        setActiveSession(prev => {
-          const liveObj = mapped.find(s => s.isLive);
-          if (liveObj) return liveObj;
+          setSessions(mapped);
           
-          if (prev) {
-            const stillExists = mapped.find(s => s.id === prev.id);
-            if (stillExists) return stillExists;
-          }
-          
-          return mapped[0];
-        });
+          // Define activeSession: prioriza a que está ao vivo, senão a selecionada anteriormente se ainda existir na lista, senão a primeira
+          setActiveSession(prev => {
+            const liveObj = mapped.find(s => s.isLive);
+            if (liveObj) return liveObj;
+            
+            if (prev) {
+              const stillExists = mapped.find(s => s.id === prev.id);
+              if (stillExists) return stillExists;
+            }
+            
+            return mapped[0];
+          });
+        } else {
+          setSessions([]);
+          setActiveSession(null);
+        }
       } else {
         setSessions([]);
         setActiveSession(null);
@@ -742,58 +748,60 @@ export default function Lives() {
         </div>
 
         {/* Past Records Section */}
-        <section className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-headline font-bold text-white flex items-center gap-2">
-              <Sparkles className="text-emerald-500 w-5 h-5" />
-              Todas as Mentorias
-            </h3>
-          </div>
+        {sessions.filter(s => s.id !== activeSession?.id).length > 0 && (
+          <section className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-headline font-bold text-white flex items-center gap-2">
+                <Sparkles className="text-emerald-500 w-5 h-5" />
+                Todas as Mentorias
+              </h3>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {sessions.map((session) => (
-              <motion.div
-                key={session.id}
-                whileHover={{ y: -4 }}
-                onClick={() => handleSelectSession(session)}
-                className={`bg-zinc-950 border rounded-[2rem] overflow-hidden flex flex-col justify-between cursor-pointer transition-all duration-300 ${
-                  activeSession.id === session.id ? "border-emerald-500 shadow-lg shadow-emerald-500/5" : "border-white/5 hover:border-white/15"
-                }`}
-              >
-                {/* Thumbnail */}
-                <div className="relative aspect-video bg-zinc-900">
-                  <img src={session.videoUrl} alt={session.title} className="w-full h-full object-cover opacity-60 animate-fade-in" />
-                  <div className="absolute inset-0 bg-black/20" />
-                  <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-slate-300 text-[8px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border border-white/5 z-10">
-                    {session.category}
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 text-white">
-                      {session.raw_status === "live" ? (
-                        <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
-                      ) : (
-                        <Play size={14} className="fill-white ml-0.5" />
-                      )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {sessions.filter(s => s.id !== activeSession?.id).map((session) => (
+                <motion.div
+                  key={session.id}
+                  whileHover={{ y: -4 }}
+                  onClick={() => handleSelectSession(session)}
+                  className={`bg-zinc-950 border rounded-[2rem] overflow-hidden flex flex-col justify-between cursor-pointer transition-all duration-300 ${
+                    activeSession.id === session.id ? "border-emerald-500 shadow-lg shadow-emerald-500/5" : "border-white/5 hover:border-white/15"
+                  }`}
+                >
+                  {/* Thumbnail */}
+                  <div className="relative aspect-video bg-zinc-900">
+                    <img src={session.videoUrl} alt={session.title} className="w-full h-full object-cover opacity-60 animate-fade-in" />
+                    <div className="absolute inset-0 bg-black/20" />
+                    <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-slate-300 text-[8px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border border-white/5 z-10">
+                      {session.category}
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 text-white">
+                        {session.raw_status === "live" ? (
+                          <span className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
+                        ) : (
+                          <Play size={14} className="fill-white ml-0.5" />
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Details */}
-                <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                  <h4 className="text-xs font-bold text-white line-clamp-2 leading-relaxed">{session.title}</h4>
-                  
-                  <div className="flex items-center justify-between text-[10px] text-slate-500 border-t border-white/5 pt-3">
-                    <span>{session.host}</span>
-                    <span className="flex items-center gap-1">
-                      <Clock size={10} />
-                      {session.duration}
-                    </span>
+                  {/* Details */}
+                  <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                    <h4 className="text-xs font-bold text-white line-clamp-2 leading-relaxed">{session.title}</h4>
+                    
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 border-t border-white/5 pt-3">
+                      <span>{session.host}</span>
+                      <span className="flex items-center gap-1">
+                        <Clock size={10} />
+                        {session.duration}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        )}
 
       </div>
     </Layout>

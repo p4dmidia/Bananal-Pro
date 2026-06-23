@@ -104,6 +104,73 @@ export default function VisualDiagnostic() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Estados e Funções da Câmera
+  const [isCameraMode, setIsCameraMode] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [cameraStream]);
+
+  const startCamera = async () => {
+    setIsCameraMode(true);
+    setCameraError(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false
+      });
+      setCameraStream(stream);
+      setTimeout(() => {
+        const videoElement = document.getElementById("webcam") as HTMLVideoElement;
+        if (videoElement) {
+          videoElement.srcObject = stream;
+        }
+      }, 100);
+    } catch (err: any) {
+      console.error("Erro ao acessar câmera:", err);
+      setCameraError("Não foi possível acessar a câmera. Verifique se as permissões necessárias foram concedidas.");
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+    setIsCameraMode(false);
+    setCameraError(null);
+  };
+
+  const capturePhoto = () => {
+    const videoElement = document.getElementById("webcam") as HTMLVideoElement;
+    if (!videoElement || !cameraStream) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = videoElement.videoWidth || 640;
+    canvas.height = videoElement.videoHeight || 480;
+
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const dummyFile = new File([blob], "camera-capture.png", { type: "image/png" });
+          setFile(dummyFile);
+          const url = URL.createObjectURL(blob);
+          setPreviewUrl(url);
+          setResult(null);
+          stopCamera();
+        }
+      }, "image/png");
+    }
+  };
+
   const scanStepsText = [
     "Lendo canais de cores foliares...",
     "Buscando assinaturas de necroses e manchas...",
@@ -186,6 +253,68 @@ export default function VisualDiagnostic() {
     if (profile?.id) {
       setSaving(true);
       try {
+        let finalImageUrl = previewUrl;
+
+        // Tenta fazer upload para o Supabase Storage
+        if (file) {
+          try {
+            const fileExt = file.name.split('.').pop()?.toLowerCase() || 'png';
+            const fileName = `${crypto.randomUUID()}.${fileExt}`;
+            const filePath = `${profile.id}/${fileName}`;
+
+            // 1. Tenta o bucket 'visual-diagnostics'
+            let uploadResult = await (supabase as any).storage
+              .from('visual-diagnostics')
+              .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false
+              });
+
+            let uploadError = uploadResult.error;
+            let bucketUsed = 'visual-diagnostics';
+
+            // 2. Se falhar, tenta usar o bucket 'library-files' que sabemos que existe
+            if (uploadError) {
+              console.warn("Falha no bucket 'visual-diagnostics', tentando 'library-files'...", uploadError);
+              const fallbackResult = await (supabase as any).storage
+                .from('library-files')
+                .upload(`diagnostics/${filePath}`, file, {
+                  cacheControl: '3600',
+                  upsert: false
+                });
+              uploadError = fallbackResult.error;
+              bucketUsed = 'library-files';
+            }
+
+            if (!uploadError) {
+              const path = bucketUsed === 'library-files' ? `diagnostics/${filePath}` : filePath;
+              const { data: { publicUrl } } = (supabase as any).storage
+                .from(bucketUsed)
+                .getPublicUrl(path);
+              
+              finalImageUrl = publicUrl;
+            } else {
+              console.warn("Falha no upload físico. Convertendo para base64 como contingência...", uploadError);
+              // 3. Fallback supremo: base64 inline na coluna de texto do banco
+              try {
+                const base64 = await new Promise<string>((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onload = () => resolve(reader.result as string);
+                  reader.onerror = (e) => reject(e);
+                  reader.readAsDataURL(file);
+                });
+                if (base64.length < 500000) {
+                  finalImageUrl = base64;
+                }
+              } catch (b64Err) {
+                console.warn("Erro ao converter para base64:", b64Err);
+              }
+            }
+          } catch (storageErr) {
+            console.warn("Falha no fluxo de storage:", storageErr);
+          }
+        }
+
         const { error } = await (supabase as any)
           .from('visual_diagnostics')
           .insert([{
@@ -194,7 +323,7 @@ export default function VisualDiagnostic() {
             scientific_name: selectedDiagnosis.scientificName,
             severity: selectedDiagnosis.severity,
             description: selectedDiagnosis.description,
-            image_url: previewUrl
+            image_url: finalImageUrl
           }]);
 
         if (error) throw error;
@@ -234,6 +363,7 @@ export default function VisualDiagnostic() {
     setFile(null);
     setPreviewUrl(null);
     setResult(null);
+    stopCamera();
   };
 
   return (
@@ -253,20 +383,75 @@ export default function VisualDiagnostic() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Scanning Box Column */}
           <div className="lg:col-span-2 space-y-6">
-            {!previewUrl ? (
+            {!previewUrl && !isCameraMode ? (
               <div className="border-2 border-dashed border-white/10 hover:border-primary/40 bg-zinc-900/40 rounded-[2.5rem] p-12 text-center flex flex-col items-center justify-center min-h-[350px] transition-all relative overflow-hidden group">
                 <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <Upload className="text-primary w-8 h-8" />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">Arraste ou clique para subir a imagem</h3>
-                <p className="text-xs text-zinc-500 max-w-xs mb-6">Suporta formatos JPG, JPEG e PNG. Envie fotos nítidas e com boa iluminação.</p>
+                <h3 className="text-lg font-bold text-white mb-2">Selecione uma imagem das folhas</h3>
+                <p className="text-xs text-zinc-500 max-w-xs mb-8">Envie fotos nítidas e com boa iluminação para identificar as manchas.</p>
                 
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                />
+                <div className="flex flex-col sm:flex-row items-center gap-4 z-10">
+                  <button
+                    onClick={startCamera}
+                    className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold text-xs uppercase tracking-widest px-6 py-4 rounded-xl transition-all cursor-pointer shadow-lg active:scale-98"
+                  >
+                    <Camera size={16} />
+                    Tirar Foto
+                  </button>
+                  <label
+                    className="flex items-center justify-center gap-2 bg-surface-variant hover:bg-outline/10 text-on-surface font-bold text-xs uppercase tracking-widest px-6 py-4 rounded-xl transition-all cursor-pointer border border-outline/15 active:scale-98"
+                  >
+                    <Upload size={16} />
+                    Fazer Upload
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+            ) : isCameraMode ? (
+              <div className="border-2 border-dashed border-white/10 bg-zinc-900/40 rounded-[2.5rem] p-8 text-center flex flex-col items-center justify-center min-h-[350px] transition-all relative space-y-6">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-bold text-white">Capturar Foto da Folha</h3>
+                  <p className="text-xs text-zinc-400">Enquadre os sintomas no centro da tela</p>
+                </div>
+                
+                <div className="relative aspect-video w-full rounded-2xl overflow-hidden border border-white/10 bg-black max-w-xl">
+                  {cameraError ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center space-y-4">
+                      <AlertTriangle size={36} className="text-red-500" />
+                      <p className="text-xs text-zinc-400 max-w-xs">{cameraError}</p>
+                    </div>
+                  ) : (
+                    <video
+                      id="webcam"
+                      autoPlay
+                      playsInline
+                      className="w-full h-full object-cover scale-x-[-1]"
+                    />
+                  )}
+                </div>
+
+                <div className="flex items-center gap-4 z-10">
+                  <button
+                    onClick={capturePhoto}
+                    disabled={!!cameraError}
+                    className="flex items-center gap-2 bg-red-500 hover:bg-red-400 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs uppercase tracking-widest px-6 py-4 rounded-xl transition-all cursor-pointer shadow-lg active:scale-98"
+                  >
+                    <Camera size={16} />
+                    Tirar Foto
+                  </button>
+                  <button
+                    onClick={stopCamera}
+                    className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs uppercase tracking-widest px-6 py-4 rounded-xl transition-all cursor-pointer active:scale-98"
+                  >
+                    Cancelar
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="glass-card p-6 rounded-[2.5rem] border-white/5 bg-zinc-900/40 space-y-6 relative">

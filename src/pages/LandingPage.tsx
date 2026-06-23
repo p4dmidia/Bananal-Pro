@@ -65,6 +65,13 @@ export default function LandingPage() {
   const [activeTool, setActiveTool] = useState("solo");
 
   useEffect(() => {
+    document.body.classList.add("dark-theme");
+    return () => {
+      document.body.classList.remove("dark-theme");
+    };
+  }, []);
+
+  useEffect(() => {
     // Scroll reveal observer
     const revealCallback = (entries: IntersectionObserverEntry[]) => {
       entries.forEach((entry) => {
@@ -113,7 +120,7 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row gap-4 pt-2 w-full sm:w-auto">
               <Link
-                to="/auth/register"
+                to="/auth/register?offer=padrao"
                 className="bg-secondary hover:bg-secondary-fixed text-white hover:text-primary-container px-8 py-4 rounded-xl font-headline font-bold text-sm tracking-wide transition-all border-glow duration-300 shadow-lg shadow-secondary/20 flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto text-center"
               >
                 Começar Operações
@@ -752,7 +759,7 @@ export default function LandingPage() {
               </div>
               <div>
                 <Link
-                  to="/auth/register"
+                  to="/auth/register?offer=padrao"
                   className="w-full bg-white/5 hover:bg-white/10 text-white py-4 rounded-xl font-headline font-bold text-xs tracking-wider uppercase transition-all duration-300 border border-white/10 active:scale-95 block text-center cursor-pointer"
                 >
                   Assinar Mensal
@@ -799,7 +806,7 @@ export default function LandingPage() {
               </div>
               <div>
                 <Link
-                  to="/auth/register"
+                  to="/auth/register?offer=padrao"
                   className="w-full bg-secondary hover:bg-secondary-fixed text-white hover:text-primary-container py-4.5 rounded-xl font-headline font-extrabold text-xs tracking-wider uppercase transition-all duration-300 shadow-lg shadow-secondary/15 active:scale-95 block text-center cursor-pointer"
                 >
                   Assinar Anual (12x)
@@ -981,7 +988,7 @@ export default function LandingPage() {
           </p>
           <div className="pt-4">
             <Link
-              to="/auth/register"
+              to="/auth/register?offer=padrao"
               className="bg-secondary hover:bg-secondary-fixed text-white hover:text-primary-container px-12 py-5 rounded-2xl font-headline font-extrabold text-sm tracking-wider uppercase transition-all duration-300 shadow-2xl shadow-secondary/20 hover:scale-[1.02] active:scale-95 inline-block text-center cursor-pointer"
             >
               Começar Agora

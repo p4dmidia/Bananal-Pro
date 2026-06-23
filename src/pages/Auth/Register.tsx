@@ -1,44 +1,55 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "motion/react";
 import { Mail, Lock, ArrowRight, User, Sprout, Globe, CheckCircle2, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { toast } from "react-hot-toast";
 
-const BRAZILIAN_STATES = [
-  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 
-  'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 
-  'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
-];
-
 export default function Register() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const offerSlug = searchParams.get("offer") || "padrao";
+
   const [formData, setFormData] = useState({
     fullName: "",
-    username: "",
     email: "",
     password: "",
-    whatsapp: "",
-    cpfCnpj: "",
-    cep: "",
-    address: "",
-    number: "",
-    complement: "",
-    neighborhood: "",
-    city: "",
-    state: "",
   });
   const [loading, setLoading] = useState(false);
-  const [cepLoading, setCepLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleGoogleRegister = async () => {
+    setGoogleLoading(true);
+    setError(null);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/checkout/${offerSlug}`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (err: any) {
+      console.error("Google auth error:", err);
+      toast.error("Erro ao autenticar com o Google. Tente novamente.");
+      setGoogleLoading(false);
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    // 1. Basic Validations
+    // Basic Validations
     if (formData.password.length < 6) {
       setError("A senha deve ter pelo menos 6 caracteres.");
       setLoading(false);
@@ -46,64 +57,29 @@ export default function Register() {
     }
 
     try {
-
-      // 3. Check if username (referral_code) is already taken
-      const { data: userData, error: userCheckError } = await supabase
-        .from("user_profiles")
-        .select("id")
-        .eq("referral_code", formData.username)
-        .maybeSingle();
-
-      if (userData) {
-        setError("Este nome de usuário já está sendo utilizado.");
-        setLoading(false);
-        return;
-      }
-
-      // 4. Check if CPF/CNPJ is already taken
-      const { data: cpfData, error: cpfCheckError } = await supabase
-        .from("user_profiles")
-        .select("id")
-        .eq("cpf", formData.cpfCnpj)
-        .maybeSingle();
-
-      if (cpfData) {
-        setError("Este CPF/CNPJ já está cadastrado no sistema.");
-        setLoading(false);
-        return;
-      }
-
-      // 5. Proceed with Registration
       const nameParts = formData.fullName.trim().split(" ");
       const firstName = nameParts[0] || "";
       const lastName = nameParts.slice(1).join(" ") || "";
 
+      // Proceed with Registration
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
-            login: formData.username,
+            full_name: formData.fullName,
             firstName: firstName,
             lastName: lastName,
-            whatsapp: formData.whatsapp,
-            cpfCnpj: formData.cpfCnpj,
-            cep: formData.cep,
-            address: formData.address,
-            number: formData.number,
-            complement: formData.complement,
-            neighborhood: formData.neighborhood,
-            city: formData.city,
-            state: formData.state,
           },
         },
       });
 
       if (signUpError) throw signUpError;
 
-      if (data.user && data.session) {
+      if (data.user) {
         toast.success("Cadastro realizado com sucesso!");
-        navigate("/dashboard");
+        // Redirect directly to the checkout page with the offer slug
+        navigate(`/checkout/${offerSlug}`);
       } else {
         toast.success("Conta criada! Verifique seu e-mail.");
         navigate("/auth/login");
@@ -116,72 +92,30 @@ export default function Register() {
     }
   };
 
-  const handleCepChange = async (cepValue: string) => {
-    // Apenas números
-    const cleanCep = cepValue.replace(/\D/g, "");
-    setFormData(prev => ({ ...prev, cep: cleanCep }));
-
-    if (cleanCep.length === 8) {
-      setCepLoading(true);
-      try {
-        const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
-        const data = await response.json();
-        
-        if (!data.erro) {
-          setFormData(prev => ({
-            ...prev,
-            address: data.logradouro || "",
-            neighborhood: data.bairro || "",
-            city: data.localidade || "",
-            state: data.uf || "",
-          }));
-          toast.success("Endereço preenchido automaticamente!");
-        } else {
-          toast.error("CEP não encontrado.");
-        }
-      } catch (err) {
-        console.error("Error fetching CEP:", err);
-        toast.error("Erro ao buscar CEP.");
-      } finally {
-        setCepLoading(false);
-      }
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    
-    if (name === "cep") {
-      handleCepChange(value);
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-black flex flex-col md:flex-row overflow-hidden">
+    <div className="min-h-screen bg-background text-on-surface flex flex-col md:flex-row overflow-hidden font-sans">
       {/* Left Side: Brand & Benefits */}
-      <div className="hidden md:flex md:w-1/2 bg-zinc-950 relative items-center justify-center p-12 overflow-hidden border-r border-white/5">
-        <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-accent/20 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-primary/20 rounded-full blur-[120px] animate-pulse delay-700" />
+      <div className="hidden md:flex md:w-1/2 bg-surface-container relative items-center justify-center p-12 overflow-hidden border-r border-outline/10">
+        <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-emerald-700/10 rounded-full blur-[120px] animate-pulse delay-700" />
         
         <div className="relative z-10 max-w-lg space-y-12">
           <Link to="/" className="flex items-center gap-3 mb-16">
-            <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
+            <div className="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-600/20">
               <Sprout className="text-white w-8 h-8" />
             </div>
-            <span className="text-3xl font-display font-black tracking-tight text-white">Bananal PRO</span>
+            <span className="text-3xl font-bold tracking-tight text-on-surface">Bananal PRO</span>
           </Link>
 
           <div className="space-y-6">
             <motion.h1 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="text-5xl font-display font-bold leading-tight text-white"
+              className="text-5xl font-bold leading-tight text-on-surface"
             >
-              Tudo que o produtor <br />de banana precisa <br /><span className="text-gradient">em um só lugar</span>.
+              Tudo que o produtor <br />de banana precisa <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-600 font-extrabold">em um só lugar</span>.
             </motion.h1>
-            <p className="text-zinc-400 text-lg leading-relaxed">
+            <p className="text-on-surface-variant text-lg leading-relaxed">
               Faça parte da maior plataforma de bananicultura do Brasil. Tenha acesso a ferramentas de precisão, análises de solo e suporte técnico especializado.
             </p>
           </div>
@@ -193,8 +127,8 @@ export default function Register() {
               "Gestão Financeira e Estoque de Insumos",
               "Treinamentos Técnicos e Comunidade Exclusiva"
             ].map((text, i) => (
-              <div key={i} className="flex items-center gap-3 text-zinc-300 text-sm font-medium bg-white/5 p-4 rounded-2xl border border-white/5">
-                <CheckCircle2 className="text-primary" size={18} />
+              <div key={i} className="flex items-center gap-3 text-on-surface text-sm font-semibold bg-surface p-4 rounded-2xl border border-outline/10">
+                <CheckCircle2 className="text-emerald-500 shrink-0" size={18} />
                 {text}
               </div>
             ))}
@@ -203,14 +137,14 @@ export default function Register() {
       </div>
 
       {/* Right Side: Register Form */}
-      <div className="flex-1 flex items-center justify-center p-6 md:p-12 bg-black relative overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center p-6 md:p-12 bg-background relative overflow-y-auto">
         <div className="md:hidden absolute top-10 left-10">
           <Link to="/" className="flex items-center gap-2">
-            <Sprout className="text-primary w-8 h-8" />
-            <span className="text-xl font-display font-bold text-white">Bananal PRO</span>
+            <Sprout className="text-emerald-500 w-8 h-8" />
+            <span className="text-xl font-bold text-on-surface">Bananal PRO</span>
           </Link>
         </div>
-        <div className="absolute top-10 right-10 hidden md:flex items-center gap-2 text-zinc-500 text-xs font-bold uppercase tracking-widest cursor-pointer hover:text-white transition-colors">
+        <div className="absolute top-10 right-10 hidden md:flex items-center gap-2 text-on-surface-variant text-xs font-bold uppercase tracking-widest cursor-pointer hover:text-on-surface transition-colors">
           <Globe size={14} />
           <span>Português (BR)</span>
         </div>
@@ -222,15 +156,55 @@ export default function Register() {
         >
           <Link 
             to="/" 
-            className="inline-flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm font-bold group"
+            className="inline-flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors text-sm font-bold group"
           >
             <ArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform" />
             Voltar ao Início
           </Link>
 
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold text-white">Criar nova conta</h2>
-            <p className="text-zinc-500">Preencha os dados abaixo para criar sua conta de produtor.</p>
+          <div className="space-y-2 text-center md:text-left">
+            <h2 className="text-3xl font-extrabold text-on-surface">Crie sua conta agora.</h2>
+            <p className="text-on-surface-variant">É gratuito e leva menos de 1 minuto.</p>
+          </div>
+
+          {/* Google Register Button */}
+          <button
+            type="button"
+            onClick={handleGoogleRegister}
+            disabled={googleLoading || loading}
+            className="w-full bg-white text-zinc-900 font-bold py-3.5 px-4 rounded-2xl flex items-center justify-center gap-3 transition-all hover:bg-zinc-100 active:scale-[0.98] border border-zinc-200 cursor-pointer disabled:opacity-50"
+          >
+            {googleLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin text-zinc-950" />
+            ) : (
+              <>
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.85c.87-2.6 3.3-4.53 6.16-4.53z"
+                  />
+                </svg>
+                Registrar com o Google
+              </>
+            )}
+          </button>
+
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t border-outline/10"></div>
+            <span className="flex-shrink mx-4 text-on-surface-variant text-xs font-bold uppercase tracking-wider">Ou</span>
+            <div className="flex-grow border-t border-outline/10"></div>
           </div>
 
           <form onSubmit={handleRegister} className="space-y-5">
@@ -238,201 +212,41 @@ export default function Register() {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex items-center gap-3 text-red-500 text-sm"
+                className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex items-center gap-3 text-red-500 text-sm font-semibold"
               >
-                <AlertCircle size={18} />
+                <AlertCircle className="shrink-0" size={18} />
                 {error}
               </motion.div>
             )}
 
-
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-300 ml-1">Nome Completo</label>
-                <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-primary transition-colors" />
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                    placeholder="Seu nome"
-                    className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm"
-                    required
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-300 ml-1">Usuário</label>
-                <input
-                  type="text"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  placeholder="Nome de usuário"
-                  className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl py-4 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm"
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-300 ml-1">CPF OU CNPJ</label>
-                <input
-                  type="text"
-                  name="cpfCnpj"
-                  value={formData.cpfCnpj}
-                  onChange={handleChange}
-                  placeholder="000.000.000-00"
-                  className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl py-4 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm"
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-300 ml-1">WhatsApp</label>
-                <input
-                  type="text"
-                  name="whatsapp"
-                  value={formData.whatsapp}
-                  onChange={handleChange}
-                  placeholder="(00) 00000-0000"
-                  className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl py-4 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm"
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            {/* Endereço / Localização */}
-            <div className="border-t border-white/5 pt-4">
-              <h3 className="text-xs font-bold text-primary uppercase tracking-widest mb-4">Dados de Localização</h3>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-300 ml-1">CEP</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="cep"
-                    value={formData.cep}
-                    onChange={handleChange}
-                    placeholder="00000-000"
-                    maxLength={9}
-                    className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl py-4 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm"
-                    required
-                    disabled={loading || cepLoading}
-                  />
-                  {cepLoading && (
-                    <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary animate-spin" />
-                  )}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-300 ml-1">Estado (UF)</label>
-                <select
-                  name="state"
-                  value={formData.state}
-                  onChange={handleChange}
-                  className="w-full bg-zinc-900 border-none rounded-2xl py-4 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm h-[54px] cursor-pointer"
-                  required
-                  disabled={loading}
-                >
-                  <option value="" disabled>Selecione...</option>
-                  {BRAZILIAN_STATES.map(uf => (
-                    <option key={uf} value={uf}>{uf}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-300 ml-1">Cidade</label>
-                <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  placeholder="Cidade"
-                  className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl py-4 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm"
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-300 ml-1">Bairro</label>
-                <input
-                  type="text"
-                  name="neighborhood"
-                  value={formData.neighborhood}
-                  onChange={handleChange}
-                  placeholder="Bairro"
-                  className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl py-4 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm"
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-300 ml-1">Rua / Logradouro</label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                placeholder="Ex: Av. Paulista"
-                className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl py-4 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm"
-                required
-                disabled={loading}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-300 ml-1">Número</label>
-                <input
-                  type="text"
-                  name="number"
-                  value={formData.number}
-                  onChange={handleChange}
-                  placeholder="123"
-                  className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl py-4 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm"
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-300 ml-1">Complemento</label>
-                <input
-                  type="text"
-                  name="complement"
-                  value={formData.complement}
-                  onChange={handleChange}
-                  placeholder="Apto, Bloco..."
-                  className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl py-4 px-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-300 ml-1">E-mail</label>
+              <label className="text-sm font-semibold text-on-surface ml-1">Digite seu nome completo</label>
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-primary transition-colors" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-on-surface-variant group-focus-within:text-emerald-500 transition-colors" />
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  placeholder="Nome Completo"
+                  className="w-full bg-surface border border-outline/15 rounded-2xl py-4 pl-12 pr-4 text-on-surface focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all text-sm placeholder:text-on-surface-variant/40"
+                  required
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-on-surface ml-1">Digite seu e-mail</label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-on-surface-variant group-focus-within:text-emerald-500 transition-colors" />
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="seu@email.com"
-                  className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                  placeholder="exemplo@email.com"
+                  className="w-full bg-surface border border-outline/15 rounded-2xl py-4 pl-12 pr-4 text-on-surface focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all text-sm placeholder:text-on-surface-variant/40"
                   required
                   disabled={loading}
                 />
@@ -440,56 +254,56 @@ export default function Register() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-300 ml-1">Senha</label>
+              <label className="text-sm font-semibold text-on-surface ml-1">Digite sua senha</label>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-primary transition-colors" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-on-surface-variant group-focus-within:text-emerald-500 transition-colors" />
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="••••••••"
-                  className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl py-4 pl-12 pr-12 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                  placeholder="Mínimo 6 caracteres"
+                  className="w-full bg-surface border border-outline/15 rounded-2xl py-4 pl-12 pr-12 text-on-surface focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all text-sm placeholder:text-on-surface-variant/40"
                   required
                   disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
             </div>
 
-            <div className="flex items-start gap-2 px-1">
-              <input type="checkbox" id="terms" className="accent-primary w-4 h-4 rounded border-white/10 mt-1" required />
-              <label htmlFor="terms" className="text-xs text-zinc-500 leading-relaxed">
-                Eu li e concordo com os <a href="#" className="text-primary hover:underline font-bold">Termos de Uso</a> e a <a href="#" className="text-primary hover:underline font-bold">Política de Privacidade</a> do Bananal PRO.
+            <div className="flex items-start gap-2 px-1 pt-2">
+              <input type="checkbox" id="terms" className="accent-emerald-600 w-4 h-4 rounded border-outline/10 mt-1 cursor-pointer" required />
+              <label htmlFor="terms" className="text-xs text-on-surface-variant leading-relaxed cursor-pointer select-none">
+                Ao clicar aqui, concordo com os <a href="#" className="text-emerald-500 hover:underline font-semibold">Termos de Uso</a> e <a href="#" className="text-emerald-500 hover:underline font-semibold">Políticas de Privacidade</a> do Bananal PRO.
               </label>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary hover:bg-primary-dark text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 group transition-all shadow-xl shadow-primary/20 hover:scale-[1.01] active:scale-[0.98] mt-4 disabled:opacity-50"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 group transition-all shadow-xl shadow-emerald-600/20 hover:scale-[1.01] active:scale-[0.98] mt-6 disabled:opacity-50 cursor-pointer"
             >
               {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-5 h-5 animate-spin text-white" />
               ) : (
                 <>
-                  Cadastrar Agora
+                  Criar conta
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </button>
           </form>
 
-          <p className="text-center text-zinc-500 text-sm">
-            Já possui acesso?{" "}
-            <Link to="/auth/login" className="text-primary font-bold hover:underline">
-              Entrar na Conta
+          <p className="text-center text-on-surface-variant text-sm pt-4 border-t border-outline/10">
+            Já possui conta?{" "}
+            <Link to={`/auth/login?offer=${offerSlug}`} className="text-emerald-500 font-bold hover:underline">
+              Entrar
             </Link>
           </p>
         </motion.div>

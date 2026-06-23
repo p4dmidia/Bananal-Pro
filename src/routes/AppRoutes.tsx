@@ -22,6 +22,7 @@ import Contact from "../pages/Public/Contact";
 import Privacy from "../pages/Public/Privacy";
 import Terms from "../pages/Public/Terms";
 import SalesPage from "../pages/Public/SalesPage";
+import Checkout from "../pages/Public/Checkout";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import AdminDashboard from "../pages/Admin/Dashboard";
 import AdminLogin from "../pages/Admin/Login";
@@ -54,6 +55,7 @@ export default function AppRoutes() {
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/register" element={<Register />} />
         <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+        <Route path="/checkout/:slug?" element={<Checkout />} />
         
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
@@ -77,6 +79,7 @@ export default function AppRoutes() {
         <Route path="/lives" element={<ProtectedRoute><MemberLives /></ProtectedRoute>} />
         <Route path="/biblioteca" element={<ProtectedRoute><Library /></ProtectedRoute>} />
         <Route path="/perfil" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+        <Route path="/configuracoes" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
         <Route path="/notificacoes" element={<ProtectedRoute><NotificationsCenter /></ProtectedRoute>} />
         
         {/* Novas Rotas Agrícolas do Bananal PRO */}

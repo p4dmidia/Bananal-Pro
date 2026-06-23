@@ -26,6 +26,9 @@ export default function Weather() {
   const [city, setCity] = useState("Sete Lagoas");
   const [state, setState] = useState("MG");
   const [loading, setLoading] = useState(true);
+  const [areas, setAreas] = useState<any[]>([]);
+  const [selectedArea, setSelectedArea] = useState<any | null>(null);
+  const [loadingAreas, setLoadingAreas] = useState(true);
 
   const [showLocModal, setShowLocModal] = useState(false);
   const [newCity, setNewCity] = useState("");
@@ -98,26 +101,54 @@ export default function Weather() {
   };
 
   useEffect(() => {
-    const fetchWeather = async () => {
-      setLoading(true);
-      
-      let userCity = "Sete Lagoas";
-      let userState = "MG";
-      
-      if (profile?.city) {
-        userCity = profile.city;
-        userState = profile.state || "";
+    const fetchAreas = async () => {
+      if (!profile?.id) {
+        setLoadingAreas(false);
+        return;
       }
-      
-      setCity(userCity);
-      setState(userState);
+      try {
+        const { data, error } = await supabase
+          .from("producer_areas")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        const loadedAreas = data || [];
+        setAreas(loadedAreas);
+
+        if (loadedAreas.length > 0) {
+          const savedAreaId = localStorage.getItem("selected_area_id");
+          const found = loadedAreas.find(a => String(a.id) === savedAreaId);
+          const initialArea = found || loadedAreas[0];
+          setSelectedArea(initialArea);
+          setCity(initialArea.city);
+          setState(initialArea.state);
+        } else {
+          setCity(profile.city || "Sete Lagoas");
+          setState(profile.state || "MG");
+        }
+      } catch (err) {
+        console.error("Error loading areas for weather:", err);
+      } finally {
+        setLoadingAreas(false);
+      }
+    };
+
+    fetchAreas();
+  }, [profile]);
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      if (!city || !state) return;
+      setLoading(true);
 
       // Default Sete Lagoas coordinates
       let lat = -19.4664;
       let lon = -44.2447;
 
       try {
-        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(userCity)}&count=1&language=pt`);
+        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=pt`);
         if (geoRes.ok) {
           const geoData = await geoRes.json();
           if (geoData.results && geoData.results.length > 0) {
@@ -188,9 +219,9 @@ export default function Weather() {
     };
 
     fetchWeather();
-  }, [profile]);
+  }, [city, state]);
 
-  if (loading) {
+  if (loading || loadingAreas) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -240,20 +271,50 @@ export default function Weather() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3 bg-zinc-900/50 border border-white/5 px-6 py-3 rounded-2xl">
-            <MapPin className="text-primary w-5 h-5" />
-            <span className="font-bold text-white">{city} - {state}</span>
-            <button
-              onClick={() => {
-                setNewCity(city);
-                setNewState(state);
-                setShowLocModal(true);
-              }}
-              className="p-1 rounded-lg hover:bg-white/5 text-zinc-500 hover:text-white transition-colors cursor-pointer ml-1"
-              title="Alterar Localização"
-            >
-              <Pencil size={14} />
-            </button>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {areas.length > 0 && (
+              <div className="flex items-center gap-2 bg-zinc-900/50 border border-white/5 px-4 py-3 rounded-2xl">
+                <span className="text-[10px] font-black uppercase text-slate-500 mr-1 shrink-0">Área:</span>
+                <select
+                  value={selectedArea?.id || ""}
+                  onChange={(e) => {
+                    const areaId = e.target.value;
+                    const area = areas.find(a => String(a.id) === areaId);
+                    if (area) {
+                      setSelectedArea(area);
+                      setCity(area.city);
+                      setState(area.state);
+                      localStorage.setItem("selected_area_id", String(area.id));
+                    }
+                  }}
+                  className="bg-transparent text-white font-bold text-xs focus:outline-none border-none cursor-pointer pr-4 uppercase tracking-wider"
+                >
+                  {areas.map(a => (
+                    <option key={a.id} value={a.id} className="bg-zinc-950 text-white text-xs">
+                      {a.name} ({a.property_name})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 bg-zinc-900/50 border border-white/5 px-6 py-3 rounded-2xl">
+              <MapPin className="text-primary w-5 h-5 shrink-0" />
+              <span className="font-bold text-white text-sm">{city} - {state}</span>
+              {areas.length === 0 && (
+                <button
+                  onClick={() => {
+                    setNewCity(city);
+                    setNewState(state);
+                    setShowLocModal(true);
+                  }}
+                  className="p-1 rounded-lg hover:bg-white/5 text-zinc-500 hover:text-white transition-colors cursor-pointer ml-1"
+                  title="Alterar Localização"
+                >
+                  <Pencil size={14} />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

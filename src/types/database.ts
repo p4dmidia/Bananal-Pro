@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      checkout_settings: {
+        Row: {
+          id: number
+          slug: string
+          name: string
+          title: string
+          subtitle: string
+          header_image_url: string | null
+          features: Json
+          guarantee_days: number
+          payment_methods: Json
+          testimonials: Json
+          updated_at: string | null
+        }
+        Insert: {
+          id?: number
+          slug: string
+          name: string
+          title?: string
+          subtitle?: string
+          header_image_url?: string | null
+          features?: Json
+          guarantee_days?: number
+          payment_methods?: Json
+          testimonials?: Json
+          updated_at?: string | null
+        }
+        Update: {
+          id?: number
+          slug?: string
+          name?: string
+          title?: string
+          subtitle?: string
+          header_image_url?: string | null
+          features?: Json
+          guarantee_days?: number
+          payment_methods?: Json
+          testimonials?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       admin_audit_logs: {
         Row: {
           action: string
@@ -1688,6 +1730,50 @@ export type Database = {
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      producer_areas: {
+        Row: {
+          id: number
+          user_id: number
+          name: string
+          property_name: string
+          size_hectares: number
+          city: string
+          state: string
+          banana_variety: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          user_id: number
+          name: string
+          property_name: string
+          size_hectares?: number
+          city: string
+          state: string
+          banana_variety: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          user_id?: number
+          name?: string
+          property_name?: string
+          size_hectares?: number
+          city?: string
+          state?: string
+          banana_variety?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "producer_areas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          }
         ]
       }
       user_course_progress: {

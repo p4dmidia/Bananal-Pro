@@ -321,33 +321,33 @@ export default function Overview() {
 
         {/* Agro Indicators Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="glass-card p-6 rounded-[2rem] border-white/5 bg-zinc-900/30">
-            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">Área Monitorada</p>
-            <h3 className="text-3xl font-display font-black text-white">{farmStats.totalArea} <span className="text-sm font-semibold text-zinc-400">hectares</span></h3>
-            <p className="text-[10px] text-zinc-600 mt-2 font-medium">Cultivo: {farmStats.variety}</p>
+          <div className="bg-surface border border-outline/10 rounded-[2rem] p-6 shadow-sm hover:shadow-md hover:border-primary/20 transition-all">
+            <p className="text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-1">Área Monitorada</p>
+            <h3 className="text-3xl font-display font-black text-primary">{farmStats.totalArea} <span className="text-sm font-semibold text-on-surface-variant">hectares</span></h3>
+            <p className="text-[10px] text-on-surface-variant mt-2 font-medium">Cultivo: {farmStats.variety}</p>
           </div>
 
-          <div className="glass-card p-6 rounded-[2rem] border-white/5 bg-zinc-900/30">
-            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">Produção Estimada</p>
-            <h3 className="text-3xl font-display font-black text-white">{farmStats.estimatedYield}</h3>
-            <p className="text-[10px] text-zinc-600 mt-2 font-medium">Previsão de colheita para o ciclo atual</p>
+          <div className="bg-surface border border-outline/10 rounded-[2rem] p-6 shadow-sm hover:shadow-md hover:border-primary/20 transition-all">
+            <p className="text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-1">Produção Estimada</p>
+            <h3 className="text-3xl font-display font-black text-primary">{farmStats.estimatedYield}</h3>
+            <p className="text-[10px] text-on-surface-variant mt-2 font-medium">Previsão de colheita para o ciclo atual</p>
           </div>
 
-          <div className="glass-card p-6 rounded-[2rem] border-white/5 bg-zinc-900/30">
-            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">Sanidade Geral</p>
-            <h3 className="text-3xl font-display font-black text-emerald-400">{farmStats.healthStatus}</h3>
-            <p className="text-[10px] text-zinc-600 mt-2 font-medium">Análise baseada em dados fitossanitários</p>
+          <div className="bg-surface border border-outline/10 rounded-[2rem] p-6 shadow-sm hover:shadow-md hover:border-primary/20 transition-all">
+            <p className="text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-1">Sanidade Geral</p>
+            <h3 className={`text-3xl font-display font-black ${farmStats.healthStatus === 'Excelente' ? 'text-primary' : 'text-amber-600'}`}>{farmStats.healthStatus}</h3>
+            <p className="text-[10px] text-on-surface-variant mt-2 font-medium">Análise baseada em dados fitossanitários</p>
           </div>
 
-          <div className="glass-card p-6 rounded-[2rem] border-white/5 bg-primary/5 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-10 text-white group-hover:scale-110 transition-transform">
+          <div className="bg-surface border border-outline/10 rounded-[2rem] p-6 shadow-sm hover:shadow-md hover:border-primary/20 transition-all relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-5 text-on-surface group-hover:scale-110 transition-transform">
               <DollarSign size={50} />
             </div>
-            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Financeiro Fazenda</p>
-            <h3 className={`text-3xl font-display font-black ${farmStats.isProfit ? 'text-white' : 'text-red-400'}`}>
+            <p className="text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-1">Financeiro Fazenda</p>
+            <h3 className={`text-3xl font-display font-black ${farmStats.isProfit ? 'text-primary' : 'text-red-650'}`}>
               {farmStats.financeText}
             </h3>
-            <p className="text-[10px] text-zinc-600 mt-2 font-medium">Fluxo de Caixa da Fazenda</p>
+            <p className="text-[10px] text-on-surface-variant mt-2 font-medium">Fluxo de Caixa da Fazenda</p>
           </div>
         </div>
 
@@ -355,37 +355,37 @@ export default function Overview() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Weather & Recommendations */}
-          <div className="lg:col-span-2 glass-card p-8 rounded-[2.5rem] border-white/5 bg-zinc-900/40 relative overflow-hidden flex flex-col justify-between min-h-[300px]">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
+          <div className="lg:col-span-2 bg-gradient-to-br from-primary-container/20 to-surface border border-outline/10 rounded-[2.5rem] p-8 shadow-sm hover:shadow-md hover:border-primary/20 transition-all relative overflow-hidden flex flex-col justify-between min-h-[300px]">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary-container/10 rounded-full blur-3xl" />
             
             <div className="relative z-10 flex justify-between items-start flex-wrap gap-4">
               <div>
-                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">CLIMA EM TEMPO REAL ({city}/{state})</p>
-                <h3 className="text-4xl font-display font-black text-white mt-4">{weatherWidget.temp}°C</h3>
-                <p className="text-sm text-zinc-400 mt-2 font-medium">{weatherWidget.condition}</p>
+                <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-widest">CLIMA EM TEMPO REAL ({city}/{state})</p>
+                <h3 className="text-4xl font-display font-black text-primary mt-4">{weatherWidget.temp}°C</h3>
+                <p className="text-sm text-on-surface-variant mt-2 font-medium">{weatherWidget.condition}</p>
               </div>
               <CloudSun size={64} className="text-primary animate-pulse" />
             </div>
 
-            <div className="relative z-10 grid grid-cols-3 gap-4 border-t border-white/5 pt-6 mt-8">
+            <div className="relative z-10 grid grid-cols-3 gap-4 border-t border-outline/10 pt-6 mt-8">
               <div>
-                <p className="text-[9px] text-zinc-500 font-black uppercase">Umidade do Ar</p>
-                <p className="text-sm font-bold text-white mt-0.5">{weatherWidget.humidity}%</p>
+                <p className="text-[9px] text-on-surface-variant font-black uppercase">Umidade do Ar</p>
+                <p className="text-sm font-bold text-on-surface mt-0.5">{weatherWidget.humidity}%</p>
               </div>
               <div>
-                <p className="text-[9px] text-zinc-500 font-black uppercase">Vento</p>
-                <p className="text-sm font-bold text-white mt-0.5">{weatherWidget.wind} km/h</p>
+                <p className="text-[9px] text-on-surface-variant font-black uppercase">Vento</p>
+                <p className="text-sm font-bold text-on-surface mt-0.5">{weatherWidget.wind} km/h</p>
               </div>
               <div>
-                <p className="text-[9px] text-zinc-500 font-black uppercase">Chuva</p>
-                <p className="text-sm font-bold text-white mt-0.5">{weatherWidget.rainChance}%</p>
+                <p className="text-[9px] text-on-surface-variant font-black uppercase">Chuva</p>
+                <p className="text-sm font-bold text-on-surface mt-0.5">{weatherWidget.rainChance}%</p>
               </div>
             </div>
 
-            <div className="relative z-10 bg-primary/5 border border-primary/20 p-4 rounded-2xl flex items-center gap-3 mt-6">
+            <div className="relative z-10 bg-primary-container/30 border border-primary/10 p-4 rounded-2xl flex items-center gap-3 mt-6">
               <Sprout className="text-primary shrink-0" size={18} />
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                <span className="text-white font-bold">Conselho Agrícola:</span> {getAgroAdvice()}
+              <p className="text-xs text-on-surface-variant leading-relaxed">
+                <span className="text-on-surface font-bold">Conselho Agrícola:</span> {getAgroAdvice()}
               </p>
             </div>
           </div>
@@ -421,16 +421,16 @@ export default function Overview() {
               <Link to="/calendario" className="text-xs text-primary font-bold hover:underline">Ver Calendário Completo</Link>
             </div>
 
-            <div className="glass-card rounded-[2.5rem] border-white/5 bg-zinc-900/40 divide-y divide-white/5">
+            <div className="bg-surface rounded-[2.5rem] border border-outline/10 shadow-sm hover:shadow-md transition-all divide-y divide-outline/10">
               {recentTasks.map(t => (
-                <div key={t.id} className="p-6 flex justify-between items-center hover:bg-white/[0.01] transition-colors first:rounded-t-[2.5rem] last:rounded-b-[2.5rem]">
+                <div key={t.id} className="p-6 flex justify-between items-center hover:bg-surface-variant/40 transition-colors first:rounded-t-[2.5rem] last:rounded-b-[2.5rem]">
                   <div>
-                    <h4 className="font-bold text-white text-sm">{t.title}</h4>
-                    <span className="text-[9px] font-black uppercase text-zinc-500 tracking-wider bg-white/5 border border-white/5 px-2 py-0.5 rounded mt-1.5 inline-block">
+                    <h4 className="font-bold text-on-surface text-sm">{t.title}</h4>
+                    <span className="text-[9px] font-black uppercase text-primary tracking-wider bg-primary-container border border-primary/15 px-2 py-0.5 rounded mt-1.5 inline-block">
                       {t.category}
                     </span>
                   </div>
-                  <span className="text-xs text-zinc-400 font-bold">{t.date}</span>
+                  <span className="text-xs text-on-surface-variant font-bold">{t.date}</span>
                 </div>
               ))}
             </div>
@@ -446,14 +446,14 @@ export default function Overview() {
               <Link to="/cursos" className="text-xs text-primary font-bold hover:underline">Ver Catálogo</Link>
             </div>
 
-            <div className="glass-card rounded-[2.5rem] border-white/5 bg-zinc-900/40 divide-y divide-white/5">
+            <div className="bg-surface rounded-[2.5rem] border border-outline/10 shadow-sm hover:shadow-md transition-all divide-y divide-outline/10">
               {recentLessons.map(l => (
-                <div key={l.id} className="p-6 flex justify-between items-center hover:bg-white/[0.01] transition-colors first:rounded-t-[2.5rem] last:rounded-b-[2.5rem]">
+                <div key={l.id} className="p-6 flex justify-between items-center hover:bg-surface-variant/40 transition-colors first:rounded-t-[2.5rem] last:rounded-b-[2.5rem]">
                   <div>
-                    <h4 className="font-bold text-white text-sm">{l.title}</h4>
-                    <p className="text-[10px] text-zinc-500 mt-1 font-medium">Módulo: {l.module}</p>
+                    <h4 className="font-bold text-on-surface text-sm">{l.title}</h4>
+                    <p className="text-[10px] text-on-surface-variant mt-1 font-medium">Módulo: {l.module}</p>
                   </div>
-                  <span className="text-xs text-zinc-400 font-bold shrink-0">{l.duration}</span>
+                  <span className="text-xs text-on-surface-variant font-bold shrink-0">{l.duration}</span>
                 </div>
               ))}
             </div>

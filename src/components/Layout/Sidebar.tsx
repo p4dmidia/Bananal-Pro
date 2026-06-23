@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { 
   LayoutDashboard, 
   Users, 
@@ -13,7 +13,8 @@ import {
   CloudSun,
   Camera,
   Tv,
-  BookOpen
+  BookOpen,
+  MessageCircle
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
@@ -34,6 +35,8 @@ const MENU_ITEMS = [
   { icon: CloudSun, labelKey: "nav.weather", defaultLabel: "Clima", path: "/clima" },
   { icon: Calendar, labelKey: "nav.calendar", defaultLabel: "Calendário Agrícola", path: "/calendario" },
   { icon: Camera, labelKey: "nav.diagnostic", defaultLabel: "Diagnóstico Visual", path: "/diagnostico" },
+  { icon: MessageCircle, labelKey: "nav.whatsapp", defaultLabel: "Suporte WhatsApp", path: "https://wa.me/5531999999999" },
+  { icon: Settings, labelKey: "nav.settings", defaultLabel: "Configurações", path: "/configuracoes" },
 ];
 
 interface SidebarProps {
@@ -46,11 +49,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const { t } = useTranslation();
+
   const activeRef = useRef<HTMLAnchorElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (activeRef.current) {
-      activeRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      activeRef.current.scrollIntoView({ behavior: "auto", block: "nearest" });
     }
   }, [location.pathname]);
 
@@ -72,14 +76,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       )}
 
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-72 bg-black border-r border-white/10 flex flex-col h-screen transition-transform duration-300 lg:sticky lg:translate-x-0
+        fixed inset-y-0 left-0 z-50 w-72 bg-[#0a2413] text-white border-r border-emerald-950 flex flex-col h-screen transition-transform duration-300 lg:translate-x-0
         ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}>
-        <div className="py-4 px-8 flex items-center justify-between">
-          <Link to="/dashboard" className="flex items-center gap-3 group">
-            <img src={logoImg} alt="Bananal PRO" className="h-28 w-auto object-contain -my-6" style={{ filter: 'invert(1)' }} />
+        <div className="py-6 px-4 flex flex-col items-center justify-center relative">
+          <Link to="/dashboard" className="flex items-center justify-center bg-white w-48 h-16 rounded-2xl shadow-md p-2 group hover:scale-105 transition-transform">
+            <img src={logoImg} alt="Bananal PRO" className="h-full w-full object-contain" />
           </Link>
-          <button onClick={onClose} className="lg:hidden text-slate-400 hover:text-white cursor-pointer">
+          <button onClick={onClose} className="absolute right-6 top-6 lg:hidden text-white/80 hover:text-white cursor-pointer">
             <LogOut className="w-6 h-6 rotate-180" />
           </button>
         </div>
@@ -87,24 +91,32 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto min-h-0">
           {MENU_ITEMS.map((item) => {
             const isActive = location.pathname === item.path;
+            const isExternal = item.path.startsWith("http");
+            
+            const linkProps = isExternal 
+              ? { href: item.path, target: "_blank", rel: "noopener noreferrer" } 
+              : { to: item.path };
+              
+            const Tag = isExternal ? "a" : Link;
+
             return (
-              <Link
+              <Tag
                 key={item.path}
-                to={item.path}
-                ref={isActive ? activeRef : undefined}
+                {...linkProps}
+                ref={!isExternal && isActive ? activeRef : undefined}
                 onClick={onClose}
                 className={`flex items-center justify-between p-4 rounded-2xl transition-all group ${
-                  isActive 
-                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/10" 
-                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                  !isExternal && isActive 
+                    ? "bg-white text-primary shadow-lg shadow-black/10" 
+                    : "text-white/80 hover:bg-white/5 hover:text-white"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <item.icon size={22} className={isActive ? "text-white" : "group-hover:text-primary transition-colors"} />
+                  <item.icon size={22} className={!isExternal && isActive ? "text-primary" : "text-white/70 group-hover:text-white transition-colors"} />
                   <span className="font-semibold">{t(item.labelKey, item.defaultLabel)}</span>
                 </div>
-                {isActive && <motion.div layoutId="active-pill"><ChevronRight size={16} /></motion.div>}
-              </Link>
+                {!isExternal && isActive && <motion.div layoutId="active-pill"><ChevronRight size={16} /></motion.div>}
+              </Tag>
             );
           })}
           
@@ -112,37 +124,37 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </nav>
 
         <div className="p-4 mt-auto">
-          <Link to="/perfil" onClick={onClose} className="block glass-card p-4 rounded-2xl border border-white/5 hover:border-emerald-600/30 transition-all mb-4 group/profile">
+          <Link to="/perfil" onClick={onClose} className="block bg-white hover:bg-slate-50 transition-all p-4 rounded-2xl mb-4 group/profile shadow-md border border-primary/10">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-600 p-[2px] group-hover/profile:scale-105 transition-transform">
-                <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
+              <div className="w-10 h-10 rounded-full bg-primary/10 p-[2px] group-hover/profile:scale-105 transition-transform">
+                <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
                   <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userDisplayName}`} alt="User" />
                 </div>
               </div>
               <div className="overflow-hidden flex-1">
-                <p className="text-sm font-bold truncate group-hover/profile:text-emerald-400 transition-colors">{userDisplayName}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">
+                <p className="text-sm font-bold truncate text-primary">{userDisplayName}</p>
+                <p className="text-[10px] text-primary/70 uppercase tracking-wider font-bold">
                   {profile?.role === 'admin' ? t("nav.admin", "Administrador") : `Parceiro • ${profile?.email || user?.email || '---'}`}
                 </p>
               </div>
-              <ChevronRight size={14} className="text-slate-500 group-hover/profile:translate-x-1 transition-transform" />
+              <ChevronRight size={14} className="text-primary/70 group-hover/profile:translate-x-1 transition-transform" />
             </div>
-            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-1 bg-primary/10 rounded-full overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: "10%" }}
-                className="h-full bg-emerald-600"
+                className="h-full bg-primary"
               />
             </div>
-            <p className="text-[10px] text-slate-500 mt-2 text-right">Iniciando jornada</p>
+            <p className="text-[10px] text-primary/70 mt-2 text-right">Iniciando jornada</p>
           </Link>
 
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 p-4 text-slate-400 hover:text-red-400 transition-colors group cursor-pointer"
+            className="w-full flex items-center gap-3 p-4 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all group cursor-pointer"
           >
-            <LogOut size={20} className="group-hover:rotate-12 transition-transform" />
-            <span className="font-semibold">{t("nav.logout", "Sair")}</span>
+            <LogOut size={20} className="group-hover:rotate-12 transition-transform text-red-400" />
+            <span className="font-semibold">{t("nav.logout", "Sair da Conta")}</span>
           </button>
         </div>
       </aside>

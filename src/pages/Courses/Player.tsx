@@ -24,7 +24,7 @@ import {
   Award,
   User as UserIcon
 } from "lucide-react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase as supabaseClient } from "../../lib/supabase";
 const supabase = supabaseClient as any;
 import { Tables } from "../../types/database";
@@ -48,6 +48,8 @@ type Lesson = Tables<'lessons'>;
 export default function CoursePlayer() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialLessonId = searchParams.get("lessonId");
   const { user, profile } = useAuth();
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
@@ -113,8 +115,16 @@ export default function CoursePlayer() {
 
         setModules(modulesWithLessons);
         
-        // Abrir primeiro módulo por padrão
-        if (modulesWithLessons.length > 0) {
+        // Determinar aula inicial
+        let startingLesson = null;
+        if (initialLessonId) {
+          startingLesson = (lessonData || []).find(l => l.id === Number(initialLessonId));
+        }
+
+        if (startingLesson) {
+          setCurrentLesson(startingLesson);
+          setExpandedModules([Number(startingLesson.module_id)]);
+        } else if (modulesWithLessons.length > 0) {
           setExpandedModules([Number(modulesWithLessons[0].id)]);
           if (modulesWithLessons[0].lessons.length > 0) {
             setCurrentLesson(modulesWithLessons[0].lessons[0]);
