@@ -55,6 +55,8 @@ interface ModuleInput {
   title: string;
   lessons: LessonInput[];
   isExpanded: boolean;
+  coverFile: File | null;
+  existingCoverUrl?: string;
 }
 
 export default function ProducerDashboard() {
@@ -274,10 +276,16 @@ export default function ProducerDashboard() {
         const mod = modules[i];
         const isExistingModule = !isNaN(Number(mod.id));
 
-        const modulePayload = {
+        let coverUrl = mod.existingCoverUrl || "";
+        if (mod.coverFile) {
+          coverUrl = await uploadFile(mod.coverFile, 'course-thumbnails');
+        }
+
+        const modulePayload: any = {
           course_id: course.id,
           title: mod.title || `Módulo ${i + 1}`,
-          order_index: i
+          order_index: i,
+          cover_url: coverUrl
         };
 
         let moduleData;
@@ -392,11 +400,12 @@ export default function ProducerDashboard() {
       if (courseError) throw courseError;
 
       // 2. Fetch Modules and Lessons
-      const { data: modulesData, error: modulesError } = await supabase
+      const { data: modulesData, error: modulesError } = await (supabase as any)
         .from('course_modules')
         .select(`
           id,
           title,
+          cover_url,
           lessons (
             id,
             title,
@@ -423,6 +432,8 @@ export default function ProducerDashboard() {
         id: mod.id.toString(),
         title: mod.title || "",
         isExpanded: false,
+        coverFile: null,
+        existingCoverUrl: (mod as any).cover_url || "",
         lessons: (mod.lessons as any[] || []).map(lesson => ({
           id: lesson.id.toString(),
           title: lesson.title || "",
@@ -484,7 +495,9 @@ export default function ProducerDashboard() {
       id: Math.random().toString(36),
       title: "",
       lessons: [],
-      isExpanded: true
+      isExpanded: true,
+      coverFile: null,
+      existingCoverUrl: ""
     };
     setModules([...modules, newModule]);
   };
@@ -529,8 +542,9 @@ export default function ProducerDashboard() {
 
   return (
     <Layout>
-      <div className="space-y-10 max-w-7xl mx-auto">
-        {/* Header */}
+      {!isModalOpen ? (
+        <div className="space-y-10 max-w-7xl mx-auto">
+          {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <h1 className="text-4xl font-display font-bold mb-2">Área do Produtor (LMS)</h1>
@@ -690,60 +704,49 @@ export default function ProducerDashboard() {
           </div>
         </div>
       </div>
-
-      {/* Modal Course Builder */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-10">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/90 backdrop-blur-xl"
-              onClick={() => !isSaving && setIsModalOpen(false)}
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 40 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 40 }}
-              className="relative w-full h-full max-w-6xl bg-zinc-950 border border-white/10 rounded-none md:rounded-[3.5rem] shadow-2xl overflow-hidden flex flex-col"
-            >
-              {/* Builder Header */}
-              <div className="p-8 border-b border-white/5 flex items-center justify-between bg-zinc-900/20">
-                <div className="flex items-center gap-6">
-                  <div className="flex flex-col">
-                    <h2 className="text-2xl font-black text-white uppercase tracking-tighter">
-                      {editingCourseId ? "Editando Treinamento" : step === 1 ? "Identidade do Curso" : "Estrutura do Conteúdo"}
-                    </h2>
-                    <div className="flex gap-2 mt-2">
-                      <div className={`h-1.5 w-12 rounded-full transition-all ${step >= 1 ? "bg-primary" : "bg-white/10"}`} />
-                      <div className={`h-1.5 w-12 rounded-full transition-all ${step >= 2 ? "bg-primary" : "bg-white/10"}`} />
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  {step === 2 && (
-                    <button 
-                      onClick={() => setStep(1)}
-                      className="text-zinc-500 hover:text-white font-bold text-sm px-4"
-                    >
-                      Voltar
-                    </button>
-                  )}
-                  <button 
-                    disabled={isSaving}
-                    onClick={() => setIsModalOpen(false)}
-                    className="p-3 hover:bg-white/5 rounded-2xl text-zinc-500 hover:text-white transition-all"
-                  >
-                    <X size={24} />
-                  </button>
+      ) : (
+        <div className="space-y-10 max-w-7xl mx-auto">
+          {/* Header do Builder em Tela Cheia */}
+          <div className="p-8 border border-white/5 bg-zinc-900/20 rounded-[2.5rem] flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <div className="flex flex-col">
+                <h2 className="text-2xl font-black text-white uppercase tracking-tighter">
+                  {editingCourseId ? "Editando Treinamento" : step === 1 ? "Identidade do Curso" : "Estrutura do Conteúdo"}
+                </h2>
+                <div className="flex gap-2 mt-2">
+                  <div className={`h-1.5 w-12 rounded-full transition-all ${step >= 1 ? "bg-primary" : "bg-white/10"}`} />
+                  <div className={`h-1.5 w-12 rounded-full transition-all ${step >= 2 ? "bg-primary" : "bg-white/10"}`} />
                 </div>
               </div>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              {step === 2 && (
+                <button 
+                  onClick={() => setStep(1)}
+                  className="text-zinc-500 hover:text-white font-bold text-sm px-4"
+                >
+                  Voltar Etapa
+                </button>
+              )}
+              <button 
+                disabled={isSaving}
+                onClick={() => {
+                  if (!isSaving) {
+                    setIsModalOpen(false);
+                    resetForm();
+                  }
+                }}
+                className="bg-white/5 hover:bg-white/10 text-white font-black text-xs uppercase tracking-widest px-6 py-4 rounded-2xl border border-white/10 transition-all flex items-center gap-2"
+              >
+                Cancelar e Sair
+              </button>
+            </div>
+          </div>
 
-              {/* Builder Body */}
-              <div className="flex-1 overflow-y-auto p-6 md:p-12 custom-scrollbar">
-                {step === 1 ? (
+          {/* Builder Body */}
+          <div className="bg-zinc-950/40 border border-white/5 rounded-[2.5rem] p-6 md:p-12">
+            {step === 1 ? (
                   <motion.div 
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -856,52 +859,113 @@ export default function ProducerDashboard() {
                           </div>
                        </div>
                        <button 
-                        onClick={addModule}
-                        className="bg-white/5 hover:bg-white/10 text-white font-black text-xs uppercase tracking-widest px-6 py-4 rounded-2xl border border-white/10 transition-all flex items-center gap-2"
-                       >
-                         <Plus size={16} />
-                         Novo Módulo
-                       </button>
-                    </div>
+                    onClick={addModule}
+                    className="bg-primary hover:bg-primary/90 text-white font-black text-xs uppercase tracking-widest px-6 py-4 rounded-2xl border border-primary/20 transition-all flex items-center gap-2 shadow-lg shadow-primary/20 active:scale-95 cursor-pointer"
+                   >
+                     <Plus size={16} />
+                     Novo Módulo
+                   </button>
+                </div>
 
-                    {/* Modules List */}
-                    <div className="space-y-6">
-                      {modules.map((mod, modIdx) => (
-                        <div key={mod.id} className="bg-zinc-900/30 border border-white/5 rounded-[2.5rem] overflow-hidden transition-all">
-                          <div className="p-6 flex items-center justify-between bg-white/5">
-                             <div className="flex items-center gap-4 flex-1">
-                                <GripVertical className="text-zinc-800" />
-                                <input 
-                                  type="text" 
-                                  placeholder="Ex: Módulo 1 - Fundamentos do Negócio"
-                                  value={mod.title}
-                                  onChange={(e) => {
-                                    const newMods = [...modules];
-                                    newMods[modIdx].title = e.target.value;
-                                    setModules(newMods);
-                                  }}
-                                  className="bg-transparent border-none text-white font-black text-xl focus:ring-0 w-full placeholder:text-zinc-800"
-                                />
-                             </div>
-                             <div className="flex items-center gap-3">
-                                 <button 
-                                   onClick={() => addLesson(mod.id)}
-                                   className="text-xs font-extrabold text-white bg-primary px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-all uppercase tracking-wider shadow-md active:scale-95 flex items-center gap-1"
-                                 >
-                                   <Plus size={14} />
-                                   Aula
-                                 </button>
-                                <button 
-                                  onClick={() => setModules(modules.filter(m => m.id !== mod.id))}
-                                  className="p-2 text-zinc-700 hover:text-primary transition-colors"
-                                >
-                                  <Trash2 size={20} />
-                                </button>
-                             </div>
+                {/* Modules List */}
+                <div className="space-y-6">
+                  {modules.map((mod, modIdx) => (
+                    <div key={mod.id} className="bg-zinc-900/30 border border-white/5 rounded-[2.5rem] overflow-hidden transition-all">
+                      <div className="p-6 flex items-center justify-between bg-white/5">
+                         <div className="flex items-center gap-4 flex-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newMods = [...modules];
+                                newMods[modIdx].isExpanded = !newMods[modIdx].isExpanded;
+                                setModules(newMods);
+                              }}
+                              className="text-zinc-500 hover:text-white p-1 transition-transform duration-200"
+                              style={{ transform: mod.isExpanded ? "rotate(0deg)" : "rotate(-90deg)" }}
+                            >
+                              <ChevronDown size={20} />
+                            </button>
+                            <GripVertical className="text-zinc-800" />
+                            <input 
+                              type="text" 
+                              placeholder="Ex: Módulo 1 - Fundamentos do Negócio"
+                              value={mod.title}
+                              onChange={(e) => {
+                                const newMods = [...modules];
+                                newMods[modIdx].title = e.target.value;
+                                setModules(newMods);
+                              }}
+                              className="bg-transparent border-none text-white font-black text-xl focus:ring-0 w-full placeholder:text-zinc-800"
+                            />
+                         </div>
+                         <div className="flex items-center gap-3">
+                             <button 
+                               onClick={() => addLesson(mod.id)}
+                               className="text-xs font-extrabold text-white bg-primary px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-all uppercase tracking-wider shadow-md active:scale-95 flex items-center gap-1"
+                             >
+                               <Plus size={14} />
+                               Aula
+                             </button>
+                             <button 
+                               onClick={() => setModules(modules.filter(m => m.id !== mod.id))}
+                               className="p-2 text-zinc-700 hover:text-primary transition-colors"
+                             >
+                               <Trash2 size={20} />
+                             </button>
+                         </div>
+                      </div>
+
+                      {mod.isExpanded && (
+                        <div className="p-6 space-y-4">
+                        {/* Capa do Módulo */}
+                        <div className="flex flex-col md:flex-row items-center gap-6 p-6 bg-black/20 border border-white/5 rounded-3xl mb-6">
+                          <div 
+                            onClick={() => document.getElementById(`module-cover-${mod.id}`)?.click()}
+                            className="w-full md:w-48 aspect-video bg-zinc-950 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary/30 overflow-hidden relative group shrink-0"
+                          >
+                            {mod.coverFile ? (
+                              <img src={URL.createObjectURL(mod.coverFile)} className="w-full h-full object-cover" alt="" />
+                            ) : mod.existingCoverUrl ? (
+                              <img src={mod.existingCoverUrl} className="w-full h-full object-cover" alt="" />
+                            ) : (
+                              <>
+                                <ImageIcon size={20} className="text-zinc-700 group-hover:text-primary transition-colors" />
+                                <span className="text-[10px] font-black text-zinc-700 group-hover:text-zinc-500 uppercase">Capa do Módulo</span>
+                              </>
+                            )}
+                            <input 
+                              id={`module-cover-${mod.id}`} 
+                              type="file" 
+                              className="hidden" 
+                              accept="image/*" 
+                              onChange={(e) => {
+                                const file = e.target.files?.[0] || null;
+                                const newMods = [...modules];
+                                newMods[modIdx].coverFile = file;
+                                setModules(newMods);
+                              }} 
+                            />
                           </div>
+                          <div className="flex-1 space-y-1">
+                            <h4 className="text-sm font-bold text-white">Imagem de Capa do Módulo</h4>
+                            <p className="text-xs text-zinc-500">Esta imagem será mostrada como plano de fundo do card deste módulo no catálogo.</p>
+                            {(mod.coverFile || mod.existingCoverUrl) && (
+                              <button 
+                                onClick={() => {
+                                  const newMods = [...modules];
+                                  newMods[modIdx].coverFile = null;
+                                  newMods[modIdx].existingCoverUrl = "";
+                                  setModules(newMods);
+                                }}
+                                className="text-[10px] font-black text-primary hover:text-red-400 uppercase tracking-widest mt-2 bg-transparent border-none cursor-pointer"
+                              >
+                                Remover Capa
+                              </button>
+                            )}
+                          </div>
+                        </div>
 
-                          <div className="p-6 space-y-4">
-                            {mod.lessons.map((lesson, lessonIdx) => (
+                        {mod.lessons.map((lesson, lessonIdx) => (
                               <div key={lesson.id} className="bg-black/40 border border-white/5 rounded-[2rem] p-6 grid grid-cols-1 md:grid-cols-12 gap-6 group hover:border-white/10 transition-all">
                                  {/* Lesson Thumbnail */}
                                  <div className="md:col-span-3">
@@ -1086,9 +1150,10 @@ export default function ProducerDashboard() {
                                  <p className="text-zinc-800 font-bold text-sm">Este módulo ainda não tem aulas.</p>
                               </div>
                             )}
-                          </div>
-                        </div>
-                      ))}
+                       </div>
+                     )}
+                    </div>
+                  ))}
 
                       {modules.length === 0 && (
                         <div className="py-20 text-center border-2 border-dashed border-white/5 rounded-[3rem]">
@@ -1111,11 +1176,9 @@ export default function ProducerDashboard() {
                     </div>
                   </motion.div>
                 )}
-              </div>
-            </motion.div>
+            </div>
           </div>
         )}
-      </AnimatePresence>
-    </Layout>
-  );
-}
+      </Layout>
+    );
+  }

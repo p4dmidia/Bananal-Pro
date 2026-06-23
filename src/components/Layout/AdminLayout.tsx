@@ -8,13 +8,15 @@ import {
   Settings,
   LogOut,
   Bell,
-  Search,
   X,
   Menu,
   Video,
-  BookOpen
+  BookOpen,
+  ChevronRight,
+  MessageSquare
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import logoImg from "../../assets/logo.png";
 
 const adminMenuItems = [
   { icon: LayoutDashboard, label: "Visão Geral", path: "/admin" },
@@ -24,10 +26,9 @@ const adminMenuItems = [
   { icon: ShieldCheck, label: "Cursos", path: "/admin/cursos" },
   { icon: Video, label: "Lives", path: "/admin/lives" },
   { icon: BookOpen, label: "Biblioteca", path: "/admin/biblioteca" },
+  { icon: MessageSquare, label: "Comunidade", path: "/comunidade" },
   { icon: Settings, label: "Configurações", path: "/admin/config" },
 ];
-
-import logoImg from "../../assets/logo.png";
 
 const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const location = useLocation();
@@ -38,26 +39,28 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       {/* Mobile Overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden"
           onClick={onClose}
         />
       )}
 
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-72 bg-black border-r border-white/5 flex flex-col h-screen transition-transform duration-300 lg:sticky lg:translate-x-0
+        fixed inset-y-0 left-0 z-50 w-72 bg-[#0a2413] text-white border-r border-emerald-950 flex flex-col h-screen transition-transform duration-300 lg:translate-x-0
         ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}>
-        <div className="py-4 px-8 flex items-center justify-between">
-          <Link to="/admin" className="flex items-center gap-3 group">
-            <img src={logoImg} alt="Bananal PRO" className="h-28 w-auto object-contain -my-6" style={{ filter: 'invert(1)' }} />
-            <span className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest self-center ml-1">Admin</span>
-          </Link>
-          <button onClick={onClose} className="lg:hidden text-zinc-500 hover:text-white">
+        <div className="py-6 px-4 flex flex-col items-center justify-center relative">
+          <div className="relative">
+            <Link to="/admin" className="flex items-center justify-center bg-white w-48 h-16 rounded-2xl shadow-md p-2 group hover:scale-105 transition-transform">
+              <img src={logoImg} alt="Bananal PRO" className="h-full w-full object-contain" />
+            </Link>
+            <span className="absolute -top-2 -right-2 bg-emerald-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-md">Admin</span>
+          </div>
+          <button onClick={onClose} className="absolute right-6 top-6 lg:hidden text-white/80 hover:text-white cursor-pointer">
             <X size={24} />
           </button>
         </div>
 
-        <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto min-h-0">
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto min-h-0">
           {adminMenuItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -65,38 +68,49 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
                 key={item.path}
                 to={item.path}
                 onClick={onClose}
-                className={`flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold text-sm transition-all group ${
+                className={`flex items-center justify-between p-4 rounded-2xl transition-all group ${
                   isActive 
-                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/10" 
-                    : "text-zinc-500 hover:text-white hover:bg-white/5"
+                    ? "bg-white text-primary shadow-lg shadow-black/10" 
+                    : "text-white/80 hover:bg-white/5 hover:text-white"
                 }`}
               >
-                <item.icon size={20} className={isActive ? "text-white" : "group-hover:text-emerald-500 transition-colors"} />
-                {item.label}
+                <div className="flex items-center gap-3">
+                  <item.icon size={22} className={isActive ? "text-primary" : "text-white/70 group-hover:text-white transition-colors"} />
+                  <span className="font-semibold">{item.label}</span>
+                </div>
+                {isActive && <ChevronRight size={16} />}
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-4 border-t border-white/5">
-          <div className="bg-zinc-900/50 p-4 rounded-3xl border border-white/5 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full border-2 border-emerald-500 overflow-hidden">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" alt="Admin Avatar" />
+        <div className="p-4 mt-auto">
+          <div className="block bg-white p-4 rounded-2xl mb-4 group/profile shadow-md border border-primary/10">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 p-[2px]">
+                <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                  <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" alt="Admin Avatar" />
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-black text-white uppercase tracking-widest">Administrador Master</p>
-                <p className="text-[10px] text-zinc-500 font-bold">Acesso Total</p>
+              <div className="overflow-hidden flex-1">
+                <p className="text-sm font-bold truncate text-primary">Administrador Master</p>
+                <p className="text-[10px] text-primary/70 uppercase tracking-wider font-bold">
+                  Acesso Total
+                </p>
               </div>
             </div>
-            <button 
-              onClick={() => navigate("/admin/login")}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/5 hover:bg-emerald-500/10 hover:text-emerald-500 text-zinc-500 text-xs font-bold transition-all"
-            >
-              <LogOut size={14} />
-              Encerrar Sessão
-            </button>
+            <div className="h-1 bg-primary/10 rounded-full overflow-hidden">
+              <div className="h-full bg-primary w-full" />
+            </div>
           </div>
+
+          <button 
+            onClick={() => navigate("/admin/login")}
+            className="w-full flex items-center gap-3 p-4 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all group cursor-pointer"
+          >
+            <LogOut size={20} className="group-hover:rotate-12 transition-transform text-red-400" />
+            <span className="font-semibold">Encerrar Sessão</span>
+          </button>
         </div>
       </aside>
     </>
@@ -107,28 +121,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-black text-white font-sans overflow-x-hidden">
+    <div className="flex min-h-screen bg-background text-on-surface font-sans overflow-x-hidden">
       <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 lg:pl-72">
         {/* Admin Navbar */}
-        <header className="h-20 border-b border-white/10 px-4 md:px-8 flex items-center justify-between sticky top-0 bg-black/80 backdrop-blur-md z-40">
+        <header className="h-20 border-b border-outline/10 px-4 md:px-8 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-40">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 text-zinc-400 hover:text-white transition-colors"
+              className="lg:hidden p-2 text-on-surface-variant hover:text-on-surface transition-colors"
             >
               <Menu size={24} />
             </button>
           </div>
 
           <div className="flex items-center gap-3 md:gap-6">
-            <button className="relative p-2 text-zinc-400 hover:text-white transition-colors">
+            <button className="relative p-2 text-on-surface-variant hover:text-on-surface transition-colors">
               <Bell size={22} />
               <span className="absolute top-2 right-2 w-2 h-2 bg-emerald-600 rounded-full" />
             </button>
             
-            <div className="h-8 w-[1px] bg-white/10 hidden sm:block" />
+            <div className="h-8 w-[1px] bg-outline/20 hidden sm:block" />
             
             <div className="hidden xs:flex flex-col items-end">
               <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Servidor</span>

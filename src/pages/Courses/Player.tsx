@@ -31,6 +31,7 @@ import { Tables } from "../../types/database";
 import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "sonner";
 import { getUserDisplayName } from "../../lib/utils";
+import { validateContent } from "../../utils/contentFilter";
 import CertificateModal from "../../components/Courses/CertificateModal";
 import YouTubePlayer from "../../components/Courses/YouTubePlayer";
 
@@ -61,6 +62,7 @@ export default function CoursePlayer() {
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isPosting, setIsPosting] = useState(false);
+  const [customBlockedWords, setCustomBlockedWords] = useState<string[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [materials, setMaterials] = useState<any[]>([]);
   const [loadingMaterials, setLoadingMaterials] = useState(false);
@@ -70,6 +72,32 @@ export default function CoursePlayer() {
   const [showCertificate, setShowCertificate] = useState(false);
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [isCompleting, setIsCompleting] = useState(false);
+
+  const fetchBlockedWords = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'blocked_words')
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data && data.value) {
+        const words = data.value
+          .split(',')
+          .map((w: string) => w.trim())
+          .filter((w: string) => w.length > 0);
+        setCustomBlockedWords(words);
+      }
+    } catch (err) {
+      console.warn("Erro ao buscar palavras bloqueadas personalizadas:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchBlockedWords();
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -354,6 +382,16 @@ export default function CoursePlayer() {
   const handlePostComment = async () => {
     if (!newComment.trim() || !currentLesson || !profile) return;
 
+    const validation = validateContent(newComment.trim(), customBlockedWords);
+    if (!validation.isValid) {
+      if (validation.reason === "profanity") {
+        toast.error(`Seu comentário contém termo impróprio ("${validation.blockedTerm}"). Por favor, seja respeitoso.`);
+      } else if (validation.reason === "links") {
+        toast.error(`Links externos não autorizados ("${validation.blockedTerm}") não são permitidos nas aulas.`);
+      }
+      return;
+    }
+
     setIsPosting(true);
     try {
       const { error } = await supabase
@@ -420,7 +458,96 @@ export default function CoursePlayer() {
 
   return (
     <Layout>
-      <div className="max-w-[1600px] mx-auto pb-20">
+      <div className="max-w-[1600px] mx-auto pb-20 player-page-container">
+        <style dangerouslySetInnerHTML={{ __html: `
+          body:not(.dark-theme) .lg\\:pl-72,
+          body:not(.dark-theme) header,
+          body:not(.dark-theme) main {
+            background-color: #020c08 !important;
+            color: #ffffff !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+          }
+          body:not(.dark-theme) header button,
+          body:not(.dark-theme) header span,
+          body:not(.dark-theme) header svg,
+          body:not(.dark-theme) header div {
+            color: #ffffff !important;
+          }
+          body:not(.dark-theme) header button {
+            background-color: rgba(255, 255, 255, 0.06) !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+          }
+          body:not(.dark-theme) header button:hover {
+            background-color: rgba(255, 255, 255, 0.12) !important;
+          }
+          body:not(.dark-theme) .player-page-container .bg-zinc-900\\/30,
+          body:not(.dark-theme) .player-page-container .bg-zinc-900\\/40,
+          body:not(.dark-theme) .player-page-container .bg-white\\/5,
+          body:not(.dark-theme) .player-page-container .bg-surface-variant\\/20,
+          body:not(.dark-theme) .player-page-container .bg-surface-variant\\/40,
+          body:not(.dark-theme) .player-page-container .bg-surface {
+            background-color: #06150e !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+          }
+          body:not(.dark-theme) .player-page-container .border-white\\/5,
+          body:not(.dark-theme) .player-page-container .border-outline\\/10 {
+            border-color: rgba(255, 255, 255, 0.08) !important;
+          }
+          body:not(.dark-theme) .player-page-container input,
+          body:not(.dark-theme) .player-page-container textarea {
+            background-color: #030a07 !important;
+            color: #ffffff !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+          }
+          body:not(.dark-theme) .player-page-container input::placeholder,
+          body:not(.dark-theme) .player-page-container textarea::placeholder {
+            color: rgba(255, 255, 255, 0.35) !important;
+          }
+          body:not(.dark-theme) .player-page-container h1,
+          body:not(.dark-theme) .player-page-container h2,
+          body:not(.dark-theme) .player-page-container h3,
+          body:not(.dark-theme) .player-page-container h4,
+          body:not(.dark-theme) .player-page-container h5,
+          body:not(.dark-theme) .player-page-container h6,
+          body:not(.dark-theme) .player-page-container .text-white,
+          body:not(.dark-theme) .player-page-container text-white,
+          body:not(.dark-theme) .player-page-container .force-white {
+            color: #ffffff !important;
+          }
+          body:not(.dark-theme) .player-page-container p,
+          body:not(.dark-theme) .player-page-container .text-zinc-300,
+          body:not(.dark-theme) .player-page-container .text-zinc-400 {
+            color: #b5c7bd !important;
+          }
+          body:not(.dark-theme) .player-page-container .text-zinc-500,
+          body:not(.dark-theme) .player-page-container .text-zinc-600 {
+            color: #5d7568 !important;
+          }
+          body:not(.dark-theme) .player-page-container .text-zinc-700 {
+            color: rgba(255, 255, 255, 0.4) !important;
+          }
+          body:not(.dark-theme) .player-page-container .border-emerald-500 {
+            border-color: #10b981 !important;
+          }
+          body:not(.dark-theme) .player-page-container .bg-emerald-500\\/5 {
+            background-color: rgba(16, 185, 129, 0.08) !important;
+          }
+          body:not(.dark-theme) .player-page-container .text-emerald-500 {
+            color: #10b981 !important;
+          }
+          body:not(.dark-theme) .player-page-container .bg-white\\/5 {
+            background-color: rgba(255, 255, 255, 0.06) !important;
+          }
+          body:not(.dark-theme) .player-page-container .bg-white\\/5:hover {
+            background-color: rgba(255, 255, 255, 0.12) !important;
+          }
+          body:has(.player-page-container) ::-webkit-scrollbar-track {
+            background: #020c08 !important;
+          }
+          body:has(.player-page-container) ::-webkit-scrollbar-thumb {
+            background: #0d2f19 !important;
+          }
+        `}} />
         {/* Navigation Breadcrumb */}
         <div className="flex items-center gap-4 mb-8">
            <button 

@@ -108,45 +108,45 @@ export default function AdminModeration() {
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
           <div>
-             <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+             <h1 className="text-3xl font-bold text-on-surface flex items-center gap-3">
                <ShieldAlert className="text-primary" />
                Moderação de Comentários
              </h1>
-             <p className="text-zinc-500 text-sm mt-1">Modere as interações dos alunos nas aulas do Bananal PRO.</p>
+             <p className="text-on-surface-variant text-sm mt-1">Modere as interações dos alunos nas aulas do Bananal PRO.</p>
           </div>
           <button 
             onClick={fetchComments}
-            className="p-3 bg-zinc-900 border border-white/5 rounded-2xl text-zinc-400 hover:text-white transition-all shadow-xl cursor-pointer"
+            className="p-3 bg-white border border-outline/10 rounded-2xl text-on-surface-variant hover:text-on-surface transition-all shadow-sm cursor-pointer"
           >
             <RefreshCcw size={20} className={loading ? "animate-spin" : ""} />
           </button>
         </div>
 
         {/* Date Filter Bar */}
-        <div className="bg-zinc-900/40 border border-white/5 p-6 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white border border-outline/10 p-6 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
             <div className="flex flex-col gap-1.5 flex-1 max-w-xs">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Data Inicial</label>
+              <label className="text-[10px] font-black text-on-surface-variant/60 uppercase tracking-widest ml-1">Data Inicial</label>
               <div className="relative group">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-primary transition-colors" />
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/60 group-focus-within:text-primary transition-colors" />
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full bg-zinc-950/50 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-xs text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all cursor-pointer [color-scheme:dark]"
+                  className="w-full bg-white border border-outline/15 rounded-2xl py-3 pl-12 pr-4 text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all cursor-pointer [color-scheme:light]"
                 />
               </div>
             </div>
 
             <div className="flex flex-col gap-1.5 flex-1 max-w-xs">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Data Final</label>
+              <label className="text-[10px] font-black text-on-surface-variant/60 uppercase tracking-widest ml-1">Data Final</label>
               <div className="relative group">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-primary transition-colors" />
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/60 group-focus-within:text-primary transition-colors" />
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full bg-zinc-950/50 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-xs text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all cursor-pointer [color-scheme:dark]"
+                  className="w-full bg-white border border-outline/15 rounded-2xl py-3 pl-12 pr-4 text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all cursor-pointer [color-scheme:light]"
                 />
               </div>
             </div>
@@ -158,7 +158,7 @@ export default function AdminModeration() {
                 setStartDate("");
                 setEndDate("");
               }}
-              className="px-5 py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-2xl text-xs font-bold transition-all self-end md:self-auto cursor-pointer"
+              className="px-5 py-3 bg-surface hover:bg-on-surface/5 text-on-surface-variant hover:text-on-surface border border-outline/10 rounded-2xl text-xs font-bold transition-all self-end md:self-auto cursor-pointer"
             >
               Limpar Filtros
             </button>
@@ -168,7 +168,7 @@ export default function AdminModeration() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="w-10 h-10 text-primary animate-spin" />
-            <p className="text-zinc-500 font-bold animate-pulse">Sincronizando com o Servidor...</p>
+            <p className="text-on-surface-variant font-bold animate-pulse">Sincronizando com o Servidor...</p>
           </div>
         ) : (
           <div className="grid gap-6">
@@ -196,7 +196,7 @@ export default function AdminModeration() {
                     key={`${comment.type}-${comment.id}`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="bg-zinc-900/60 border border-white/10 p-8 rounded-[2.5rem] flex flex-col md:flex-row justify-between items-start md:items-center group hover:border-primary/20 transition-all shadow-2xl"
+                    className="bg-white border border-outline/10 p-8 rounded-[2.5rem] flex flex-col md:flex-row justify-between items-start md:items-center group hover:border-primary/20 transition-all shadow-sm"
                   >
                     <div className="flex-1">
                       <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -204,16 +204,16 @@ export default function AdminModeration() {
                             <User size={12} /> {comment.user_name}
                          </span>
                          
-                         <span className="flex items-center gap-2 bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full text-[10px] font-black uppercase border border-blue-500/20">
+                         <span className="flex items-center gap-2 bg-blue-500/10 text-blue-500 px-3 py-1 rounded-full text-[10px] font-black uppercase border border-blue-500/20">
                             <BookOpen size={12} /> Curso: {comment.context_title}
                          </span>
 
-                         <span className="flex items-center gap-2 bg-yellow-500/10 text-yellow-500 px-3 py-1 rounded-full text-[10px] font-black uppercase border border-yellow-500/20 animate-pulse">
+                         <span className="flex items-center gap-2 bg-yellow-500/10 text-yellow-600 px-3 py-1 rounded-full text-[10px] font-black uppercase border border-yellow-500/20 animate-pulse">
                             <RefreshCcw size={12} /> Pendente
                          </span>
                       </div>
-                      <p className="text-zinc-100 text-lg leading-relaxed font-medium">"{comment.content}"</p>
-                      <p className="text-[10px] text-zinc-600 font-bold mt-4 uppercase tracking-widest">
+                      <p className="text-on-surface text-lg leading-relaxed font-medium">"{comment.content}"</p>
+                      <p className="text-[10px] text-on-surface-variant/60 font-bold mt-4 uppercase tracking-widest">
                         {new Date(comment.created_at).toLocaleString('pt-BR')}
                       </p>
                     </div>
@@ -222,7 +222,7 @@ export default function AdminModeration() {
                       <button 
                         onClick={() => handleAction(comment.id.toString(), 'approve_comment', comment.type)}
                         disabled={loading}
-                        className="p-4 bg-zinc-800 text-zinc-500 hover:text-emerald-500 rounded-2xl transition-all hover:bg-zinc-700 disabled:opacity-50 cursor-pointer"
+                        className="p-4 bg-surface text-on-surface-variant/70 hover:text-emerald-600 border border-outline/10 rounded-2xl transition-all hover:bg-on-surface/5 disabled:opacity-50 cursor-pointer"
                         title="Aprovar comentário"
                       >
                         <CheckCircle size={24} />
@@ -230,7 +230,7 @@ export default function AdminModeration() {
                       <button 
                         onClick={() => handleAction(comment.id.toString(), 'delete_comment', comment.type)}
                         disabled={loading}
-                        className="p-4 bg-zinc-800 text-zinc-500 hover:text-red-500 rounded-2xl transition-all hover:bg-zinc-700 disabled:opacity-50 cursor-pointer"
+                        className="p-4 bg-surface text-on-surface-variant/70 hover:text-red-500 border border-outline/10 rounded-2xl transition-all hover:bg-on-surface/5 disabled:opacity-50 cursor-pointer"
                         title="Excluir comentário"
                       >
                         <Trash2 size={24} />
@@ -239,9 +239,9 @@ export default function AdminModeration() {
                   </motion.div>
                 ))
               ) : (
-                <div className="py-24 text-center bg-zinc-900/20 rounded-[4rem] border border-dashed border-white/10">
-                   <MessageSquare size={56} className="mx-auto text-zinc-800 mb-4" />
-                   <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs">
+                <div className="py-24 text-center bg-white rounded-[4rem] border border-dashed border-outline/10">
+                   <MessageSquare size={56} className="mx-auto text-on-surface-variant/30 mb-4" />
+                   <p className="text-on-surface-variant/60 font-bold uppercase tracking-widest text-xs">
                      {comments.length > 0 
                        ? "Nenhum comentário encontrado no período selecionado." 
                        : "Nenhum comentário aguardando moderação."}

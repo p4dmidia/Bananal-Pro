@@ -138,7 +138,8 @@ export default function AdminSettings() {
             { id: "2", name: "Plano Anual", price: 790, interval: "anual", description: "Acesso completo por 12 meses com desconto de mais de 20% em relação ao mensal.", is_active: true }
           ]),
           desc: "Planos de assinatura da plataforma de cursos e ferramentas (JSON)"
-        }
+        },
+        { key: "blocked_words", value: "", desc: "Lista de palavras e termos proibidos separados por vírgula para moderação automática de comentários" }
       ];
 
       setSettings(prev => {
@@ -760,6 +761,17 @@ export default function AdminSettings() {
                     onChange={(e) => handleUpdateSetting('max_login_attempts', e.target.value)}
                     className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50" 
                   />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">Palavras e Termos Bloqueados (separados por vírgula)</label>
+                  <textarea 
+                    value={getSetting('blocked_words')} 
+                    onChange={(e) => handleUpdateSetting('blocked_words', e.target.value)}
+                    placeholder="ex: palavra1, palavra2, termo inapropriado"
+                    rows={4}
+                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none font-sans text-sm" 
+                  />
+                  <p className="text-[10px] text-zinc-500 italic">Essas palavras serão adicionadas ao filtro automático em tempo real no feed da comunidade e comentários das aulas.</p>
                 </div>
               </div>
             </section>

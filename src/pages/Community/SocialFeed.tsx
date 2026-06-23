@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Layout from "../../components/Layout/Layout";
+import AdminLayout from "../../components/Layout/AdminLayout";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Users, 
@@ -15,12 +16,17 @@ import {
   Filter,
   CheckCircle2,
   Lock,
-  Loader2
+  Loader2,
+  Trash2,
+  Megaphone,
+  Pencil,
+  Check
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "react-hot-toast";
 import { supabase as supabaseClient } from "../../lib/supabase";
 const supabase = supabaseClient as any;
+import { validateContent } from "../../utils/contentFilter";
 
 interface Post {
   id: string;
@@ -62,6 +68,7 @@ interface Comment {
 
 export default function SocialFeed() {
   const { profile } = useAuth();
+  const LayoutTag = profile?.role === 'admin' ? AdminLayout : Layout;
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [newPostContent, setNewPostContent] = useState("");
@@ -75,6 +82,11 @@ export default function SocialFeed() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [newCommentText, setNewCommentText] = useState("");
+  const [customBlockedWords, setCustomBlockedWords] = useState<string[]>([]);
+  const [announcement, setAnnouncement] = useState("");
+  const [isEditingAnnouncement, setIsEditingAnnouncement] = useState(false);
+  const [newAnnouncementText, setNewAnnouncementText] = useState("");
+  const [isSavingAnnouncement, setIsSavingAnnouncement] = useState(false);
 
   const fetchPosts = async () => {
     try {
@@ -192,8 +204,101 @@ export default function SocialFeed() {
     }
   };
 
+  const fetchBlockedWords = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'blocked_words')
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data && data.value) {
+        const words = data.value
+          .split(',')
+          .map((w: string) => w.trim())
+          .filter((w: string) => w.length > 0);
+        setCustomBlockedWords(words);
+      }
+    } catch (err) {
+      console.warn("Erro ao buscar palavras bloqueadas personalizadas:", err);
+    }
+  };
+
+  const fetchAnnouncement = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'community_announcement')
+        .maybeSingle();
+
+      if (error) throw error;
+      
+      if (data) {
+        setAnnouncement(data.value || "");
+      }
+    } catch (err) {
+      console.warn("Erro ao buscar aviso da comunidade:", err);
+    }
+  };
+
+  const handleSaveAnnouncement = async () => {
+    setIsSavingAnnouncement(true);
+    try {
+      const { error } = await supabase
+        .from('system_settings')
+        .upsert({
+          key: 'community_announcement',
+          value: newAnnouncementText.trim(),
+          updated_at: new Date().toISOString()
+         }, { onConflict: 'key' });
+
+      if (error) throw error;
+
+      setAnnouncement(newAnnouncementText.trim());
+      setIsEditingAnnouncement(false);
+      toast.success("Aviso da comunidade atualizado!");
+    } catch (err: any) {
+      console.error('Error saving announcement:', err);
+      toast.error("Erro ao salvar aviso: " + err.message);
+    } finally {
+      setIsSavingAnnouncement(false);
+    }
+  };
+
+  const handleDeleteAnnouncement = async () => {
+    if (!confirm("Deseja realmente remover o aviso da comunidade?")) return;
+
+    setIsSavingAnnouncement(true);
+    try {
+      const { error } = await supabase
+        .from('system_settings')
+        .upsert({
+          key: 'community_announcement',
+          value: "",
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'key' });
+
+      if (error) throw error;
+
+      setAnnouncement("");
+      setNewAnnouncementText("");
+      setIsEditingAnnouncement(false);
+      toast.success("Aviso da comunidade removido!");
+    } catch (err: any) {
+      console.error('Error deleting announcement:', err);
+      toast.error("Erro ao remover aviso: " + err.message);
+    } finally {
+      setIsSavingAnnouncement(false);
+    }
+  };
+
   useEffect(() => {
     fetchPosts();
+    fetchBlockedWords();
+    fetchAnnouncement();
   }, [profile]);
 
   const handleCreatePost = async (e: React.FormEvent) => {
@@ -202,6 +307,16 @@ export default function SocialFeed() {
 
     if (!profile) {
       toast.error("Você precisa estar logado para publicar.");
+      return;
+    }
+
+    const validation = validateContent(newPostContent, customBlockedWords);
+    if (!validation.isValid) {
+      if (validation.reason === "profanity") {
+        toast.error(`Sua publicação não pôde ser enviada porque contém termo impróprio ("${validation.blockedTerm}"). Por favor, seja respeitoso.`);
+      } else if (validation.reason === "links") {
+        toast.error(`Links externos não autorizados ("${validation.blockedTerm}") não são permitidos na comunidade.`);
+      }
       return;
     }
 
@@ -258,6 +373,45 @@ export default function SocialFeed() {
     } catch (err: any) {
       console.error('Error toggling like:', err);
       toast.error("Erro ao curtir publicação: " + err.message);
+    }
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    if (!confirm("Tem certeza de que deseja excluir esta publicação permanentemente?")) return;
+
+    try {
+      const { error } = await supabase
+        .from('community_posts')
+        .delete()
+        .eq('id', postId);
+
+      if (error) throw error;
+
+      toast.success("Publicação excluída com sucesso!");
+      await fetchPosts();
+    } catch (err: any) {
+      console.error('Error deleting post:', err);
+      toast.error("Erro ao excluir publicação: " + err.message);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string, postId: string) => {
+    if (!confirm("Tem certeza de que deseja excluir este comentário permanentemente?")) return;
+
+    try {
+      const { error } = await supabase
+        .from('community_post_comments')
+        .delete()
+        .eq('id', commentId);
+
+      if (error) throw error;
+
+      toast.success("Comentário excluído com sucesso!");
+      await fetchComments(postId);
+      await fetchPosts();
+    } catch (err: any) {
+      console.error('Error deleting comment:', err);
+      toast.error("Erro ao excluir comentário: " + err.message);
     }
   };
 
@@ -331,6 +485,16 @@ export default function SocialFeed() {
       return;
     }
 
+    const validation = validateContent(newCommentText, customBlockedWords);
+    if (!validation.isValid) {
+      if (validation.reason === "profanity") {
+        toast.error(`Seu comentário contém termo impróprio ("${validation.blockedTerm}"). Por favor, seja respeitoso.`);
+      } else if (validation.reason === "links") {
+        toast.error(`Links externos não autorizados ("${validation.blockedTerm}") não são permitidos na comunidade.`);
+      }
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('community_post_comments')
@@ -368,7 +532,7 @@ export default function SocialFeed() {
   };
 
   return (
-    <Layout>
+    <LayoutTag>
       <div className="max-w-7xl mx-auto space-y-10 pb-20">
         
         {/* Header */}
@@ -404,6 +568,85 @@ export default function SocialFeed() {
           {/* Feed Column */}
           <div className="lg:col-span-2 space-y-6">
             
+            {/* Announcement Section */}
+            {(announcement || profile?.role === 'admin') && (
+              <div className="bg-gradient-to-r from-emerald-900 to-[#072413] border border-emerald-500/25 p-6 rounded-[2rem] shadow-md relative overflow-hidden text-white flex gap-4 items-start">
+                <div className="p-3 bg-white/10 rounded-2xl text-emerald-400 shrink-0">
+                  <Megaphone size={24} className="animate-bounce" />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Aviso Importante</span>
+                    {profile?.role === 'admin' && (
+                      <div className="flex gap-2">
+                        {!isEditingAnnouncement ? (
+                          <>
+                            <button 
+                              onClick={() => {
+                                setNewAnnouncementText(announcement);
+                                setIsEditingAnnouncement(true);
+                              }}
+                              className="text-xs bg-white/10 hover:bg-white/20 text-white font-bold px-3 py-1.5 rounded-xl cursor-pointer flex items-center gap-1 transition-all"
+                              title="Editar aviso"
+                            >
+                              <Pencil size={12} />
+                              <span>Editar</span>
+                            </button>
+                            {announcement && (
+                              <button 
+                                onClick={handleDeleteAnnouncement}
+                                className="text-xs bg-red-650/20 hover:bg-red-600/30 text-red-400 font-bold px-3 py-1.5 rounded-xl cursor-pointer flex items-center gap-1 transition-all"
+                                title="Excluir aviso"
+                              >
+                                <Trash2 size={12} />
+                                <span>Remover</span>
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <button 
+                              onClick={handleSaveAnnouncement}
+                              disabled={isSavingAnnouncement}
+                              className="text-xs bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-xl cursor-pointer flex items-center gap-1 transition-all"
+                            >
+                              <Check size={12} />
+                              <span>Salvar</span>
+                            </button>
+                            <button 
+                              onClick={() => setIsEditingAnnouncement(false)}
+                              disabled={isSavingAnnouncement}
+                              className="text-xs bg-white/10 hover:bg-white/20 text-white font-bold px-3 py-1.5 rounded-xl cursor-pointer flex items-center gap-1 transition-all"
+                            >
+                              <span>Cancelar</span>
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {isEditingAnnouncement ? (
+                    <textarea
+                      value={newAnnouncementText}
+                      onChange={(e) => setNewAnnouncementText(e.target.value)}
+                      placeholder="Digite o aviso para toda a comunidade..."
+                      rows={3}
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none font-sans"
+                    />
+                  ) : announcement ? (
+                    <p className="text-sm font-medium leading-relaxed whitespace-pre-line text-white/95">
+                      {announcement}
+                    </p>
+                  ) : (
+                    <p className="text-sm font-medium italic text-white/60">
+                      Nenhum aviso ativo. Clique em "Editar" para adicionar um aviso para a comunidade.
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Create Post Card */}
             <div className="bg-surface p-6 rounded-[2rem] border border-outline/10 shadow-sm space-y-4">
               <form onSubmit={handleCreatePost} className="space-y-4">
@@ -491,7 +734,9 @@ export default function SocialFeed() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-bold text-on-surface text-sm">{post.author.name}</h4>
+                            <h4 className="font-bold text-on-surface text-sm">
+                              {post.author.reputation === 'Especialista' ? `Admin - ${post.author.name}` : post.author.name}
+                            </h4>
                             <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded border ${getReputationBadgeColor(post.author.reputation)}`}>
                               {post.author.reputation}
                             </span>
@@ -545,6 +790,17 @@ export default function SocialFeed() {
                         <span>{post.commentsCount} Comentários</span>
                       </button>
 
+                      {profile?.role === 'admin' && (
+                        <button
+                          onClick={() => handleDeletePost(post.id)}
+                          className="flex items-center gap-2 text-xs font-bold text-red-500 hover:text-red-700 transition-colors cursor-pointer"
+                          title="Excluir publicação (Admin)"
+                        >
+                          <Trash2 size={16} />
+                          <span>Excluir</span>
+                        </button>
+                      )}
+
                       <span className="text-[10px] text-on-surface-variant ml-auto font-medium self-center">
                         {post.timeAgo}
                       </span>
@@ -563,15 +819,28 @@ export default function SocialFeed() {
                           <div className="space-y-3 max-h-60 overflow-y-auto no-scrollbar pr-2">
                             {comments.length > 0 ? (
                               comments.map((comment) => (
-                                <div key={comment.id} className="flex gap-2 items-start text-xs bg-surface-variant/40 p-3 rounded-xl border border-outline/10">
+                                <div key={comment.id} className="flex gap-2 items-start text-xs bg-surface-variant/40 p-3 rounded-xl border border-outline/10 w-full relative">
                                   <div className="w-6 h-6 rounded-full overflow-hidden bg-surface shrink-0">
                                     <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.author.avatarSeed}`} alt="" />
                                   </div>
-                                  <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-bold text-on-surface">{comment.author.name}</span>
-                                      <span className="text-[8px] bg-primary-container px-1.5 py-0.5 rounded text-primary font-bold uppercase">{comment.author.role}</span>
-                                      <span className="text-[8px] text-on-surface-variant">{comment.timeAgo}</span>
+                                  <div className="space-y-1 flex-1">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-bold text-on-surface">
+                                          {comment.author.role === 'Agrônomo' || comment.author.role === 'admin' ? `Admin - ${comment.author.name}` : comment.author.name}
+                                        </span>
+                                        <span className="text-[8px] bg-primary-container px-1.5 py-0.5 rounded text-primary font-bold uppercase">{comment.author.role}</span>
+                                        <span className="text-[8px] text-on-surface-variant">{comment.timeAgo}</span>
+                                      </div>
+                                      {profile?.role === 'admin' && (
+                                        <button
+                                          onClick={() => handleDeleteComment(comment.id, post.id)}
+                                          className="text-red-500 hover:text-red-700 transition-colors p-1 rounded hover:bg-red-500/10 cursor-pointer"
+                                          title="Excluir comentário (Admin)"
+                                        >
+                                          <Trash2 size={12} />
+                                        </button>
+                                      )}
                                     </div>
                                     <p className="text-on-surface">{comment.content}</p>
                                   </div>
@@ -679,6 +948,6 @@ export default function SocialFeed() {
 
         </div>
       </div>
-    </Layout>
+    </LayoutTag>
   );
 }

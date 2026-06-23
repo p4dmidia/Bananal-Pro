@@ -32,7 +32,7 @@ export function ProtectedRoute({
 
   // 3. Se for rota de ADMIN, precisamos esperar o carregamento do perfil
   if (adminOnly) {
-    if (profileLoading) {
+    if (profileLoading && !profile) {
       return (
         <div className="min-h-screen bg-black flex items-center justify-center flex-col gap-4">
           <Loader2 className="w-8 h-8 text-red-600 animate-spin" />

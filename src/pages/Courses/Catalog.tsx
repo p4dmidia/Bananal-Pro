@@ -72,12 +72,12 @@ const MODULE_THEMES = [
   }
 ];
 
-const getModuleTheme = (title: string, index: number) => {
+const getModuleTheme = (title: string, index: number, coverUrl?: string) => {
   const theme = MODULE_THEMES[index % MODULE_THEMES.length];
   return {
     title: title.startsWith("Módulo") ? `Módulo ${index}: ${theme.title}` : title,
     desc: theme.desc,
-    cover: theme.cover,
+    cover: coverUrl || theme.cover,
   };
 };
 
@@ -104,6 +104,13 @@ export default function Catalog() {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const handleAccessModule = (mod: Module) => {
+    if (!mod.lessons || mod.lessons.length === 0) return;
+    const firstUncompleted = mod.lessons.find(l => !completedLessons.includes(Number(l.id)));
+    const targetLesson = firstUncompleted || mod.lessons[0];
+    navigate(`/cursos/player/${course?.id}?lessonId=${targetLesson.id}`);
+  };
 
   // Buscar dados principais
   useEffect(() => {
@@ -194,7 +201,7 @@ export default function Catalog() {
         // 6. Enriquecer os módulos (Módulo 0, Módulo 1, etc.)
         const enrichedModules = (modulesData || []).map((mod, index) => {
           const modLessons = allLessons.filter(lesson => lesson.module_id === mod.id);
-          const theme = getModuleTheme(mod.title, index);
+          const theme = getModuleTheme(mod.title, index, (mod as any).cover_url);
           
           const completedInModule = modLessons.filter(l => completedIds.includes(Number(l.id))).length;
           const progressPercent = modLessons.length > 0 ? Math.round((completedInModule / modLessons.length) * 100) : 0;
@@ -249,7 +256,7 @@ export default function Catalog() {
       return "https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&q=80&w=600";
     }
     if (category.includes("sustent") || category.includes("org")) {
-      return "https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?auto=format&fit=crop&q=80&w=600";
+      return "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&q=80&w=600";
     }
     if (category.includes("finan") || category.includes("gest")) {
       return "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600";
@@ -409,8 +416,11 @@ export default function Catalog() {
     <Layout>
       <div className="space-y-12 pb-20 max-w-[1600px] mx-auto hero-banner-container">
         
-        {/* Estilos customizados para contornar overrides agressivos do index.css e forçar textos brancos legíveis */}
+        {/* Estilos customizados para contornar overrides agressivos do index.css e forçar elementos legíveis */}
         <style dangerouslySetInnerHTML={{ __html: `
+          body:not(.dark-theme) .hero-banner-container .force-white,
+          body:not(.dark-theme) .force-white,
+          body .force-white,
           .hero-banner-container .force-white {
             color: #ffffff !important;
           }
@@ -426,10 +436,60 @@ export default function Catalog() {
           .hero-banner-container .force-emerald-400 {
             color: #34d399 !important;
           }
-          .hero-banner-container button.bg-white span,
-          .hero-banner-container button.bg-white svg,
-          .hero-banner-container button.bg-white {
-            color: #000000 !important;
+          .hero-banner-container .hero-card-custom {
+            background-color: #000000 !important;
+          }
+          .hero-banner-container .gradient-t-custom {
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.1) 60%, transparent 100%) !important;
+          }
+          .hero-banner-container .gradient-r-custom {
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.1) 60%, transparent 100%) !important;
+          }
+          .hero-banner-container .selo-premium-badge {
+            background-color: rgba(255, 255, 255, 0.15) !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+          }
+          .hero-banner-container .btn-continuar {
+            background-color: #006d3b !important;
+            color: #ffffff !important;
+            border: 1px solid #006d3b !important;
+          }
+          .hero-banner-container .btn-continuar:hover {
+            background-color: #00522c !important;
+            border-color: #00522c !important;
+          }
+          .hero-banner-container .btn-continuar svg {
+            color: #ffffff !important;
+            fill: #ffffff !important;
+          }
+          .hero-banner-container .btn-modulos {
+            background-color: #ffffff !important;
+            color: #006d3b !important;
+            border: 1px solid #ffffff !important;
+          }
+          .hero-banner-container .btn-modulos:hover {
+            background-color: #f4f4f5 !important;
+            border-color: #f4f4f5 !important;
+            color: #00522c !important;
+          }
+          .hero-banner-container .btn-modulos svg {
+            color: #006d3b !important;
+          }
+          .hero-banner-container .btn-modulos:hover svg {
+            color: #00522c !important;
+          }
+          .hero-banner-container .btn-card-acessar {
+            background-color: rgba(255, 255, 255, 0.12) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+            backdrop-filter: blur(8px) !important;
+          }
+          .hero-banner-container .btn-card-acessar:hover {
+            background-color: rgba(255, 255, 255, 0.25) !important;
+            color: #ffffff !important;
+          }
+          .hero-banner-container .card-gradient-custom {
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.15) 50%, transparent 100%) !important;
           }
         `}} />
 
@@ -437,29 +497,29 @@ export default function Catalog() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative w-full rounded-[3.5rem] overflow-hidden min-h-[480px] lg:min-h-[520px] border border-outline/15 bg-black flex flex-col justify-end p-8 md:p-16 lg:p-20 shadow-2xl"
+          className="relative w-full rounded-[3.5rem] overflow-hidden min-h-[480px] lg:min-h-[520px] border border-outline/15 hero-card-custom flex flex-col justify-end p-8 md:p-16 lg:p-20 shadow-2xl"
         >
           {/* Capa de Fundo com Imagem mais nítida e vibrante */}
           <div className="absolute inset-0 z-0">
             <img 
               src={course.thumbnail_url || "https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?auto=format&fit=crop&q=80&w=1600"} 
-              className="w-full h-full object-cover opacity-80 brightness-[0.95]"
+              className="w-full h-full object-cover opacity-100 brightness-[1.08]"
               alt="Capa Bananal PRO"
             />
             {/* Gradientes controlados para dar contraste aos textos sem apagar a imagem */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
+            <div className="absolute inset-0 gradient-t-custom" />
+            <div className="absolute inset-0 gradient-r-custom" />
           </div>
 
           {/* Conteúdo do Banner */}
           <div className="relative z-10 space-y-8 max-w-4xl">
             {/* Selo Premium + Info */}
             <div className="flex flex-wrap items-center gap-3">
-              <div className="bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 force-white">
+              <div className="selo-premium-badge backdrop-blur-md px-3.5 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 force-white">
                 <Star size={12} className="text-yellow-400 fill-yellow-400" />
                 Selo Premium
               </div>
-              <div className="text-[10px] font-black force-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1.5 rounded-full uppercase tracking-widest">
+              <div className="text-[10px] font-black force-white bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1.5 rounded-full uppercase tracking-widest">
                 Formação Oficial
               </div>
             </div>
@@ -469,7 +529,7 @@ export default function Catalog() {
               <h1 className="text-5xl md:text-7xl font-display font-black tracking-tight leading-none force-white">
                 {course.title === 'grilo' || course.title === 'rick' || course.title === ' girino   adulto ' ? 'BANANAL PRO' : course.title.toUpperCase()}
               </h1>
-              <p className="text-zinc-200 text-lg md:text-xl font-medium max-w-2xl leading-relaxed force-zinc-250">
+              <p className="text-lg md:text-xl font-medium max-w-2xl leading-relaxed force-white">
                 Formação completa para produtores que desejam aumentar produtividade, melhorar gestão e obter mais resultados.
               </p>
             </div>
@@ -484,7 +544,7 @@ export default function Catalog() {
                     navigate(`/cursos/player/${course.id}`);
                   }
                 }}
-                className="bg-white text-black hover:bg-zinc-200 transition-all font-black text-xs uppercase tracking-widest px-8 py-5 rounded-2xl flex items-center gap-3 active:scale-95 shadow-xl shadow-white/5 cursor-pointer"
+                className="btn-continuar transition-all font-black text-xs uppercase tracking-widest px-8 py-5 rounded-2xl flex items-center gap-3 active:scale-95 shadow-xl cursor-pointer"
               >
                 <Play size={16} fill="currentColor" />
                 Continuar Assistindo
@@ -496,7 +556,7 @@ export default function Catalog() {
                     modSection.scrollIntoView({ behavior: "smooth" });
                   }
                 }}
-                className="bg-white/10 hover:bg-white/20 text-white transition-all border border-white/15 font-black text-xs uppercase tracking-widest px-8 py-5 rounded-2xl flex items-center gap-3 active:scale-95 cursor-pointer"
+                className="btn-modulos transition-all border font-black text-xs uppercase tracking-widest px-8 py-5 rounded-2xl flex items-center gap-3 active:scale-95 cursor-pointer"
               >
                 <BookOpen size={16} />
                 Ver Módulos
@@ -572,77 +632,67 @@ export default function Catalog() {
                 >
                   {/* Card Módulo Premium */}
                   <div 
-                    onClick={() => setSelectedModule(isSelected ? null : mod)}
-                    className={`w-[290px] h-[440px] bg-surface border rounded-[2.5rem] overflow-hidden flex flex-col justify-between p-5 cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] relative group ${
-                      isSelected 
-                        ? "border-emerald-500 ring-2 ring-emerald-500/20" 
-                        : "border-outline/10 hover:border-outline/25"
-                    }`}
+                    onClick={() => handleAccessModule(mod)}
+                    className="relative w-[290px] h-[500px] rounded-[2.5rem] overflow-hidden flex flex-col justify-between p-6 cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border group border-white/10 hover:border-white/20"
                   >
-                    {/* Capa do Módulo com Selo */}
-                    <div className="relative h-[190px] rounded-[2rem] overflow-hidden bg-surface-variant shrink-0">
+                    {/* Capa de Fundo (Imagem do Módulo) */}
+                    <div className="absolute inset-0 z-0 bg-zinc-950">
                       <img 
                         src={mod.cover} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                        className="w-full h-full object-cover opacity-100 group-hover:scale-105 transition-transform duration-700" 
                         alt={mod.title}
                       />
-                      
-                      <div className="absolute top-4 left-4 z-10">
-                        <span className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border backdrop-blur-md ${
-                          mod.status === "Concluído" 
-                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
-                            : mod.status === "Em andamento"
-                            ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                            : "bg-black/45 text-zinc-300 border-white/10"
-                        }`}>
-                          {mod.status}
-                        </span>
-                      </div>
                     </div>
 
-                    {/* Informações do Módulo */}
-                    <div className="flex-1 flex flex-col justify-between pt-5 space-y-4">
+                    {/* Badge de Status (Z-10 para ficar acima do fundo) */}
+                    <div className="relative z-10 self-start">
+                      <span className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border backdrop-blur-md ${
+                        mod.status === "Concluído" 
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                          : mod.status === "Em andamento"
+                          ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                          : "bg-black/45 text-white force-white border-white/10"
+                      }`}>
+                        {mod.status}
+                      </span>
+                    </div>
+
+                    {/* Informações do Módulo (Z-10) */}
+                    <div className="relative z-10 flex flex-col justify-end space-y-4 pt-5">
+                      
+                      {/* Tempo e Aulas */}
+                      <div className="flex items-center justify-between text-xs font-semibold force-white">
+                        <span className="flex items-center gap-1 force-white">
+                          <Clock size={12} className="force-white" />
+                          {mod.lessons.length * 15} min
+                        </span>
+                        <span className="force-white">{mod.lessons.length} aulas</span>
+                      </div>
+
+                      {/* Barra de Progresso */}
                       <div className="space-y-1.5">
-                        <span className="text-[9px] font-black text-secondary-fixed uppercase tracking-wider">Módulo {index}</span>
-                        <h3 className="text-base font-headline font-black text-on-surface leading-snug line-clamp-2">
-                          {mod.title}
-                        </h3>
+                        <div className="w-full h-1 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255, 255, 255, 0.25)' }}>
+                          <div 
+                            className="h-full bg-emerald-500 rounded-full" 
+                            style={{ width: `${mod.progressPercent}%` }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] font-bold force-white">
+                          <span className="force-white">Progresso</span>
+                          <span className="force-white">{mod.progressPercent}%</span>
+                        </div>
                       </div>
 
-                      {/* Progresso & Tempo */}
-                      <div className="space-y-4 pt-2 border-t border-outline/10">
-                        <div className="flex items-center justify-between text-xs text-on-surface-variant font-semibold">
-                          <span className="flex items-center gap-1">
-                            <Clock size={12} />
-                            {mod.lessons.length * 15} min
-                          </span>
-                          <span>{mod.lessons.length} aulas</span>
-                        </div>
-
-                        {/* Barra de progresso */}
-                        <div className="space-y-1.5">
-                          <div className="w-full h-1 bg-outline/10 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-emerald-500 rounded-full" 
-                              style={{ width: `${mod.progressPercent}%` }}
-                            />
-                          </div>
-                          <div className="flex items-center justify-between text-[10px] font-bold text-on-surface-variant">
-                            <span>Progresso</span>
-                            <span>{mod.progressPercent}%</span>
-                          </div>
-                        </div>
-
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedModule(isSelected ? null : mod);
-                          }}
-                          className="w-full py-3 text-[10px] font-black uppercase tracking-widest text-center rounded-xl bg-surface-variant hover:bg-outline/10 text-on-surface transition-all duration-200"
-                        >
-                          {isSelected ? "Fechar Detalhes" : "Acessar Módulo"}
-                        </button>
-                      </div>
+                      {/* Botão Acessar Módulo */}
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAccessModule(mod);
+                        }}
+                        className="btn-card-acessar w-full py-3.5 text-[10px] font-black uppercase tracking-widest text-center rounded-xl transition-all duration-200 cursor-pointer"
+                      >
+                        Acessar Módulo
+                      </button>
                     </div>
                   </div>
                 </div>

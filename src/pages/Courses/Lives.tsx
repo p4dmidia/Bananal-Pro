@@ -94,7 +94,7 @@ function getSessionThumbnail(item: any) {
     return "https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&q=80&w=600";
   }
   if (category.includes("sustent") || category.includes("org")) {
-    return "https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?auto=format&fit=crop&q=80&w=600";
+    return "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&q=80&w=600";
   }
   if (category.includes("finan") || category.includes("gest")) {
     return "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=600";
@@ -142,7 +142,7 @@ const fallbackSessions: LiveSession[] = [
     date: "18 Mai 2026",
     duration: "1h 42min",
     category: "Manejo Sustentável",
-    videoUrl: "https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?auto=format&fit=crop&q=80&w=600",
+    videoUrl: "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&q=80&w=600",
     description: "Controle biológico e práticas culturais para reduzir infestação de fitonematoides.",
     live_url: "",
     replay_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",

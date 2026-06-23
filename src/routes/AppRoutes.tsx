@@ -64,6 +64,7 @@ export default function AppRoutes() {
         <Route path="/admin/financeiro" element={<ProtectedRoute adminOnly={true}><AdminFinancial /></ProtectedRoute>} />
         <Route path="/admin/moderacao" element={<ProtectedRoute adminOnly={true}><AdminModeration /></ProtectedRoute>} />
         <Route path="/admin/cursos" element={<ProtectedRoute adminOnly={true}><AdminCourses /></ProtectedRoute>} />
+        <Route path="/admin/cursos/detalhes/:id" element={<ProtectedRoute adminOnly={true}><CourseDetail /></ProtectedRoute>} />
         <Route path="/admin/config" element={<ProtectedRoute adminOnly={true}><AdminSettings /></ProtectedRoute>} />
         <Route path="/admin/lives" element={<ProtectedRoute adminOnly={true}><AdminLives /></ProtectedRoute>} />
         <Route path="/admin/biblioteca" element={<ProtectedRoute adminOnly={true}><AdminLibrary /></ProtectedRoute>} />
