@@ -17,7 +17,6 @@ import VisualDiagnostic from "../pages/Diagnostic/VisualDiagnostic";
 import HowItWorks from "../pages/Public/HowItWorks";
 import AboutUs from "../pages/Public/AboutUs";
 import PublicBenefits from "../pages/Public/Benefits";
-import Tools from "../pages/Public/Tools";
 import Contact from "../pages/Public/Contact";
 import Privacy from "../pages/Public/Privacy";
 import Terms from "../pages/Public/Terms";
@@ -48,7 +47,6 @@ export default function AppRoutes() {
         <Route path="/como-funciona" element={<HowItWorks />} />
         <Route path="/sobre" element={<AboutUs />} />
         <Route path="/beneficios" element={<PublicBenefits />} />
-        <Route path="/ferramentas" element={<Tools />} />
         <Route path="/contato" element={<Contact />} />
         <Route path="/politica-de-privacidade" element={<Privacy />} />
         <Route path="/termos-de-uso" element={<Terms />} />

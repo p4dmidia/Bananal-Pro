@@ -998,7 +998,7 @@ export default function ProducerDashboard() {
                                     />
                                     <input 
                                        type="text" 
-                                       placeholder="Link do Vídeo (Ex: YouTube ou Vimeo)"
+                                       placeholder="Link do Vídeo (Ex: YouTube, Vimeo ou Panda Video)"
                                        value={lesson.videoUrlInput || ""}
                                        onChange={(e) => updateLesson(mod.id, lesson.id, { videoUrlInput: e.target.value })}
                                        className="w-full bg-black/20 border border-white/5 rounded-2xl px-4 py-2.5 text-zinc-300 text-xs focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-zinc-800"

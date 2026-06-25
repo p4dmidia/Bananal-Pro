@@ -5,6 +5,19 @@ interface YouTubePlayerProps {
   title?: string;
 }
 
+// Helper para extrair URL caso o produtor cole a tag <iframe> inteira
+function extractUrlFromIframe(input: string): string {
+  if (!input) return "";
+  const trimmed = input.trim();
+  if (trimmed.toLowerCase().startsWith("<iframe")) {
+    const match = trimmed.match(/src=["']([^"']+)["']/i);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  return trimmed;
+}
+
 // Helpers para extração de IDs de vídeo e validação
 function getYoutubeId(url: string): string | null {
   if (!url) return null;
@@ -15,9 +28,44 @@ function getYoutubeId(url: string): string | null {
 
 function getVimeoId(url: string): string | null {
   if (!url) return null;
-  const vimeoReg = /(?:vimeo)\.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|album\/(\d+)\/video\/|)(\d+)(?:$|\/|\?)/;
+  const vimeoReg = /(?:vimeo)\.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|album\/(\d+)\/video\/|video\/|)(\d+)(?:$|\/|\?)/;
   const vimeoMatch = url.match(vimeoReg);
   return (vimeoMatch && vimeoMatch[3]) ? vimeoMatch[3] : null;
+}
+
+function getPandaVideoEmbedUrl(url: string): string | null {
+  if (!url) return null;
+  
+  if (!url.includes("pandavideo.com") && !url.includes("pandavideo.com.br")) {
+    return null;
+  }
+  
+  // Captura o UUID do vídeo de parâmetros como ?v=UUID ou &v=UUID
+  const vMatch = url.match(/[?&]v=([a-fA-F0-9-]+)/);
+  if (vMatch && vMatch[1]) {
+    if (url.includes("/embed/")) {
+      try {
+        const urlObj = new URL(url);
+        return `https://${urlObj.host}/embed/?v=${vMatch[1]}`;
+      } catch (e) {
+        // Ignora erro e usa fallback
+      }
+    }
+    return `https://player.pandavideo.com.br/embed/?v=${vMatch[1]}`;
+  }
+  
+  // Captura o UUID de caminhos como /embed/UUID ou /v/UUID
+  const pathMatch = url.match(/\/(embed|v)\/([a-fA-F0-9-]+)/);
+  if (pathMatch && pathMatch[2]) {
+    return `https://player.pandavideo.com.br/embed/?v=${pathMatch[2]}`;
+  }
+  
+  // Se contiver /embed/, assume que já está no formato correto
+  if (url.includes("embed/")) {
+    return url;
+  }
+
+  return url;
 }
 
 function isDirectVideoUrl(url: string): boolean {
@@ -26,9 +74,11 @@ function isDirectVideoUrl(url: string): boolean {
 }
 
 export default function YouTubePlayer({ url, title = "Vídeo do treinamento" }: YouTubePlayerProps) {
-  const youtubeId = getYoutubeId(url);
-  const vimeoId = getVimeoId(url);
-  const isDirectVideo = isDirectVideoUrl(url);
+  const cleanedUrl = extractUrlFromIframe(url);
+  const youtubeId = getYoutubeId(cleanedUrl);
+  const vimeoId = getVimeoId(cleanedUrl);
+  const pandaUrl = getPandaVideoEmbedUrl(cleanedUrl);
+  const isDirectVideo = isDirectVideoUrl(cleanedUrl);
 
   // Função interna para renderizar o player correspondente
   const renderPlayer = () => {
@@ -75,10 +125,22 @@ export default function YouTubePlayer({ url, title = "Vídeo do treinamento" }: 
       );
     }
 
+    if (pandaUrl) {
+      return (
+        <iframe
+          src={pandaUrl}
+          title={title}
+          className="w-full h-full border-0"
+          allow="accelerometer; gyroscope; clipboard-write; encrypted-media; picture-in-picture"
+          allowFullScreen
+        />
+      );
+    }
+
     if (isDirectVideo) {
       return (
         <video
-          src={url}
+          src={cleanedUrl}
           controls
           controlsList="nodownload"
           disablePictureInPicture
@@ -89,10 +151,10 @@ export default function YouTubePlayer({ url, title = "Vídeo do treinamento" }: 
       );
     }
 
-    // Fallback padrão se não for YouTube, Vimeo ou link direto
+    // Fallback padrão se não for YouTube, Vimeo, Panda ou link direto
     return (
       <iframe
-        src={url}
+        src={cleanedUrl}
         title={title}
         className="w-full h-full border-0"
         allowFullScreen
@@ -106,3 +168,4 @@ export default function YouTubePlayer({ url, title = "Vídeo do treinamento" }: 
     </div>
   );
 }
+

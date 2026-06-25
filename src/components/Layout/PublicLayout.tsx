@@ -47,12 +47,13 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             >
               Home
             </Link>
-            <Link
-              to="/ferramentas"
+            <a
+              href="#ferramentas"
+              onClick={(e) => handleNavClick(e, "#ferramentas")}
               className="text-zinc-600 hover:text-primary transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
             >
               Ferramentas
-            </Link>
+            </a>
             <a
               href="#comunidade"
               onClick={(e) => handleNavClick(e, "#comunidade")}
@@ -118,13 +119,16 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               >
                 Home
               </Link>
-              <Link
-                to="/ferramentas"
-                onClick={() => setIsMenuOpen(false)}
+              <a
+                href="#ferramentas"
+                onClick={(e) => {
+                  setIsMenuOpen(false);
+                  handleNavClick(e, "#ferramentas");
+                }}
                 className="text-xl font-bold font-headline text-zinc-800"
               >
                 Ferramentas
-              </Link>
+              </a>
               <a
                 href="#comunidade"
                 onClick={(e) => {
@@ -205,9 +209,13 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             </h4>
             <ul className="space-y-2 text-xs text-on-surface-variant font-sans">
               <li>
-                <Link to="/ferramentas" className="hover:text-secondary hover:underline transition-all">
+                <a
+                  href="#ferramentas"
+                  onClick={(e) => handleNavClick(e, "#ferramentas")}
+                  className="hover:text-secondary hover:underline transition-all"
+                >
                   Ferramentas
-                </Link>
+                </a>
               </li>
               <li>
                 <a href="#planos" onClick={(e) => handleNavClick(e, "#planos")} className="hover:text-secondary hover:underline transition-all">

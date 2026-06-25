@@ -1,6 +1,16 @@
 import React, { useEffect, useState, useRef } from "react";
 import PublicLayout from "../components/Layout/PublicLayout";
 import { Link } from "react-router-dom";
+import { motion } from "motion/react";
+import { 
+  Sprout, 
+  Wallet, 
+  Package, 
+  CloudSun, 
+  Calendar, 
+  Camera, 
+  CheckCircle2 
+} from "lucide-react";
 
 // Custom Counter Component with IntersectionObserver
 function Counter({
@@ -63,6 +73,51 @@ function Counter({
 export default function LandingPage() {
   const [dashboardTab, setDashboardTab] = useState("Dashboard");
   const [activeTool, setActiveTool] = useState("solo");
+
+  const toolsList = [
+    {
+      id: "solo",
+      icon: <Sprout className="text-secondary w-8 h-8" />,
+      title: "Química de Solo & Calagem",
+      desc: "Interprete análises laboratoriais de forma instantânea. O sistema calcula a Soma de Bases (SB), Capacidade de Troca Catiônica (CTC) e a Saturação por Bases (V%). Com base na meta da cultura de banana, a plataforma gera a recomendação exata da Necessidade de Calagem (NC) em toneladas por hectare.",
+      features: ["Interpretação automática de pH, P, K, Ca, Mg", "Cálculo preciso de Necessidade de Calagem", "Histórico digital de glebas/talhões"]
+    },
+    {
+      id: "financeiro",
+      icon: <Wallet className="text-secondary w-8 h-8" />,
+      title: "Gestão Financeira & Break-Even",
+      desc: "Controle as receitas e custos operacionais da propriedade sem complicações. Monitore despesas com insumos, combustível e mão de obra, calculando automaticamente o custo operacional por hectare e por planta, além do ponto de equilíbrio (Break-even) em caixas de banana.",
+      features: ["Custos operacionais detalhados", "Indicadores de custo por hectare/planta", "Ponto de Equilíbrio (Break-Even) automático"]
+    },
+    {
+      id: "estoque",
+      icon: <Package className="text-secondary w-8 h-8" />,
+      title: "Estoque de Insumos NPK",
+      desc: "Evite a interrupção de aplicações críticas. Cadastre adubos e defensivos agrícolas com alerta de validade e quantidade mínima de segurança, facilitando a reposição e o planejamento financeiro de compras.",
+      features: ["Entradas e saídas de insumos", "Aviso de estoque mínimo e validade", "Planejamento de compras integrado"]
+    },
+    {
+      id: "clima",
+      icon: <CloudSun className="text-secondary w-8 h-8" />,
+      title: "Clima & Conselho Agrícola",
+      desc: "Previsões meteorológicas locais calibradas para a pulverização foliar. O sistema calcula a janela ideal com base na velocidade do vento, umidade do ar e chances de precipitação, emitindo alertas automáticos de risco de Sigatoka.",
+      features: ["Temperatura e umidade em tempo real", "Janela ideal de pulverização (vento/umidade)", "Alertas fitossanitários climáticos"]
+    },
+    {
+      id: "calendario",
+      icon: <Calendar className="text-secondary w-8 h-8" />,
+      title: "Calendário Agrícola",
+      desc: "Gerencie o cronograma de atividades do campo. Defina datas de adubação, pulverizações, irrigação e colheitas, mantendo toda a equipe técnica alinhada com as tarefas agendadas.",
+      features: ["Agenda de manejo foliar e irrigação", "Notificação de tarefas pendentes", "Histórico de manejos executados"]
+    },
+    {
+      id: "diagnostico",
+      icon: <Camera className="text-secondary w-8 h-8" />,
+      title: "Diagnóstico Visual por IA",
+      desc: "Use a câmera do seu celular para identificar problemas foliares na bananeira. A Inteligência Artificial analisa os padrões de manchas e estrias, fornecendo sugestões e recomendações de controle cultural, químico e biológico.",
+      features: ["Identificação visual de Sigatoka e Fusariose", "Dicas imediatas de manejo preventivo", "Laudo técnico digital"]
+    }
+  ];
 
   useEffect(() => {
     document.body.classList.add("dark-theme");
@@ -391,56 +446,40 @@ export default function LandingPage() {
       <section className="py-24 relative overflow-hidden bg-white text-zinc-900 border-y border-zinc-200/50 reveal" id="ferramentas">
         <div className="max-w-7xl mx-auto px-6 md:px-10">
           <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
-            <span className="text-secondary font-semibold uppercase tracking-widest text-xs font-inter block">Ecossistema Operacional & Educação</span>
-            <h2 className="font-headline text-2xl sm:text-3xl md:text-4xl text-primary font-bold tracking-tight">Capacitação, comunidade ativa e precisão técnica.</h2>
+            <span className="text-secondary font-semibold uppercase tracking-widest text-xs font-inter block">Tecnologia de Precisão</span>
+            <h2 className="font-headline text-2xl sm:text-3xl md:text-4xl text-primary font-bold tracking-tight">Ferramentas Agrícolas que otimizam seu campo.</h2>
             <p className="text-zinc-600 font-sans text-sm md:text-base leading-relaxed">
-              Substitua a incerteza pela exatidão técnica. No Bananal PRO, o produtor de banana conta com agrônomos dedicados, cursos práticos de manejo e um sistema completo de gestão.
+              Substitua planilhas complexas por painéis práticos desenhados exclusivamente para a bananicultura brasileira.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                title: "Engenheiros Agrônomos",
-                desc: "Chat direto com especialistas na cultura da banana para diagnóstico de pragas, laudos e receitas de adubação em 24h.",
-                icon: "agriculture"
-              },
-              {
-                title: "Cursos & Treinamento de Equipe",
-                desc: "Aulas e trilhas completas do plantio à colheita para treinar você e sua equipe de campo sobre o manejo ideal.",
-                icon: "school"
-              },
-              {
-                title: "Química de Solo & Nutrição",
-                desc: "Interpretação automática de laudos físicos e químicos do solo, gerando cálculo de calagem e gessagem imediato.",
-                icon: "science"
-              },
-              {
-                title: "Monitoramento por Satélite",
-                desc: "Análise climática local e alertas operacionais automáticos para janelas ideias de pulverização e manejo.",
-                icon: "thermostat"
-              },
-              {
-                title: "Estoque de Insumos & Validade",
-                desc: "Controle de estoque mínimo de adubos e defensivos agrícolas com avisos de validade e reposição facilitada.",
-                icon: "inventory_2"
-              },
-              {
-                title: "Planejador de Manejo Rápido",
-                desc: "Crie cronogramas automatizados de adubação, irrigação e desbaste para otimizar os ciclos da plantação.",
-                icon: "calendar_month"
-              }
-            ].map((feature, i) => (
-              <div
-                key={i}
-                className="p-8 rounded-[2rem] bg-slate-50 border border-zinc-200/80 hover-card-effect cursor-pointer group hover:bg-emerald-50/50 hover:border-secondary hover:shadow-lg shadow-sm"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            {toolsList.map((tool, idx) => (
+              <motion.div
+                key={tool.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: (idx % 2) * 0.1 }}
+                className="bg-slate-50 border border-zinc-200/80 p-8 md:p-10 rounded-[2.5rem] hover:border-secondary hover:shadow-xl transition-all shadow-sm flex flex-col justify-between group hover:bg-emerald-50/10 duration-300"
               >
-                <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center border border-secondary/20 transition-colors group-hover:bg-secondary/20 mb-6">
-                  <span className="material-symbols-outlined text-secondary text-2xl">{feature.icon}</span>
+                <div className="space-y-6">
+                  <div className="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center border border-secondary/20 transition-colors group-hover:bg-secondary/20">
+                    {tool.icon}
+                  </div>
+                  <h3 className="text-2xl font-headline font-bold text-primary">{tool.title}</h3>
+                  <p className="text-zinc-600 text-xs leading-relaxed font-sans">{tool.desc}</p>
+                  
+                  <div className="space-y-2 pt-4 border-t border-zinc-200/60">
+                    {tool.features.map((feat, fidx) => (
+                      <div key={fidx} className="flex items-center gap-2 text-zinc-700 text-xs font-semibold">
+                        <CheckCircle2 size={16} className="text-secondary shrink-0" />
+                        <span>{feat}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <h3 className="font-headline font-bold text-lg text-primary mb-3">{feature.title}</h3>
-                <p className="text-xs font-sans text-zinc-600 leading-relaxed">{feature.desc}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
