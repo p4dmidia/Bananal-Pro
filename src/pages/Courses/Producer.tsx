@@ -93,6 +93,8 @@ export default function ProducerDashboard() {
   
   const [courseThumbnail, setCourseThumbnail] = useState<File | null>(null);
   const [modules, setModules] = useState<ModuleInput[]>([]);
+  const [deletedLessonIds, setDeletedLessonIds] = useState<number[]>([]);
+  const [deletedModuleIds, setDeletedModuleIds] = useState<number[]>([]);
 
   const fetchProducerData = async () => {
     if (!profile?.id) return;
@@ -228,6 +230,46 @@ export default function ProducerDashboard() {
     
     setIsSaving(true);
     try {
+      // 0. Deletar módulos e aulas marcados para exclusão no banco de dados
+      if (deletedLessonIds.length > 0) {
+        // Excluir materiais associados primeiro
+        await supabase
+          .from('lesson_materials')
+          .delete()
+          .in('lesson_id', deletedLessonIds);
+
+        // Excluir comentários associados primeiro
+        await supabase
+          .from('lesson_comments')
+          .delete()
+          .in('lesson_id', deletedLessonIds);
+          
+        // Excluir progresso do usuário associado
+        await supabase
+          .from('user_course_progress')
+          .delete()
+          .in('lesson_id', deletedLessonIds);
+
+        const { error: delLessonError } = await supabase
+          .from('lessons')
+          .delete()
+          .in('id', deletedLessonIds);
+          
+        if (delLessonError) throw delLessonError;
+      }
+
+      if (deletedModuleIds.length > 0) {
+        const { error: delModError } = await supabase
+          .from('course_modules')
+          .delete()
+          .in('id', deletedModuleIds);
+          
+        if (delModError) throw delModError;
+      }
+
+      setDeletedLessonIds([]);
+      setDeletedModuleIds([]);
+
       let thumbnailUrl = "";
 
       // 1. Upload Capa do Curso
@@ -271,6 +313,8 @@ export default function ProducerDashboard() {
 
       const course = courseData;
 
+      const updatedModules = [];
+
       // 3. Processar Módulos e Aulas
       for (let i = 0; i < modules.length; i++) {
         const mod = modules[i];
@@ -308,6 +352,7 @@ export default function ProducerDashboard() {
           moduleData = data;
         }
 
+        const updatedLessons = [];
         for (let j = 0; j < mod.lessons.length; j++) {
           const lesson = mod.lessons[j] as any;
           const isExistingLesson = !isNaN(Number(lesson.id));
@@ -332,6 +377,7 @@ export default function ProducerDashboard() {
             order_index: j
           };
 
+          let lessonId = lesson.id;
           if (isExistingLesson) {
             const { error: lessonError } = await supabase
               .from('lessons')
@@ -345,10 +391,11 @@ export default function ProducerDashboard() {
               .select()
               .single();
             if (lessonError) throw lessonError;
-            lesson.id = newLessonData.id;
+            lessonId = newLessonData.id.toString();
           }
 
           // 3.1. Processar Materiais da Aula
+          const updatedMaterials = [];
           if (lesson.materials && lesson.materials.length > 0) {
             for (const material of lesson.materials) {
               let materialUrl = material.url;
@@ -358,25 +405,67 @@ export default function ProducerDashboard() {
               }
 
               const materialPayload = {
-                lesson_id: lesson.id,
+                lesson_id: lessonId,
                 title: material.title || "Arquivo",
                 file_url: materialUrl,
                 file_type: materialUrl.split('.').pop()?.toUpperCase() || 'FILE'
               };
 
+              let materialId = material.id;
               if (material.id && !isNaN(Number(material.id))) {
-                await supabase.from('lesson_materials').update(materialPayload).eq('id', Number(material.id));
+                const { data: updatedMaterialData, error: matError } = await supabase
+                  .from('lesson_materials')
+                  .update(materialPayload)
+                  .eq('id', Number(material.id))
+                  .select()
+                  .single();
+                if (!matError && updatedMaterialData) {
+                  materialId = updatedMaterialData.id.toString();
+                }
               } else {
-                await supabase.from('lesson_materials').insert([materialPayload]);
+                const { data: newMaterialData, error: matError } = await supabase
+                  .from('lesson_materials')
+                  .insert([materialPayload])
+                  .select()
+                  .single();
+                if (!matError && newMaterialData) {
+                  materialId = newMaterialData.id.toString();
+                }
               }
+              updatedMaterials.push({
+                id: materialId,
+                title: materialPayload.title,
+                url: materialUrl,
+                file: null
+              });
             }
           }
+
+          updatedLessons.push({
+            ...lesson,
+            id: lessonId,
+            videoFile: null,
+            thumbnailFile: null,
+            existingVideoUrl: lessonVideoUrl,
+            videoUrlInput: lessonVideoUrl,
+            existingThumbUrl: lessonThumbUrl,
+            materials: updatedMaterials
+          });
         }
+
+        updatedModules.push({
+          ...mod,
+          id: moduleData.id.toString(),
+          existingCoverUrl: coverUrl,
+          coverFile: null,
+          lessons: updatedLessons
+        });
       }
 
-      toast.success(editingCourseId ? "Treinamento atualizado!" : "Curso publicado com sucesso!");
-      setIsModalOpen(false);
-      resetForm();
+      toast.success(editingCourseId ? "Alterações salvas com sucesso!" : "Curso publicado com sucesso!");
+      setEditingCourseId(course.id.toString());
+      setCourseThumbnail(null);
+      setModules(updatedModules);
       fetchProducerData();
     } catch (err: any) {
       console.error('Error saving course:', err);
@@ -488,6 +577,8 @@ export default function ProducerDashboard() {
     setModules([]);
     setStep(1);
     setEditingCourseId(null);
+    setDeletedLessonIds([]);
+    setDeletedModuleIds([]);
   };
 
   const addModule = () => {
@@ -735,11 +826,12 @@ export default function ProducerDashboard() {
                   if (!isSaving) {
                     setIsModalOpen(false);
                     resetForm();
+                    fetchProducerData();
                   }
                 }}
                 className="bg-white/5 hover:bg-white/10 text-white font-black text-xs uppercase tracking-widest px-6 py-4 rounded-2xl border border-white/10 transition-all flex items-center gap-2"
               >
-                Cancelar e Sair
+                Fechar Editor
               </button>
             </div>
           </div>
@@ -885,29 +977,37 @@ export default function ProducerDashboard() {
                             >
                               <ChevronDown size={20} />
                             </button>
-                            <GripVertical className="text-zinc-800" />
-                            <input 
-                              type="text" 
-                              placeholder="Ex: Módulo 1 - Fundamentos do Negócio"
-                              value={mod.title}
-                              onChange={(e) => {
-                                const newMods = [...modules];
-                                newMods[modIdx].title = e.target.value;
-                                setModules(newMods);
-                              }}
-                              className="bg-transparent border-none text-white font-black text-xl focus:ring-0 w-full placeholder:text-zinc-800"
-                            />
+                            <GripVertical className="text-zinc-800 shrink-0" />
+                            <div className="flex-1 flex flex-col gap-1 pr-4">
+                               <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Título do Módulo</label>
+                               <input 
+                                 type="text" 
+                                 placeholder="Ex: Módulo 1 - Fundamentos do Negócio"
+                                 value={mod.title}
+                                 onChange={(e) => {
+                                   const newMods = [...modules];
+                                   newMods[modIdx].title = e.target.value;
+                                   setModules(newMods);
+                                 }}
+                                 className="bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-white font-bold text-base focus:outline-none focus:ring-1 focus:ring-primary/30 w-full placeholder:text-zinc-700"
+                               />
+                            </div>
                          </div>
                          <div className="flex items-center gap-3">
                              <button 
-                               onClick={() => addLesson(mod.id)}
-                               className="text-xs font-extrabold text-white bg-primary px-5 py-2.5 rounded-xl hover:bg-primary/90 transition-all uppercase tracking-wider shadow-md active:scale-95 flex items-center gap-1"
-                             >
-                               <Plus size={14} />
-                               Aula
-                             </button>
-                             <button 
-                               onClick={() => setModules(modules.filter(m => m.id !== mod.id))}
+                               onClick={() => {
+                                  const isRealId = !isNaN(Number(mod.id));
+                                  if (isRealId) {
+                                    setDeletedModuleIds(prev => [...prev, Number(mod.id)]);
+                                    const realLessonIds = mod.lessons
+                                      .map(l => Number(l.id))
+                                      .filter(id => !isNaN(id));
+                                    if (realLessonIds.length > 0) {
+                                      setDeletedLessonIds(prev => [...prev, ...realLessonIds]);
+                                    }
+                                  }
+                                  setModules(modules.filter(m => m.id !== mod.id));
+                                }}
                                className="p-2 text-zinc-700 hover:text-primary transition-colors"
                              >
                                <Trash2 size={20} />
@@ -989,13 +1089,16 @@ export default function ProducerDashboard() {
 
                                  {/* Lesson Details */}
                                  <div className="md:col-span-6 space-y-3">
+                                 <div className="flex flex-col gap-1 w-full">
+                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Nome da Aula</label>
                                     <input 
                                       type="text" 
                                       placeholder="Título da Aula"
                                       value={lesson.title}
                                       onChange={(e) => updateLesson(mod.id, lesson.id, { title: e.target.value })}
-                                      className="w-full bg-transparent border-none text-white font-bold p-0 focus:ring-0 text-lg placeholder:text-zinc-800"
+                                      className="w-full bg-black/20 border border-white/5 rounded-2xl px-4 py-3 text-white font-bold text-sm focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-zinc-800"
                                     />
+                                 </div>
                                     <input 
                                        type="text" 
                                        placeholder="Link do Vídeo (Ex: YouTube, Vimeo ou Panda Video)"
@@ -1132,7 +1235,12 @@ export default function ProducerDashboard() {
                                  {/* Lesson Actions */}
                                  <div className="md:col-span-12 flex justify-end border-t border-white/5 pt-4">
                                    <button 
+                                     type="button"
                                      onClick={() => {
+                                       const isRealId = !isNaN(Number(lesson.id));
+                                       if (isRealId) {
+                                         setDeletedLessonIds(prev => [...prev, Number(lesson.id)]);
+                                       }
                                        const newMods = [...modules];
                                        newMods[modIdx].lessons = newMods[modIdx].lessons.filter(l => l.id !== lesson.id);
                                        setModules(newMods);
@@ -1150,6 +1258,18 @@ export default function ProducerDashboard() {
                                  <p className="text-zinc-800 font-bold text-sm">Este módulo ainda não tem aulas.</p>
                               </div>
                             )}
+
+                             {/* Botão de Adicionar Nova Aula */}
+                             <div className="flex justify-center pt-6 border-t border-white/5 mt-4">
+                               <button 
+                                 type="button"
+                                 onClick={() => addLesson(mod.id)}
+                                 className="bg-primary hover:bg-primary/95 text-white font-black text-xs uppercase tracking-widest px-8 py-4 rounded-2xl transition-all flex items-center gap-2 shadow-lg shadow-primary/20 active:scale-95 cursor-pointer"
+                               >
+                                 <Plus size={16} />
+                                 Adicionar Nova Aula
+                               </button>
+                             </div>
                        </div>
                      )}
                     </div>
