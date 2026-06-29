@@ -159,7 +159,7 @@ export default function AdminDashboard() {
     return (
       <AdminLayout>
         <div className="h-[60vh] flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
         </div>
       </AdminLayout>
     );
@@ -169,12 +169,12 @@ export default function AdminDashboard() {
     <AdminLayout>
       <div className="max-w-7xl mx-auto space-y-10">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-purple-500/20 rounded-2xl border border-purple-500/20">
-            <ShieldCheck className="text-purple-500 w-8 h-8" />
+          <div className="p-3 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-2xl border border-emerald-500/20">
+            <ShieldCheck className="text-emerald-600 dark:text-emerald-400 w-8 h-8" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-white">Painel Administrativo</h1>
-            <p className="text-zinc-500 text-sm font-medium">Controle total da plataforma Bananal PRO</p>
+            <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Painel Administrativo</h1>
+            <p className="text-slate-500 dark:text-zinc-400 text-sm font-medium">Controle total da plataforma Bananal PRO</p>
           </div>
         </div>
 
@@ -186,14 +186,20 @@ export default function AdminDashboard() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.1 }}
-              className="bg-zinc-900/50 border border-white/5 p-6 rounded-[2rem] hover:border-white/10 transition-all"
+              className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between group hover:shadow-md transition-all duration-300 relative overflow-hidden"
             >
-              <div className="flex items-center justify-between mb-4">
-                <stat.icon className={`${stat.color} w-6 h-6`} />
-                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{stat.change}</span>
+              <div className="flex justify-between items-start">
+                <div className="space-y-1">
+                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">{stat.label}</span>
+                  <span className="text-3xl font-display font-black text-slate-800 dark:text-white">{stat.value}</span>
+                </div>
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center text-[#589c1c] dark:text-[#6ee7b7]">
+                  <stat.icon size={20} />
+                </div>
               </div>
-              <p className="text-zinc-500 text-xs font-bold mb-1 uppercase tracking-wider">{stat.label}</p>
-              <h3 className="text-3xl font-bold text-white">{stat.value}</h3>
+              <div className="flex items-center gap-1 text-[10px] font-black text-[#589c1c] dark:text-[#6ee7b7] mt-4">
+                <span className="text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-wider">{stat.change}</span>
+              </div>
             </motion.div>
           ))}
         </div>
@@ -204,12 +210,12 @@ export default function AdminDashboard() {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-zinc-900/50 border border-white/5 p-6 rounded-[2.5rem] overflow-hidden"
+            className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 p-6 rounded-[2rem] shadow-sm overflow-hidden"
           >
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-xl font-bold text-white uppercase tracking-tighter">Novos Produtores</h2>
-                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest mt-1">Usuários cadastrados nos últimos 7 dias</p>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-white uppercase tracking-tighter">Novos Produtores</h2>
+                <p className="text-slate-400 dark:text-zinc-500 text-[10px] font-black uppercase tracking-widest mt-1">Usuários cadastrados nos últimos 7 dias</p>
               </div>
             </div>
 
@@ -218,31 +224,33 @@ export default function AdminDashboard() {
                 <AreaChart data={growthData}>
                   <defs>
                     <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.04)" className="dark:stroke-white/5" vertical={false} />
                   <XAxis 
                     dataKey="name" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fill: '#71717a', fontSize: 10, fontWeight: 700 }}
+                    tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }}
                   />
                   <YAxis hide />
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: '#18181b', 
-                      border: '1px solid #ffffff10',
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                      border: '1px solid #e2e8f0',
                       borderRadius: '16px',
-                      fontSize: '10px'
+                      fontSize: '11px',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)'
                     }}
-                    cursor={{ stroke: '#ef444420', strokeWidth: 2 }}
+                    className="dark:!bg-zinc-900 dark:!border-white/10"
+                    cursor={{ stroke: 'rgba(16, 185, 129, 0.1)', strokeWidth: 2 }}
                   />
                   <Area 
                     type="monotone" 
                     dataKey="usuarios" 
-                    stroke="#ef4444" 
+                    stroke="#10b981" 
                     strokeWidth={3}
                     fillOpacity={1} 
                     fill="url(#colorUsers)" 
@@ -257,15 +265,15 @@ export default function AdminDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-zinc-900/50 border border-white/5 p-6 rounded-[2.5rem] overflow-hidden"
+            className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 p-6 rounded-[2rem] shadow-sm overflow-hidden"
           >
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-xl font-bold text-white uppercase tracking-tighter">Faturamento</h2>
-                <p className="text-emerald-500 text-[10px] font-black uppercase tracking-widest mt-1">Volume de vendas em R$</p>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-white uppercase tracking-tighter">Faturamento</h2>
+                <p className="text-[#589c1c] dark:text-[#6ee7b7] text-[10px] font-black uppercase tracking-widest mt-1">Volume de vendas em R$</p>
               </div>
               <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-lg">
-                <span className="text-[10px] font-black text-emerald-500 tracking-widest uppercase">7 Dias</span>
+                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 tracking-widest uppercase">7 Dias</span>
               </div>
             </div>
 
@@ -274,27 +282,29 @@ export default function AdminDashboard() {
                 <BarChart data={revenueData}>
                   <defs>
                     <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={1}/>
-                      <stop offset="95%" stopColor="#059669" stopOpacity={1}/>
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.2}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.04)" className="dark:stroke-white/5" vertical={false} />
                   <XAxis 
                     dataKey="name" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fill: '#71717a', fontSize: 10, fontWeight: 700 }}
+                    tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 700 }}
                   />
                   <YAxis hide />
                   <Tooltip 
                     formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Faturamento']}
                     contentStyle={{ 
-                      backgroundColor: '#18181b', 
-                      border: '1px solid #ffffff10',
+                      backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                      border: '1px solid #e2e8f0',
                       borderRadius: '16px',
-                      fontSize: '10px'
+                      fontSize: '11px',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)'
                     }}
-                    cursor={{ fill: '#ffffff05' }}
+                    className="dark:!bg-zinc-900 dark:!border-white/10"
+                    cursor={{ fill: 'rgba(0, 0, 0, 0.02)' }}
                   />
                   <Bar 
                     dataKey="faturamento" 
@@ -312,48 +322,48 @@ export default function AdminDashboard() {
           {/* Recent Subscriptions */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <CheckCircle className="text-emerald-400" size={20} />
+              <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <CheckCircle className="text-emerald-500" size={20} />
                 Últimas Assinaturas Ativas
               </h2>
               <button 
                 onClick={() => navigate('/admin/financeiro')}
-                className="text-xs font-bold text-zinc-500 hover:text-white transition-colors"
+                className="text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
               >
                 Ver todas
               </button>
             </div>
 
-            <div className="bg-zinc-900/50 border border-white/5 rounded-[2.5rem] overflow-hidden">
+            <div className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 rounded-[2rem] shadow-sm overflow-hidden">
               <table className="w-full text-left">
-                <thead className="bg-white/5">
+                <thead className="bg-slate-50 dark:bg-white/5">
                   <tr>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase text-zinc-500">Produtor</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase text-zinc-500">Valor</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase text-zinc-500">Data</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase text-zinc-500 text-right">Método</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/5">Produtor</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/5">Valor</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/5">Data</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/5 text-right">Método</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                   {recentSubscriptions.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-6 py-10 text-center text-zinc-500 text-sm">Nenhuma assinatura ativa encontrada</td>
+                      <td colSpan={4} className="px-6 py-10 text-center text-slate-400 dark:text-zinc-500 text-sm">Nenhuma assinatura ativa encontrada</td>
                     </tr>
                   ) : (
                     recentSubscriptions.map((s) => (
-                      <tr key={s.id} className="hover:bg-white/[0.02] transition-colors group">
-                        <td className="px-6 py-4 font-bold text-sm text-white">
+                      <tr key={s.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-colors border-b border-slate-100 dark:border-white/5 last:border-0">
+                        <td className="px-6 py-4 font-bold text-sm text-slate-800 dark:text-white">
                           <div>
                             <p>{s.user_profiles?.full_name || 'Produtor'}</p>
-                            <p className="text-[10px] text-zinc-500 font-medium">{s.user_profiles?.email || ''}</p>
+                            <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-medium">{s.user_profiles?.email || ''}</p>
                           </div>
                         </td>
-                        <td className="px-6 py-4 font-bold text-sm text-emerald-400">R$ {Number(s.total_amount).toLocaleString('pt-BR')}</td>
-                        <td className="px-6 py-4 text-xs text-zinc-500 font-medium">
+                        <td className="px-6 py-4 font-bold text-sm text-emerald-600 dark:text-emerald-400">R$ {Number(s.total_amount).toLocaleString('pt-BR')}</td>
+                        <td className="px-6 py-4 text-xs text-slate-500 dark:text-zinc-400 font-medium">
                           {format(new Date(s.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <span className="text-xs text-zinc-400 font-bold bg-white/5 px-3 py-1.5 rounded-xl border border-white/5">
+                          <span className="text-xs text-slate-600 dark:text-zinc-300 font-bold bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/5">
                             {s.payment_method || 'PIX'}
                           </span>
                         </td>

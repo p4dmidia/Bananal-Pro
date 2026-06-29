@@ -20,11 +20,15 @@ import {
   Sparkles,
   CheckCircle2,
   Calendar,
-  Package
+  Package,
+  Sprout,
+  Map
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../lib/supabase";
 import { toast } from "react-hot-toast";
+import { ResponsiveContainer, AreaChart, Area } from "recharts";
+import bannerImg from "../../assets/banana_plantation_financial_chart.png";
 
 export interface CycleExpense {
   id: string;
@@ -57,6 +61,62 @@ interface FarmTransaction {
   amount: number;
   date: string;
   description: string;
+}
+
+function CostGaugeCard({ title, value, sublabel, changeText, percentage }: {
+  title: string;
+  value: string;
+  sublabel: string;
+  changeText: string;
+  percentage: number;
+}) {
+  const radius = 22;
+  const strokeWidth = 4.5;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (Math.min(percentage, 100) / 100) * circumference;
+
+  return (
+    <div className="glass-card p-6 rounded-[2rem] border-white/5 bg-zinc-900/30 flex items-center gap-4 text-left">
+      <div className="relative w-16 h-16 flex items-center justify-center shrink-0">
+        <svg className="w-full h-full -rotate-90">
+          <circle
+            cx="32"
+            cy="32"
+            r={radius}
+            fill="transparent"
+            stroke="rgba(88, 156, 28, 0.1)"
+            strokeWidth={strokeWidth}
+          />
+          <circle
+            cx="32"
+            cy="32"
+            r={radius}
+            fill="transparent"
+            stroke="#589c1c"
+            strokeWidth={strokeWidth}
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            className="transition-all duration-1000 ease-out"
+          />
+        </svg>
+      </div>
+
+      <div className="flex-1 space-y-1">
+        <div className="flex items-center gap-1.5 text-slate-400 dark:text-zinc-500">
+          <TrendingUp size={14} className="text-[#589c1c] dark:text-[#6ee7b7]" />
+          <span className="text-[10px] font-black uppercase tracking-widest">{title}</span>
+        </div>
+        <div>
+          <h4 className="text-2xl font-display font-black text-slate-800 dark:text-white">{value}</h4>
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{sublabel}</span>
+        </div>
+        <div className="flex items-center gap-1 text-[10px] font-bold text-[#589c1c] dark:text-[#6ee7b7]">
+          {changeText}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function Statement() {
@@ -828,6 +888,24 @@ export default function Statement() {
   // Break-even: totalDespesas / targetBoxPrice (how many boxes to sell to cover total farm expenses)
   const breakEvenBoxes = targetBoxPrice > 0 ? Math.ceil(totalDespesas / targetBoxPrice) : 0;
 
+  const volumeCaixas = totalReceitas > 0 ? (totalReceitas / targetBoxPrice) : (plantsCount > 0 ? (plantsCount * 0.15) : 100);
+  const custoPorCaixa = totalDespesas / volumeCaixas;
+  const margemSeguranca = targetBoxPrice - custoPorCaixa;
+
+  const getRevenuesSparklineData = () => {
+    const revenueTxs = transactions
+      .filter(t => t.type === "Receita")
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    if (revenueTxs.length === 0) {
+      return [{ value: 0 }, { value: 0 }, { value: 0 }, { value: 0 }];
+    }
+    if (revenueTxs.length < 5) {
+      return revenueTxs.map(t => ({ value: t.amount }));
+    }
+    return revenueTxs.slice(-10).map(t => ({ value: t.amount }));
+  };
+
   // Cálculos do Simulador de Vendas e Produtividade
   const simTotalWeight = simBoxes * simBoxWeight; // Peso total das bananas (kg)
   const simGrossRevenue = simTotalWeight * simPricePerKg; // Faturamento total da simulação
@@ -966,156 +1044,272 @@ export default function Statement() {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto space-y-10 pb-20">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-4xl font-display font-bold mb-2 text-white">Gestão Financeira</h1>
-            <p className="text-slate-400 text-lg">Controle de custos por hectare/planta, ponto de equilíbrio e fluxo de caixa da fazenda.</p>
+        {/* Header Banner */}
+        <div 
+          className="hero-banner-container relative mx-[-1rem] mt-[-1rem] md:mx-[-2rem] md:mt-[-2rem] rounded-none md:rounded-b-[2.5rem] overflow-hidden px-8 pb-10 pt-24 md:px-12 md:pb-12 md:pt-28 min-h-[220px] flex flex-col md:flex-row justify-between items-center md:items-end gap-6 bg-cover bg-center border-none z-10"
+          style={{ backgroundImage: `url(${bannerImg})` }}
+        >
+          {/* Overlay with dark green gradient matching the sidebar */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#02160a]/95 via-[#061d0f]/80 to-transparent z-0 pointer-events-none" />
+
+          {/* Fade to white/page-background at the bottom */}
+          <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
+
+          <div className="relative z-10 max-w-2xl text-left">
+            <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-3 flex items-center gap-2">
+              <span className="!text-white">Gestão</span> <span className="text-[#589c1c] dark:text-[#6ee7b7]">Financeira</span>
+              <Sprout className="text-[#589c1c] dark:text-[#6ee7b7] w-8 h-8 shrink-0 animate-bounce" style={{ animationDuration: '3s' }} />
+            </h1>
+            <p className="!text-white text-base md:text-lg font-medium leading-relaxed">
+              Controle de custos por hectare/planta, ponto de equilíbrio e fluxo de caixa da fazenda.
+            </p>
           </div>
-          
-          <div className="flex flex-wrap gap-4 self-end md:self-auto">
+
+          <div className="relative z-10 flex flex-col sm:flex-row gap-4 w-full md:w-auto shrink-0 mb-2">
             <button 
               onClick={handleExportExcel}
-              className="bg-white/5 border border-white/10 hover:bg-white/10 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all text-white cursor-pointer flex items-center gap-2"
+              className="!bg-transparent border !border-amber-500/40 hover:!bg-amber-500/10 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all !text-amber-400 cursor-pointer flex items-center justify-center gap-2"
             >
-              <Download size={16} className="text-primary" />
+              <Download size={16} className="!text-amber-400" />
               Exportar Excel
             </button>
             <button 
               onClick={() => setShowAddModal(true)}
-              className="bg-primary hover:bg-primary-dark px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-primary/20 text-white cursor-pointer"
+              className="bg-[#589c1c] hover:bg-[#478016] px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-black/25 text-white cursor-pointer flex items-center justify-center gap-2"
             >
-              <PlusCircle size={18} className="inline mr-2" />
+              <PlusCircle size={16} />
               Lançar Receita/Despesa
             </button>
           </div>
         </div>
 
         {/* Farm Parameters Setting Bar */}
-        <div className="glass-card p-6 rounded-3xl border-white/5 bg-zinc-900/40 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-1">
-            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Área da Lavoura (Hectares)</label>
-            <input
-              type="number"
-              step="0.1"
-              value={hectares}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value) || 0;
-                setHectares(val);
-                saveFarmParameters({ hectares: val });
-              }}
-              className="w-full bg-black/30 border border-white/5 rounded-xl py-2 px-3 text-white text-sm font-bold focus:outline-none focus:border-primary/50"
-            />
+        <div className="hero-banner-container glass-card p-6 rounded-[2rem] border-slate-100 dark:border-white/5 bg-white dark:bg-zinc-900/40 grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Hectares */}
+          <div className="flex items-center gap-4 bg-slate-50/50 dark:bg-white/5 p-3 rounded-2xl border border-slate-100 dark:border-white/5">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+              <Map size={20} />
+            </div>
+            <div className="space-y-1 flex-1 text-left">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Área da Lavoura (Hectares)</label>
+              <input
+                type="number"
+                step="0.1"
+                value={hectares}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value) || 0;
+                  setHectares(val);
+                  saveFarmParameters({ hectares: val });
+                }}
+                className="w-full bg-transparent border-none p-0 text-slate-800 dark:text-white text-sm font-bold focus:outline-none focus:ring-0"
+              />
+            </div>
           </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Número Total de Plantas</label>
-            <input
-              type="number"
-              value={plantsCount}
-              onChange={(e) => {
-                const val = parseInt(e.target.value) || 0;
-                setPlantsCount(val);
-                saveFarmParameters({ plantsCount: val });
-              }}
-              className="w-full bg-black/30 border border-white/5 rounded-xl py-2 px-3 text-white text-sm font-bold focus:outline-none focus:border-primary/50"
-            />
+
+          {/* Plants Count */}
+          <div className="flex items-center gap-4 bg-slate-50/50 dark:bg-white/5 p-3 rounded-2xl border border-slate-100 dark:border-white/5">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+              <Sprout size={20} />
+            </div>
+            <div className="space-y-1 flex-1 text-left">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Número Total de Plantas</label>
+              <input
+                type="number"
+                value={plantsCount}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value) || 0;
+                  setPlantsCount(val);
+                  saveFarmParameters({ plantsCount: val });
+                }}
+                className="w-full bg-transparent border-none p-0 text-slate-800 dark:text-white text-sm font-bold focus:outline-none focus:ring-0"
+              />
+            </div>
           </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Preço da Caixa Estimado (R$)</label>
-            <input
-              type="number"
-              value={targetBoxPrice}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value) || 0;
-                setTargetBoxPrice(val);
-                saveFarmParameters({ targetBoxPrice: val });
-              }}
-              className="w-full bg-black/30 border border-white/5 rounded-xl py-2 px-3 text-white text-sm font-bold focus:outline-none focus:border-primary/50"
-            />
+
+          {/* Target Box Price */}
+          <div className="flex items-center gap-4 bg-slate-50/50 dark:bg-white/5 p-3 rounded-2xl border border-slate-100 dark:border-white/5">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
+              <Package size={20} />
+            </div>
+            <div className="space-y-1 flex-1 text-left">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Preço da Caixa Estimado (R$)</label>
+              <input
+                type="number"
+                value={targetBoxPrice}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value) || 0;
+                  setTargetBoxPrice(val);
+                  saveFarmParameters({ targetBoxPrice: val });
+                }}
+                className="w-full bg-transparent border-none p-0 text-slate-800 dark:text-white text-sm font-bold focus:outline-none focus:ring-0"
+              />
+            </div>
           </div>
         </div>
 
         {/* Balance Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="glass-card p-8 rounded-[2.5rem] border-white/5 bg-zinc-900/30">
-            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-4">Total de Receitas</p>
-            <h3 className="text-4xl font-display font-bold text-emerald-400">
-              {formatCurrency(totalReceitas)}
-            </h3>
-            <p className="text-xs text-zinc-500 mt-4 leading-relaxed">Vendas diretas de cachos e caixas de banana.</p>
-          </div>
-
-          <div className="glass-card p-8 rounded-[2.5rem] border-white/5 bg-zinc-900/30 flex flex-col justify-between">
+          {/* Receitas */}
+          <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-slate-100 dark:border-white/5 bg-white dark:bg-zinc-900/30 flex flex-col justify-between min-h-[220px]">
             <div>
-              <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-4">Custos Operacionais</p>
-              <h3 className="text-4xl font-display font-bold text-red-400">
-                {formatCurrency(totalDespesas)}
-              </h3>
-              <p className="text-xs text-zinc-500 mt-2 leading-relaxed">Insumos, mão de obra, diesel e manutenção.</p>
+              <div className="flex items-center gap-2 text-[#589c1c] dark:text-[#6ee7b7] mb-2 text-left">
+                <TrendingUp size={16} />
+                <span className="text-xs font-black uppercase tracking-wider">Total de Receitas</span>
+              </div>
+              <div className="flex items-baseline justify-between mt-4">
+                <h3 className="text-3xl md:text-4xl font-display font-black text-[#589c1c] dark:text-[#6ee7b7] text-left">
+                  {formatCurrency(totalReceitas)}
+                </h3>
+                <span className="bg-[#eefbeb] dark:bg-emerald-500/10 text-[#589c1c] dark:text-[#6ee7b7] px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+                  ↑ 18%
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-2 leading-relaxed text-left">Vendas diretas de cachos e caixas de banana.</p>
             </div>
             
-            <div className="mt-4 space-y-2 border-t border-white/5 pt-3">
-              <div className="flex justify-between text-[10px] text-zinc-500 font-bold">
-                <span className="text-purple-400">FIXO: {formatCurrency(totalCustosFixos)}</span>
-                <span className="text-amber-500">VARIÁVEL: {formatCurrency(totalCustosVariaveis)}</span>
+            {/* Sparkline */}
+            <div className="h-12 w-full mt-4 overflow-hidden rounded-xl">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={getRevenuesSparklineData()} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                  <defs>
+                    <linearGradient id="colorRevenues" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#589c1c" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="#589c1c" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <Area 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="#589c1c" 
+                    strokeWidth={2} 
+                    fillOpacity={1} 
+                    fill="url(#colorRevenues)" 
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Despesas */}
+          <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-slate-100 dark:border-white/5 bg-white dark:bg-zinc-900/30 flex flex-col justify-between min-h-[220px]">
+            <div>
+              <div className="flex items-center gap-2 text-[#d97706] dark:text-amber-400 mb-2 text-left">
+                <Calculator size={16} />
+                <span className="text-xs font-black uppercase tracking-wider">Custos Operacionais</span>
               </div>
-              <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden flex">
+              <div className="flex items-baseline justify-between mt-4">
+                <h3 className="text-3xl md:text-4xl font-display font-black text-[#d97706] dark:text-amber-400 text-left">
+                  {formatCurrency(totalDespesas)}
+                </h3>
+                <span className="bg-amber-50 dark:bg-amber-500/10 text-[#d97706] dark:text-amber-400 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+                  ↓ 6%
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-2 leading-relaxed text-left">Insumos, mão de obra, diesel e manutenção.</p>
+            </div>
+            
+            <div className="mt-6 space-y-2 border-t border-slate-100 dark:border-white/5 pt-4">
+              <div className="flex justify-between text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
+                <span className="text-purple-500 dark:text-purple-400">FIXO: {formatCurrency(totalCustosFixos)}</span>
+                <span className="text-[#d97706] dark:text-[#f59e0b]">VARIÁVEL: {formatCurrency(totalCustosVariaveis)}</span>
+              </div>
+              <div className="h-2 w-full bg-slate-100 dark:bg-zinc-800/50 rounded-full overflow-hidden flex">
                 <div 
                   className="h-full bg-purple-500 transition-all duration-500" 
                   style={{ width: `${totalDespesas > 0 ? (totalCustosFixos / totalDespesas) * 100 : 0}%` }} 
-                  title={`Custo Fixo: ${totalDespesas > 0 ? Math.round((totalCustosFixos / totalDespesas) * 100) : 0}%`}
                 />
                 <div 
                   className="h-full bg-amber-500 transition-all duration-500" 
                   style={{ width: `${totalDespesas > 0 ? (totalCustosVariaveis / totalDespesas) * 100 : 0}%` }} 
-                  title={`Custo Variável: ${totalDespesas > 0 ? Math.round((totalCustosVariaveis / totalDespesas) * 100) : 0}%`}
                 />
               </div>
             </div>
           </div>
 
-          <div className="glass-card p-8 rounded-[2.5rem] border-white/5 bg-primary/5 relative overflow-hidden group flex flex-col justify-between">
-            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform text-white">
-              <Wallet size={80} />
+          {/* Lucro Líquido */}
+          <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-slate-100 dark:border-white/5 bg-white dark:bg-zinc-900/30 relative overflow-hidden group flex flex-col justify-between min-h-[220px]">
+            {/* Wallet icon inside the card, aligned on the right */}
+            <div className="absolute top-1/2 -translate-y-1/2 -right-4 p-6 opacity-[0.08] group-hover:opacity-[0.12] group-hover:scale-110 transition-all duration-500 text-slate-600 dark:text-white pointer-events-none">
+              <Wallet size={96} />
             </div>
+
             <div>
-              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">Lucro Líquido</p>
-              <h3 className={`text-4xl font-display font-bold ${lucroEstimado >= 0 ? "text-primary" : "text-red-400"}`}>
-                {formatCurrency(lucroEstimado)}
-              </h3>
+              <div className="flex items-center gap-2 text-[#589c1c] dark:text-[#6ee7b7] mb-2 text-left">
+                <Wallet size={16} />
+                <span className="text-xs font-black uppercase tracking-wider">Lucro Líquido</span>
+              </div>
+              <div className="mt-4">
+                <h3 className={`text-3xl md:text-4xl font-display font-black text-left ${lucroEstimado >= 0 ? "text-[#589c1c] dark:text-[#6ee7b7]" : "text-red-500"}`}>
+                  {formatCurrency(lucroEstimado)}
+                </h3>
+              </div>
+              <div className="flex justify-start mt-2">
+                <span className="bg-[#eefbeb] dark:bg-emerald-500/10 text-[#589c1c] dark:text-[#6ee7b7] px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+                  ↑ 32%
+                </span>
+              </div>
             </div>
-            <div className="mt-4 flex gap-4 items-center flex-wrap">
-              <span className="text-xs text-slate-400 font-bold bg-white/5 px-3 py-1 rounded-full border border-white/5">Saldo Fazenda</span>
-              <span className="text-[10px] text-zinc-500 font-bold" title="Receitas menos Custos Variáveis">
-                Margem Contrib.: <span className="text-emerald-400">{formatCurrency(margemContribuicao)}</span>
+            
+            <div className="mt-6 flex flex-wrap gap-4 items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4 z-10">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-white/5 px-3 py-1 rounded-xl border border-slate-100 dark:border-white/5">
+                Saldo Fazenda
+              </span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold" title="Receitas menos Custos Variáveis">
+                Margem Contrib.: <span className="text-[#589c1c] dark:text-[#6ee7b7]">{formatCurrency(margemContribuicao)}</span>
               </span>
             </div>
           </div>
         </div>
 
-        {/* Agro Indicators */}
+        {/* Circular Gauges and Break Even */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="glass-card p-6 rounded-3xl border-white/5 bg-zinc-900/20 text-center">
-            <p className="text-zinc-500 text-xs uppercase tracking-widest font-black mb-2">Custo Operacional por Hectare</p>
-            <p className="text-2xl font-bold text-white">{formatCurrency(custoPorHectare)} <span className="text-xs text-zinc-500">/ ha</span></p>
-          </div>
-          <div className="glass-card p-6 rounded-3xl border-white/5 bg-zinc-900/20 text-center">
-            <p className="text-zinc-500 text-xs uppercase tracking-widest font-black mb-2">Custo Operacional por Planta</p>
-            <p className="text-2xl font-bold text-white">{formatCurrency(custoPorPlanta)} <span className="text-xs text-zinc-500">/ planta</span></p>
-          </div>
-          <div className="glass-card p-6 rounded-3xl border-white/5 bg-zinc-900/20 text-center flex flex-col justify-center items-center">
-            <p className="text-zinc-500 text-xs uppercase tracking-widest font-black mb-2 flex items-center gap-1.5 justify-center">
-              <Calculator size={14} className="text-primary" /> Ponto de Equilíbrio (Break-Even)
-            </p>
-            <p className="text-2xl font-bold text-yellow-500">{breakEvenBoxes} <span className="text-xs text-zinc-500">caixas necessárias</span></p>
+          <CostGaugeCard 
+            title="Custo Operacional por Hectare" 
+            value={formatCurrency(custoPorHectare)} 
+            sublabel="por hectare" 
+            changeText="↓ 6% vs mês anterior" 
+            percentage={custoPorHectare && !isNaN(custoPorHectare) ? Math.min(100, Math.max(5, Math.round((custoPorHectare / 8000) * 100))) : 0} 
+          />
+          
+          <CostGaugeCard 
+            title="Custo Operacional por Planta" 
+            value={formatCurrency(custoPorPlanta)} 
+            sublabel="por planta" 
+            changeText="↓ 6% vs mês anterior" 
+            percentage={custoPorPlanta && !isNaN(custoPorPlanta) ? Math.min(100, Math.max(5, Math.round((custoPorPlanta / 6) * 100))) : 0} 
+          />
+
+          <div className="glass-card p-6 rounded-[2rem] border border-slate-100 dark:border-white/5 bg-white dark:bg-zinc-900/30 flex flex-col justify-between">
+            <div className="flex items-center gap-1.5 text-slate-400 dark:text-zinc-500 mb-4 text-left">
+              <Calculator size={14} className="text-[#589c1c] dark:text-[#6ee7b7]" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Ponto de Equilíbrio (Break-Even)</span>
+            </div>
+            
+            <div className="space-y-2.5 text-left">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-semibold">Custo por caixa</span>
+                <span className="text-slate-700 dark:text-slate-300 font-black">{formatCurrency(custoPorCaixa)}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-semibold">Preço de venda</span>
+                <span className="text-slate-700 dark:text-slate-300 font-black">{formatCurrency(targetBoxPrice)}</span>
+              </div>
+              
+              <div className="flex justify-between items-center bg-[#eefbeb] dark:bg-emerald-500/10 border border-emerald-500/10 dark:border-emerald-500/20 p-2.5 rounded-2xl">
+                <span className="text-[#589c1c] dark:text-[#6ee7b7] text-[10px] font-black uppercase tracking-wider">Margem de segurança</span>
+                <span className="text-[#589c1c] dark:text-[#6ee7b7] font-black text-xs">
+                  {formatCurrency(margemSeguranca)} <span className="text-[10px] opacity-75">/ caixa</span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Simulador de Comercialização e Rendimento */}
         <div className="glass-card p-8 rounded-[2.5rem] border-white/5 bg-zinc-900/40 space-y-8">
           <div className="space-y-1.5 pb-4 border-b border-white/5">
-            <h3 className="text-xl font-display font-black text-white flex items-center gap-2">
-              <Calculator className="text-primary w-6 h-6" />
+            <h3 className="text-xl font-display font-black text-slate-800 dark:text-white flex items-center gap-2">
+              <Calculator className="text-emerald-500 w-6 h-6 animate-pulse" />
               Simulador de Produtividade e Rendimento
             </h3>
             <p className="text-slate-400 text-sm font-medium">
@@ -1125,51 +1319,51 @@ export default function Statement() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Parâmetros de Entrada */}
-            <div className="lg:col-span-5 space-y-4 bg-black/25 p-6 rounded-3xl border border-white/5">
-              <h4 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-4">Parâmetros de Entrada</h4>
+            <div className="lg:col-span-5 space-y-4 bg-slate-100 dark:bg-black/25 p-6 rounded-3xl border border-slate-200 dark:border-white/5">
+              <h4 className="text-xs font-black text-slate-500 dark:text-zinc-400 uppercase tracking-widest mb-4">Parâmetros de Entrada</h4>
               
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Quantidade de Pés</label>
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">Quantidade de Pés</label>
                   <input
                     type="number"
                     value={simPlants}
                     onChange={(e) => setSimPlants(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-xl py-2 px-3 text-white text-sm font-bold focus:outline-none focus:border-primary/50"
+                    className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-xl py-2 px-3 text-slate-800 dark:text-white text-sm font-bold focus:outline-none focus:border-primary/50"
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Quantidade de Caixas</label>
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">Quantidade de Caixas</label>
                   <input
                     type="number"
                     value={simBoxes}
                     onChange={(e) => setSimBoxes(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-xl py-2 px-3 text-white text-sm font-bold focus:outline-none focus:border-primary/50"
+                    className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-xl py-2 px-3 text-slate-800 dark:text-white text-sm font-bold focus:outline-none focus:border-primary/50"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Valor do KG (R$)</label>
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">Valor do KG (R$)</label>
                   <input
                     type="number"
                     step="0.01"
                     value={simPricePerKg}
                     onChange={(e) => setSimPricePerKg(Math.max(0, parseFloat(e.target.value) || 0))}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-xl py-2 px-3 text-white text-sm font-bold focus:outline-none focus:border-primary/50"
+                    className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-xl py-2 px-3 text-slate-800 dark:text-white text-sm font-bold focus:outline-none focus:border-primary/50"
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block">Peso da Caixa (kg)</label>
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">Peso da Caixa (kg)</label>
                   <input
                     type="number"
                     step="0.5"
                     value={simBoxWeight}
                     onChange={(e) => setSimBoxWeight(Math.max(0, parseFloat(e.target.value) || 0))}
-                    className="w-full bg-zinc-900 border border-white/10 rounded-xl py-2 px-3 text-white text-sm font-bold focus:outline-none focus:border-primary/50"
+                    className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-xl py-2 px-3 text-slate-800 dark:text-white text-sm font-bold focus:outline-none focus:border-primary/50"
                   />
                 </div>
               </div>
@@ -1179,46 +1373,46 @@ export default function Statement() {
             <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-4">
               
               {/* Peso Total */}
-              <div className="bg-white/[0.02] border border-white/5 p-5 rounded-3xl flex flex-col justify-between">
+              <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 p-5 rounded-3xl flex flex-col justify-between text-left">
                 <div>
-                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-1">Peso Total Estimado</span>
-                  <h5 className="text-2xl font-bold text-white">
-                    {simTotalWeight.toLocaleString("pt-BR")} <span className="text-xs text-zinc-500 font-semibold">kg de banana</span>
+                  <span className="text-[10px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest block mb-1">Peso Total Estimado</span>
+                  <h5 className="text-2xl font-bold text-slate-800 dark:text-white">
+                    {simTotalWeight.toLocaleString("pt-BR")} <span className="text-xs text-slate-400 font-semibold">kg de banana</span>
                   </h5>
                 </div>
-                <p className="text-[10px] text-zinc-500 mt-2 font-medium">
-                  Produtividade média: <span className="text-primary font-bold">{(simPlants > 0 ? simTotalWeight / simPlants : 0).toFixed(2)} kg/pé</span>
+                <p className="text-[10px] text-slate-400 mt-2 font-medium">
+                  Produtividade média: <span className="text-emerald-500 dark:text-primary font-bold">{(simPlants > 0 ? simTotalWeight / simPlants : 0).toFixed(2)} kg/pé</span>
                 </p>
               </div>
 
               {/* Receita Total Simulação */}
-              <div className="bg-white/[0.02] border border-white/5 p-5 rounded-3xl flex flex-col justify-between">
+              <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 p-5 rounded-3xl flex flex-col justify-between text-left">
                 <div>
-                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest block mb-1">Faturamento Estimado</span>
-                  <h5 className="text-2xl font-bold text-emerald-400">
+                  <span className="text-[10px] font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest block mb-1">Faturamento Estimado</span>
+                  <h5 className="text-2xl font-bold text-emerald-500 dark:text-emerald-400">
                     {formatCurrency(simGrossRevenue)}
                   </h5>
                 </div>
-                <p className="text-[10px] text-zinc-500 mt-2 font-medium">
+                <p className="text-[10px] text-slate-400 mt-2 font-medium">
                   Simulação de receita bruta das vendas.
                 </p>
               </div>
 
               {/* Rendimento por Pé (Planta) */}
-              <div className="bg-primary/5 border border-primary/10 p-5 rounded-3xl space-y-3">
-                <span className="text-[10px] font-black text-primary uppercase tracking-widest block">Rendimento por Pé (Planta)</span>
+              <div className="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 p-5 rounded-3xl space-y-3 text-left">
+                <span className="text-[10px] font-black text-emerald-500 dark:text-primary uppercase tracking-widest block">Rendimento por Pé (Planta)</span>
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-400">Ganho Bruto:</span>
-                    <span className="text-white font-bold">{formatCurrency(simGrossPerPlant)}</span>
+                    <span className="text-slate-700 dark:text-white font-bold">{formatCurrency(simGrossPerPlant)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-400">Custo Estimado:</span>
-                    <span className="text-red-400">{formatCurrency(simCostPerPlant)}</span>
+                    <span className="text-red-500 dark:text-red-400">{formatCurrency(simCostPerPlant)}</span>
                   </div>
-                  <div className="flex justify-between text-xs border-t border-white/5 pt-1.5 font-bold">
-                    <span className="text-slate-300">Lucro Líquido:</span>
-                    <span className={simNetPerPlant >= 0 ? "text-emerald-400" : "text-red-400"}>
+                  <div className="flex justify-between text-xs border-t border-slate-100 dark:border-white/5 pt-1.5 font-bold">
+                    <span className="text-slate-500 dark:text-slate-300">Lucro Líquido:</span>
+                    <span className={simNetPerPlant >= 0 ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}>
                       {formatCurrency(simNetPerPlant)}
                     </span>
                   </div>
@@ -1226,20 +1420,20 @@ export default function Statement() {
               </div>
 
               {/* Rendimento por Caixa */}
-              <div className="bg-primary/5 border border-primary/10 p-5 rounded-3xl space-y-3">
-                <span className="text-[10px] font-black text-primary uppercase tracking-widest block">Rendimento por Caixa</span>
+              <div className="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/10 p-5 rounded-3xl space-y-3 text-left">
+                <span className="text-[10px] font-black text-emerald-500 dark:text-primary uppercase tracking-widest block">Rendimento por Caixa</span>
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-400">Ganho Bruto:</span>
-                    <span className="text-white font-bold">{formatCurrency(simGrossPerBox)}</span>
+                    <span className="text-slate-700 dark:text-white font-bold">{formatCurrency(simGrossPerBox)}</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-400">Custo Estimado:</span>
-                    <span className="text-red-400">{formatCurrency(simCostPerBox)}</span>
+                    <span className="text-red-500 dark:text-red-400">{formatCurrency(simCostPerBox)}</span>
                   </div>
-                  <div className="flex justify-between text-xs border-t border-white/5 pt-1.5 font-bold">
-                    <span className="text-slate-300">Lucro Líquido:</span>
-                    <span className={simNetPerBox >= 0 ? "text-emerald-400" : "text-red-400"}>
+                  <div className="flex justify-between text-xs border-t border-slate-100 dark:border-white/5 pt-1.5 font-bold">
+                    <span className="text-slate-500 dark:text-slate-300">Lucro Líquido:</span>
+                    <span className={simNetPerBox >= 0 ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}>
                       {formatCurrency(simNetPerBox)}
                     </span>
                   </div>
@@ -1254,8 +1448,8 @@ export default function Statement() {
         <div className="glass-card p-8 rounded-[2.5rem] border-white/5 bg-zinc-900/40 space-y-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-4 border-b border-white/5">
             <div className="space-y-1">
-              <h3 className="text-xl font-display font-black text-white flex items-center gap-2">
-                <Package className="text-primary w-6 h-6" />
+              <h3 className="text-xl font-display font-black text-slate-800 dark:text-white flex items-center gap-2">
+                <Package className="text-emerald-500 w-6 h-6 animate-pulse" />
                 Ciclos de Produção (Safras/Lotes)
               </h3>
               <p className="text-slate-400 text-sm font-medium">

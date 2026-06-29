@@ -102,7 +102,6 @@ export default function AdminSettings() {
     { id: "geral", label: "Geral", icon: Globe },
     { id: "agricola", label: "Parâmetros Agrícolas", icon: TrendingUp },
     { id: "planos", label: "Planos & SaaS", icon: DollarSign },
-    { id: "checkout", label: "Checkout & Vendas", icon: Sliders },
     { id: "seguranca", label: "Segurança", icon: Lock },
   ];
 
@@ -455,8 +454,8 @@ export default function AdminSettings() {
 
   const renderContent = () => {
     if (loading) return (
-      <div className="flex flex-col items-center justify-center py-20 text-zinc-500">
-        <Loader2 className="w-8 h-8 animate-spin mb-4" />
+      <div className="flex flex-col items-center justify-center py-20 text-slate-500 dark:text-zinc-500">
+        <Loader2 className="w-8 h-8 animate-spin mb-4 text-emerald-500" />
         <p className="font-bold">Carregando parâmetros...</p>
       </div>
     );
@@ -465,43 +464,43 @@ export default function AdminSettings() {
       case "geral":
         return (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-            <section className="bg-zinc-900/40 border border-white/5 p-8 rounded-[2.5rem] space-y-6">
-              <h3 className="text-xl font-bold text-white">Informações da Plataforma</h3>
+            <section className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 p-8 rounded-[2rem] space-y-6 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white">Informações da Plataforma</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">Nome do Sistema</label>
+                  <label className="text-xs font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest ml-1">Nome do Sistema</label>
                   <input 
                     type="text" 
                     value={getSetting('site_name')} 
                     onChange={(e) => handleUpdateSetting('site_name', e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50" 
+                    className="w-full bg-white dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" 
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">E-mail de Suporte</label>
+                  <label className="text-xs font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest ml-1">E-mail de Suporte</label>
                   <input 
                     type="email" 
                     value={getSetting('support_email')} 
                     onChange={(e) => handleUpdateSetting('support_email', e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50" 
+                    className="w-full bg-white dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" 
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">WhatsApp Suporte</label>
+                  <label className="text-xs font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest ml-1">WhatsApp Suporte</label>
                   <input 
                     type="text" 
                     value={getSetting('support_whatsapp')} 
                     onChange={(e) => handleUpdateSetting('support_whatsapp', e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50" 
+                    className="w-full bg-white dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" 
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">URL Oficial</label>
+                  <label className="text-xs font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest ml-1">URL Oficial</label>
                   <input 
                     type="text" 
                     value={getSetting('site_url')} 
                     onChange={(e) => handleUpdateSetting('site_url', e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50" 
+                    className="w-full bg-white dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" 
                   />
                 </div>
               </div>
@@ -511,65 +510,65 @@ export default function AdminSettings() {
       case "agricola":
         return (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-            <section className="bg-zinc-900/40 border border-white/5 p-8 rounded-[2.5rem] space-y-6">
+            <section className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 p-8 rounded-[2rem] space-y-6 shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-500">
+                <div className="p-2 bg-emerald-500/10 rounded-lg text-[#589c1c] dark:text-emerald-500">
                   <TrendingUp size={20} />
                 </div>
-                <h3 className="text-xl font-bold text-white">Parâmetros das Calculadoras</h3>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-white">Parâmetros das Calculadoras</h3>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">Meta de Saturação por Bases (V2 %)</label>
+                  <label className="text-xs font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest ml-1">Meta de Saturação por Bases (V2 %)</label>
                   <input 
                     type="number" 
                     value={getSetting('soil_target_v')} 
                     onChange={(e) => handleUpdateSetting('soil_target_v', e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50" 
+                    className="w-full bg-white dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" 
                   />
-                  <p className="text-[10px] text-zinc-500 italic">Padrão para cultura da banana: 70%</p>
+                  <p className="text-[10px] text-slate-400 dark:text-zinc-500 italic">Padrão para cultura da banana: 70%</p>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">Fósforo (P) Limite Baixo (mg/dm³)</label>
+                  <label className="text-xs font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest ml-1">Fósforo (P) Limite Baixo (mg/dm³)</label>
                   <input 
                     type="number" 
                     value={getSetting('soil_limit_p_low')} 
                     onChange={(e) => handleUpdateSetting('soil_limit_p_low', e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50" 
+                    className="w-full bg-white dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" 
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">Fósforo (P) Limite Médio (mg/dm³)</label>
+                  <label className="text-xs font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest ml-1">Fósforo (P) Limite Médio (mg/dm³)</label>
                   <input 
                     type="number" 
                     value={getSetting('soil_limit_p_med')} 
                     onChange={(e) => handleUpdateSetting('soil_limit_p_med', e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50" 
+                    className="w-full bg-white dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" 
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">Potássio (K) Limite Baixo (cmolc/dm³)</label>
+                  <label className="text-xs font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest ml-1">Potássio (K) Limite Baixo (cmolc/dm³)</label>
                   <input 
                     type="number" 
                     step="0.01"
                     value={getSetting('soil_limit_k_low')} 
                     onChange={(e) => handleUpdateSetting('soil_limit_k_low', e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50" 
+                    className="w-full bg-white dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" 
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">Potássio (K) Limite Médio (cmolc/dm³)</label>
+                  <label className="text-xs font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest ml-1">Potássio (K) Limite Médio (cmolc/dm³)</label>
                   <input 
                     type="number" 
                     step="0.01"
                     value={getSetting('soil_limit_k_med')} 
                     onChange={(e) => handleUpdateSetting('soil_limit_k_med', e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50" 
+                    className="w-full bg-white dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" 
                   />
                 </div>
               </div>
@@ -579,16 +578,16 @@ export default function AdminSettings() {
       case "planos":
         return (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-8">
-            <section className="bg-zinc-900/40 border border-white/5 p-8 rounded-[2.5rem] space-y-6">
+            <section className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 p-8 rounded-[2rem] space-y-6 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-xl font-bold text-white">Planos de Assinatura</h3>
-                  <p className="text-zinc-500 text-xs mt-1">Crie e gerencie os planos que dão acesso aos cursos e ferramentas.</p>
+                  <h3 className="text-xl font-bold text-slate-800 dark:text-white">Planos de Assinatura</h3>
+                  <p className="text-slate-400 dark:text-zinc-500 text-xs mt-1">Crie e gerencie os planos que dão acesso aos cursos e ferramentas.</p>
                 </div>
                 <button
                   type="button"
                   onClick={handleOpenAddPlan}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-2xl font-bold text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-600/20 active:scale-95 cursor-pointer animate-pulse"
+                  className="bg-[#589c1c] hover:bg-[#467c16] dark:bg-[#10b981] dark:hover:bg-[#0d9468] text-white px-5 py-3 rounded-2xl font-bold text-xs flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
                 >
                   <Plus size={16} />
                   Novo Plano
@@ -597,51 +596,51 @@ export default function AdminSettings() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {plans.length === 0 ? (
-                  <div className="col-span-full py-10 text-center bg-black/20 rounded-3xl border border-dashed border-white/5 text-zinc-500 text-xs">
+                  <div className="col-span-full py-10 text-center bg-slate-50 dark:bg-black/20 rounded-[2rem] border border-dashed border-slate-200 dark:border-white/10 text-slate-500 dark:text-zinc-500 text-xs font-semibold">
                     Nenhum plano cadastrado. Clique em "Novo Plano" para começar.
                   </div>
                 ) : (
                   plans.map((plan) => (
                     <div 
                       key={plan.id}
-                      className="bg-black/40 border border-white/5 p-6 rounded-3xl flex flex-col justify-between hover:border-emerald-500/20 transition-all group"
+                      className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 p-6 rounded-[2rem] shadow-sm flex flex-col justify-between hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all group"
                     >
                       <div className="space-y-4">
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <h4 className="font-bold text-white text-sm">{plan.name}</h4>
-                            <span className="text-[10px] text-zinc-500 font-mono">ID: {plan.id.substring(0, 8)}...</span>
+                            <h4 className="font-bold text-slate-800 dark:text-white text-sm">{plan.name}</h4>
+                            <span className="text-[10px] text-slate-450 dark:text-zinc-500 font-mono">ID: {plan.id.substring(0, 8)}...</span>
                           </div>
                           <span className={`text-[9px] font-black px-2.5 py-1 rounded-full uppercase border ${
                             plan.is_active !== false 
-                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
-                              : "bg-red-500/10 text-red-400 border-red-500/20"
+                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" 
+                              : "bg-red-500/10 text-red-650 dark:text-red-500 border-red-500/20"
                           }`}>
                             {plan.is_active !== false ? "Ativo" : "Inativo"}
                           </span>
                         </div>
 
                         <div className="space-y-1">
-                          <p className="text-xl font-black text-white">
+                          <p className="text-xl font-black text-slate-800 dark:text-white">
                             R$ {plan.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                            <span className="text-xs text-zinc-500 font-medium">/{plan.interval}</span>
+                            <span className="text-xs text-slate-450 dark:text-zinc-550 font-medium">/{plan.interval}</span>
                           </p>
-                          <p className="text-zinc-400 text-xs leading-relaxed line-clamp-3">{plan.description}</p>
+                          <p className="text-slate-500 dark:text-zinc-400 text-xs leading-relaxed line-clamp-3">{plan.description}</p>
                         </div>
                       </div>
 
-                      <div className="flex justify-end gap-2 pt-4 mt-4 border-t border-white/5">
+                      <div className="flex justify-end gap-2 pt-4 mt-4 border-t border-slate-100 dark:border-white/5">
                         <button
                           type="button"
                           onClick={() => handleOpenEditPlan(plan)}
-                          className="p-2 bg-white/5 hover:bg-emerald-500/10 text-zinc-400 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 rounded-xl transition-all cursor-pointer"
+                          className="p-2 bg-slate-50 dark:bg-white/5 hover:bg-emerald-500/10 text-slate-500 dark:text-zinc-400 hover:text-[#589c1c] dark:hover:text-emerald-400 border border-slate-200 dark:border-transparent hover:border-[#589c1c]/20 dark:hover:border-emerald-500/20 rounded-xl transition-all cursor-pointer"
                         >
                           <Pencil size={14} />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeletePlan(plan.id)}
-                          className="p-2 bg-white/5 hover:bg-red-500/10 text-zinc-400 hover:text-red-400 border border-transparent hover:border-red-500/20 rounded-xl transition-all cursor-pointer"
+                          className="p-2 bg-slate-50 dark:bg-white/5 hover:bg-red-500/10 text-slate-500 dark:text-zinc-400 hover:text-red-650 dark:hover:text-red-400 border border-slate-200 dark:border-transparent hover:border-red-500/20 rounded-xl transition-all cursor-pointer"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -656,19 +655,19 @@ export default function AdminSettings() {
       case "checkout":
         return (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-            <section className="bg-zinc-900/40 border border-white/5 p-8 rounded-[2.5rem] space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-5">
+            <section className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 p-8 rounded-[2rem] space-y-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-white/5 pb-5">
                 <div>
-                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                    <Sliders className="text-emerald-500" />
+                  <h3 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                    <Sliders className="text-[#589c1c] dark:text-emerald-500" />
                     Variações de Checkout
                   </h3>
-                  <p className="text-zinc-500 text-xs mt-1">Gere múltiplos checkouts com imagens, depoimentos e links exclusivos.</p>
+                  <p className="text-slate-400 dark:text-zinc-500 text-xs mt-1">Gere múltiplos checkouts com imagens, depoimentos e links exclusivos.</p>
                 </div>
                 <button
                   type="button"
                   onClick={handleOpenAddCheckout}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-2xl font-bold text-xs flex items-center gap-1.5 transition-all shadow-lg active:scale-95 cursor-pointer"
+                  className="bg-[#589c1c] hover:bg-[#467c16] dark:bg-[#10b981] dark:hover:bg-[#0d9468] text-white px-5 py-3 rounded-2xl font-bold text-xs flex items-center gap-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
                 >
                   <Plus size={16} />
                   Novo Checkout
@@ -676,14 +675,14 @@ export default function AdminSettings() {
               </div>
 
               {loadingCheckouts ? (
-                <div className="flex justify-center items-center py-10 text-zinc-500 text-xs">
-                  <Loader2 className="animate-spin mr-2" size={16} />
+                <div className="flex justify-center items-center py-10 text-slate-500 dark:text-zinc-550 text-xs">
+                  <Loader2 className="animate-spin mr-2 text-emerald-550" size={16} />
                   Carregando checkouts...
                 </div>
               ) : checkoutConfigs.length === 0 ? (
-                <div className="py-12 text-center bg-black/20 rounded-[2rem] border border-dashed border-white/5 text-zinc-500 text-xs font-semibold">
+                <div className="py-12 text-center bg-slate-50 dark:bg-black/20 rounded-[2rem] border border-dashed border-slate-200 dark:border-white/10 text-slate-500 dark:text-zinc-500 text-xs font-semibold">
                   Nenhuma variação de checkout cadastrada.<br />
-                  <span className="text-zinc-650 block mt-2">
+                  <span className="text-slate-400 dark:text-zinc-650 block mt-2">
                     (Nota: Certifique-se de executar o script de migração no banco de dados primeiro)
                   </span>
                 </div>
@@ -692,26 +691,26 @@ export default function AdminSettings() {
                   {checkoutConfigs.map((item) => (
                     <div 
                       key={item.id}
-                      className="bg-black/40 border border-white/5 p-6 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-white/10 transition-all"
+                      className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 p-6 rounded-[2rem] shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-[#589c1c]/20 dark:hover:border-white/10 transition-all"
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-white text-sm">{item.name}</h4>
-                          <span className="bg-emerald-950 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-2.5 py-0.5 rounded-full">
+                          <h4 className="font-bold text-slate-800 dark:text-white text-sm">{item.name}</h4>
+                          <span className="bg-emerald-500/10 text-[#589c1c] dark:text-emerald-400 border border-emerald-500/20 text-[9px] font-bold px-2.5 py-0.5 rounded-full">
                             /{item.slug}
                           </span>
                         </div>
-                        <p className="text-zinc-400 text-xs line-clamp-1">{item.title}</p>
-                        <p className="text-[10px] text-zinc-500 font-medium">
+                        <p className="text-slate-500 dark:text-zinc-400 text-xs line-clamp-1">{item.title}</p>
+                        <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-medium">
                           Garantia: {item.guarantee_days} dias • Benefícios: {item.features?.length || 0} • Depoimentos: {item.testimonials?.length || 0}
                         </p>
                       </div>
 
-                      <div className="flex gap-2 shrink-0">
+                      <div className="flex gap-2 shrink-0 w-full sm:w-auto">
                         <button
                           type="button"
                           onClick={() => handleCopyCheckoutUrl(item.slug)}
-                          className="bg-zinc-800 hover:bg-zinc-700 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-white/5"
+                          className="bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-white px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-slate-200 dark:border-white/5 flex-1 sm:flex-initial"
                         >
                           {copiedSlug === item.slug ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
                           {copiedSlug === item.slug ? "Copiado" : "Copiar URL"}
@@ -719,14 +718,14 @@ export default function AdminSettings() {
                         <button
                           type="button"
                           onClick={() => handleOpenEditCheckout(item)}
-                          className="p-2.5 bg-white/5 hover:bg-emerald-500/10 text-zinc-400 hover:text-emerald-400 border border-transparent hover:border-emerald-500/20 rounded-xl transition-all cursor-pointer"
+                          className="p-2.5 bg-slate-50 dark:bg-white/5 hover:bg-emerald-500/10 text-slate-500 dark:text-zinc-400 hover:text-[#589c1c] dark:hover:text-emerald-400 border border-slate-200 dark:border-transparent hover:border-[#589c1c]/20 dark:hover:border-emerald-500/20 rounded-xl transition-all cursor-pointer"
                         >
                           <Pencil size={14} />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteCheckout(item.id)}
-                          className="p-2.5 bg-white/5 hover:bg-red-500/10 text-zinc-400 hover:text-red-400 border border-transparent hover:border-red-500/20 rounded-xl transition-all cursor-pointer"
+                          className="p-2.5 bg-slate-50 dark:bg-white/5 hover:bg-red-500/10 text-slate-500 dark:text-zinc-400 hover:text-red-650 dark:hover:text-red-400 border border-slate-200 dark:border-transparent hover:border-red-500/20 rounded-xl transition-all cursor-pointer"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -741,37 +740,37 @@ export default function AdminSettings() {
       case "seguranca":
         return (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
-            <section className="bg-zinc-900/40 border border-white/5 p-8 rounded-[2.5rem] space-y-6">
-              <h3 className="text-xl font-bold text-white">Segurança e Acesso</h3>
+            <section className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 p-8 rounded-[2rem] space-y-6 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white">Segurança e Acesso</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">Tempo de Sessão (min)</label>
+                  <label className="text-xs font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest ml-1">Tempo de Sessão (min)</label>
                   <input 
                     type="number" 
                     value={getSetting('session_timeout')} 
                     onChange={(e) => handleUpdateSetting('session_timeout', e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50" 
+                    className="w-full bg-white dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" 
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">Tentativas de Login</label>
+                  <label className="text-xs font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest ml-1">Tentativas de Login</label>
                   <input 
                     type="number" 
                     value={getSetting('max_login_attempts')} 
                     onChange={(e) => handleUpdateSetting('max_login_attempts', e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50" 
+                    className="w-full bg-white dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20" 
                   />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">Palavras e Termos Bloqueados (separados por vírgula)</label>
+                  <label className="text-xs font-black text-slate-400 dark:text-zinc-500 uppercase tracking-widest ml-1">Palavras e Termos Bloqueados (separados por vírgula)</label>
                   <textarea 
                     value={getSetting('blocked_words')} 
                     onChange={(e) => handleUpdateSetting('blocked_words', e.target.value)}
                     placeholder="ex: palavra1, palavra2, termo inapropriado"
                     rows={4}
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none font-sans text-sm" 
+                    className="w-full bg-white dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 resize-none font-sans text-sm" 
                   />
-                  <p className="text-[10px] text-zinc-500 italic">Essas palavras serão adicionadas ao filtro automático em tempo real no feed da comunidade e comentários das aulas.</p>
+                  <p className="text-[10px] text-slate-400 dark:text-zinc-500 italic">Essas palavras serão adicionadas ao filtro automático em tempo real no feed da comunidade e comentários das aulas.</p>
                 </div>
               </div>
             </section>
@@ -785,23 +784,23 @@ export default function AdminSettings() {
       <div className="max-w-6xl mx-auto space-y-10 font-sans">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-              <SettingsIcon className="text-emerald-500" />
-              Configurações do Sistema
-            </h1>
-            <p className="text-zinc-500 text-sm mt-1">Gerencie as regras de negócio, parâmetros de análise de solo e credenciais do Asaas.</p>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-2xl border border-emerald-500/20">
+              <SettingsIcon className="text-[#589c1c] dark:text-[#6ee7b7] w-8 h-8" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Configurações do Sistema</h1>
+              <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">Gerencie as regras de negócio, parâmetros de análise de solo e parâmetros do sistema.</p>
+            </div>
           </div>
-          {activeTab !== "checkout" && (
-            <button 
-              onClick={handleSaveAll}
-              disabled={isSaving}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg active:scale-95 disabled:opacity-50 cursor-pointer"
-            >
-              {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-              {isSaving ? "Salvando..." : "Salvar Alterações"}
-            </button>
-          )}
+          <button 
+            onClick={handleSaveAll}
+            disabled={isSaving}
+            className="bg-[#589c1c] hover:bg-[#467c16] dark:bg-[#10b981] dark:hover:bg-[#0d9468] text-white px-8 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg active:scale-95 disabled:opacity-50 cursor-pointer"
+          >
+            {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+            {isSaving ? "Salvando..." : "Salvar Alterações"}
+          </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -813,17 +812,17 @@ export default function AdminSettings() {
                 <button 
                   key={item.id}
                   onClick={() => setActiveTab(item.id as TabType)}
-                  className={`w-full flex items-center justify-between px-6 py-4 rounded-3xl font-bold text-sm transition-all group border ${
+                  className={`w-full flex items-center justify-between px-6 py-4 rounded-3xl font-bold text-sm transition-all group border cursor-pointer ${
                     isActive 
-                      ? "bg-white/10 text-white border-white/20 shadow-xl" 
-                      : "text-zinc-500 hover:text-white hover:bg-white/5 border-transparent"
+                      ? "bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-white border-slate-200 dark:border-white/20 shadow-sm" 
+                      : "text-slate-500 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5 border-transparent"
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <item.icon size={20} className={isActive ? "text-emerald-500" : "group-hover:text-emerald-500 transition-colors"} />
+                    <item.icon size={20} className={isActive ? "text-[#589c1c] dark:text-[#6ee7b7]" : "group-hover:text-emerald-500 transition-colors"} />
                     {item.label}
                   </div>
-                  {isActive && <ChevronRight size={16} className="text-emerald-500" />}
+                  {isActive && <ChevronRight size={16} className="text-[#589c1c] dark:text-[#6ee7b7]" />}
                 </button>
               );
             })}

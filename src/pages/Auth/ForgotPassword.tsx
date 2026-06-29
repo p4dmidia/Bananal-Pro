@@ -1,14 +1,34 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Mail, ArrowLeft, CheckCircle2, Sprout, ArrowRight } from "lucide-react";
+import { Mail, ArrowLeft, CheckCircle2, Sprout, ArrowRight, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "../../lib/supabase";
+import toast from "react-hot-toast";
 
 export default function ForgotPassword() {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
   const [isSent, setIsSent] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSent(true);
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/login` // redirects them back to login page
+      });
+
+      if (error) throw error;
+
+      setIsSent(true);
+      toast.success("E-mail de recuperação enviado com sucesso!");
+    } catch (err: any) {
+      console.error("Error resetting password:", err);
+      toast.error(err.message || "Erro ao solicitar recuperação de senha.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -75,19 +95,32 @@ export default function ForgotPassword() {
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-on-surface-variant group-focus-within:text-primary transition-colors" />
                     <input
                       type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       placeholder="seu@email.com"
                       className="w-full bg-background border border-outline/15 rounded-2xl py-4 pl-12 pr-4 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-on-surface-variant/40"
                       required
+                      disabled={loading}
                     />
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full bg-primary hover:bg-emerald-700 text-white font-black py-4 rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.98] flex items-center justify-center gap-2"
+                  disabled={loading}
+                  className="w-full bg-primary hover:bg-emerald-700 text-white font-black py-4 rounded-2xl shadow-xl shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
-                  Enviar Link
-                  <ArrowRight size={20} />
+                  {loading ? (
+                    <>
+                      <Loader2 size={20} className="animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      Enviar Link
+                      <ArrowRight size={20} />
+                    </>
+                  )}
                 </button>
               </motion.form>
             ) : (

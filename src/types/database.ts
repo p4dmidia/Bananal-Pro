@@ -524,6 +524,7 @@ export type Database = {
           course_id: number | null
           title: string
           order_index: number | null
+          is_locked: boolean | null
           created_at: string | null
           updated_at: string | null
         }
@@ -532,6 +533,7 @@ export type Database = {
           course_id?: number | null
           title: string
           order_index?: number | null
+          is_locked?: boolean | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -540,6 +542,7 @@ export type Database = {
           course_id?: number | null
           title?: string
           order_index?: number | null
+          is_locked?: boolean | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -1127,6 +1130,7 @@ export type Database = {
           thumbnail_url: string | null
           duration: string | null
           order_index: number | null
+          is_locked: boolean | null
           created_at: string | null
           updated_at: string | null
         }
@@ -1140,6 +1144,7 @@ export type Database = {
           thumbnail_url?: string | null
           duration?: string | null
           order_index?: number | null
+          is_locked?: boolean | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -1153,6 +1158,7 @@ export type Database = {
           thumbnail_url?: string | null
           duration?: string | null
           order_index?: number | null
+          is_locked?: boolean | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -1732,7 +1738,7 @@ export type Database = {
           },
         ]
       }
-      producer_areas: {
+       producer_areas: {
         Row: {
           id: number
           user_id: number
@@ -1743,6 +1749,8 @@ export type Database = {
           state: string
           banana_variety: string
           created_at: string | null
+          cep: string | null
+          address: string | null
         }
         Insert: {
           id?: number
@@ -1754,6 +1762,8 @@ export type Database = {
           state: string
           banana_variety: string
           created_at?: string | null
+          cep?: string | null
+          address?: string | null
         }
         Update: {
           id?: number
@@ -1765,6 +1775,8 @@ export type Database = {
           state?: string
           banana_variety?: string
           created_at?: string | null
+          cep?: string | null
+          address?: string | null
         }
         Relationships: [
           {

@@ -16,12 +16,12 @@ import {
   MessageSquare
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import logoImg from "../../assets/logo.png";
+import logoTransparentImg from "../../assets/logo-transparent.png";
 
 const adminMenuItems = [
   { icon: LayoutDashboard, label: "Visão Geral", path: "/admin" },
   { icon: Users, label: "Usuários", path: "/admin/usuarios" },
-  { icon: DollarSign, label: "Financeiro", path: "/admin/financeiro" },
+  { icon: DollarSign, label: "Assinaturas", path: "/admin/financeiro" },
   { icon: AlertTriangle, label: "Moderação", path: "/admin/moderacao" },
   { icon: ShieldCheck, label: "Cursos", path: "/admin/cursos" },
   { icon: Video, label: "Lives", path: "/admin/lives" },
@@ -45,70 +45,71 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       )}
 
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-72 bg-[#0a2413] text-white border-r border-emerald-950 flex flex-col h-screen transition-transform duration-300 lg:translate-x-0
+        fixed inset-y-0 left-0 z-50 w-72 sidebar-premium text-white flex flex-col h-screen transition-transform duration-300 lg:translate-x-0
         ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}>
-        <div className="py-6 px-4 flex flex-col items-center justify-center relative">
+        {/* Header com Logotipo Transparente Anexado */}
+        <div className="py-6 px-6 flex items-center justify-between relative border-b border-emerald-950/30">
           <div className="relative">
-            <Link to="/admin" className="flex items-center justify-center bg-white w-48 h-16 rounded-2xl shadow-md p-2 group hover:scale-105 transition-transform">
-              <img src={logoImg} alt="Bananal PRO" className="h-full w-full object-contain" />
+            <Link to="/admin" className="flex items-center justify-center w-44 h-12 group hover:scale-[1.02] transition-transform">
+              <img src={logoTransparentImg} alt="Bananal PRO" className="h-full w-full object-contain" />
             </Link>
-            <span className="absolute -top-2 -right-2 bg-emerald-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-md">Admin</span>
+            <span className="absolute -top-2 -right-4 bg-emerald-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-md">Admin</span>
           </div>
-          <button onClick={onClose} className="absolute right-6 top-6 lg:hidden text-white/80 hover:text-white cursor-pointer">
-            <X size={24} />
+          <button onClick={onClose} className="lg:hidden text-white/80 hover:text-white cursor-pointer p-1">
+            <LogOut className="w-5 h-5 rotate-180" />
           </button>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto min-h-0">
+        <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto min-h-0 scrollbar-thin">
           {adminMenuItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname === item.path || 
+              (item.path !== "/admin" && location.pathname.startsWith(item.path));
             return (
               <Link
                 key={item.path}
                 to={item.path}
                 onClick={onClose}
-                className={`flex items-center justify-between p-4 rounded-2xl transition-all group ${
+                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all group border border-transparent ${
                   isActive 
-                    ? "bg-white text-primary shadow-lg shadow-black/10" 
-                    : "text-white/80 hover:bg-white/5 hover:text-white"
+                    ? "sidebar-item-active font-semibold" 
+                    : "text-white/70 hover:bg-white/5 hover:text-white"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <item.icon size={22} className={isActive ? "text-primary" : "text-white/70 group-hover:text-white transition-colors"} />
-                  <span className="font-semibold">{item.label}</span>
+                  <item.icon size={18} className={isActive ? "text-emerald-400" : "text-white/60 group-hover:text-white transition-colors"} />
+                  <span className="text-sm font-medium tracking-wide">{item.label}</span>
                 </div>
-                {isActive && <ChevronRight size={16} />}
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-4 mt-auto">
-          <div className="block bg-white p-4 rounded-2xl mb-4 group/profile shadow-md border border-primary/10">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 p-[2px]">
-                <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
-                  <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" alt="Admin Avatar" />
-                </div>
+        <div className="p-4 border-t border-emerald-950/30 space-y-3">
+          {/* Card do Usuário Admin */}
+          <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-950/20 hover:bg-emerald-950/40 border border-emerald-950/40 transition-all group/profile">
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="w-10 h-10 rounded-full border border-emerald-500/20 p-[2px] bg-emerald-900/10 overflow-hidden shrink-0">
+                <img 
+                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" 
+                  alt="Admin Avatar" 
+                  className="w-full h-full object-cover rounded-full"
+                />
               </div>
-              <div className="overflow-hidden flex-1">
-                <p className="text-sm font-bold truncate text-primary">Administrador Master</p>
-                <p className="text-[10px] text-primary/70 uppercase tracking-wider font-bold">
-                  Acesso Total
-                </p>
+              <div className="overflow-hidden">
+                <p className="text-xs font-bold text-white/70 group-hover/profile:text-white transition-colors truncate leading-snug">Administrador Master</p>
+                <p className="text-[9px] text-emerald-400 uppercase tracking-wider font-extrabold mt-0.5">Acesso Total</p>
+                <p className="text-[9px] text-white/50 truncate mt-0.5">Painel Administrativo</p>
               </div>
-            </div>
-            <div className="h-1 bg-primary/10 rounded-full overflow-hidden">
-              <div className="h-full bg-primary w-full" />
             </div>
           </div>
 
+          {/* Sair da Conta */}
           <button 
             onClick={() => navigate("/admin/login")}
-            className="w-full flex items-center gap-3 p-4 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all group cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-white/50 hover:text-red-400 hover:bg-red-500/5 rounded-xl transition-all text-xs group cursor-pointer"
           >
-            <LogOut size={20} className="group-hover:rotate-12 transition-transform text-red-400" />
+            <LogOut size={16} className="group-hover:rotate-6 transition-transform" />
             <span className="font-semibold">Encerrar Sessão</span>
           </button>
         </div>
@@ -119,6 +120,8 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const location = useLocation();
+  const hasTransparentHeader = location.pathname === "/comunidade";
 
   return (
     <div className="flex min-h-screen bg-background text-on-surface font-sans overflow-x-hidden">
@@ -126,33 +129,45 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       
       <div className="flex-1 flex flex-col min-w-0 lg:pl-72">
         {/* Admin Navbar */}
-        <header className="h-20 border-b border-outline/10 px-4 md:px-8 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-40">
+        <header className={
+          hasTransparentHeader 
+            ? "h-20 px-4 md:px-8 flex items-center justify-between absolute top-0 right-0 left-0 lg:left-72 bg-transparent z-40 border-none"
+            : "h-20 border-b border-outline/10 px-4 md:px-8 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-40"
+        }>
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 text-on-surface-variant hover:text-on-surface transition-colors"
+              className={`sidebar-toggle-btn lg:hidden p-2.5 transition-colors rounded-xl border cursor-pointer ${
+                hasTransparentHeader 
+                  ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/20" 
+                  : "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20"
+              }`}
             >
-              <Menu size={24} />
+              <Menu size={22} className={hasTransparentHeader ? "text-emerald-400" : "text-emerald-600 dark:text-emerald-400"} />
             </button>
           </div>
 
           <div className="flex items-center gap-3 md:gap-6">
-            <button className="relative p-2 text-on-surface-variant hover:text-on-surface transition-colors">
+            <button className={`relative p-2 transition-colors cursor-pointer ${
+              hasTransparentHeader 
+                ? "text-white/80 hover:text-white" 
+                : "text-on-surface-variant hover:text-on-surface"
+            }`}>
               <Bell size={22} />
               <span className="absolute top-2 right-2 w-2 h-2 bg-emerald-600 rounded-full" />
             </button>
             
-            <div className="h-8 w-[1px] bg-outline/20 hidden sm:block" />
+            <div className={`h-8 w-[1px] hidden sm:block ${hasTransparentHeader ? "bg-white/10" : "bg-outline/20"}`} />
             
             <div className="hidden xs:flex flex-col items-end">
-              <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Servidor</span>
-              <span className="text-xs font-bold text-emerald-400">ATIVO</span>
+              <span className={`text-[10px] font-black uppercase tracking-widest ${hasTransparentHeader ? "text-emerald-400" : "text-emerald-500"}`}>Servidor</span>
+              <span className={`text-xs font-bold ${hasTransparentHeader ? "text-[#6ee7b7]" : "text-emerald-400"}`}>ATIVO</span>
             </div>
           </div>
         </header>
 
         {/* Content Area */}
-        <main className="p-4 md:p-8 overflow-y-auto">
+        <main className={`flex-1 overflow-y-auto ${hasTransparentHeader ? "p-0" : "p-4 md:p-8"}`}>
           {children}
         </main>
       </div>

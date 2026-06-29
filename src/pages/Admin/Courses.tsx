@@ -43,6 +43,7 @@ interface LessonInput {
   materials: { id?: string; title: string; url: string; file?: File }[];
   isUploading?: boolean;
   progress?: number;
+  is_locked?: boolean;
 }
 
 interface ModuleInput {
@@ -52,6 +53,7 @@ interface ModuleInput {
   isExpanded: boolean;
   coverFile: File | null;
   existingCoverUrl?: string;
+  is_locked?: boolean;
 }
 
 
@@ -118,12 +120,14 @@ export default function AdminCourses() {
           id,
           title,
           cover_url,
+          is_locked,
           lessons (
             id,
             title,
             description,
             video_url,
             thumbnail_url,
+            is_locked,
             materials:lesson_materials(id, title, file_url)
           )
         `)
@@ -149,6 +153,7 @@ export default function AdminCourses() {
         isExpanded: false,
         coverFile: null,
         existingCoverUrl: (mod as any).cover_url || "",
+        is_locked: mod.is_locked || false,
         lessons: (mod.lessons as any[] || []).map(lesson => ({
           id: lesson.id.toString(),
           title: lesson.title || "",
@@ -158,6 +163,7 @@ export default function AdminCourses() {
           existingVideoUrl: lesson.video_url,
           videoUrlInput: lesson.video_url || "",
           existingThumbUrl: lesson.thumbnail_url,
+          is_locked: lesson.is_locked || false,
           materials: (lesson.materials || []).map((m: any) => ({
             id: m.id.toString(),
             title: m.title,
@@ -327,7 +333,8 @@ export default function AdminCourses() {
           course_id: course.id,
           title: mod.title || `Módulo ${i + 1}`,
           order_index: i,
-          cover_url: coverUrl
+          cover_url: coverUrl,
+          is_locked: mod.is_locked || false
         };
 
         let moduleData;
@@ -372,7 +379,8 @@ export default function AdminCourses() {
             description: lesson.description,
             video_url: lessonVideoUrl,
             thumbnail_url: lessonThumbUrl,
-            order_index: j
+            order_index: j,
+            is_locked: lesson.is_locked || false
           };
 
           let lessonId = lesson.id;
@@ -491,7 +499,8 @@ export default function AdminCourses() {
       lessons: [],
       isExpanded: true,
       coverFile: null,
-      existingCoverUrl: ""
+      existingCoverUrl: "",
+      is_locked: false
     };
     setModules([...modules, newModule]);
   };
@@ -508,7 +517,8 @@ export default function AdminCourses() {
             thumbnailFile: null,
             videoFile: null,
             videoUrlInput: "",
-            materials: []
+            materials: [],
+            is_locked: false
           }]
         };
       }
@@ -734,10 +744,24 @@ export default function AdminCourses() {
                                />
                             </div>
                          </div>
-                         <div className="flex items-center gap-3">
-                            <button 
-                              type="button"
-                              onClick={() => {
+                          <div className="flex items-center gap-4">
+                             <label className="flex items-center gap-2 cursor-pointer bg-black/20 border border-white/5 px-3 py-1.5 rounded-xl hover:bg-black/35 transition-all select-none">
+                               <input 
+                                 type="checkbox" 
+                                 checked={mod.is_locked || false}
+                                 onChange={(e) => {
+                                   const newMods = [...modules];
+                                   newMods[modIdx].is_locked = e.target.checked;
+                                   setModules(newMods);
+                                 }}
+                                 className="accent-emerald-500 w-4 h-4 cursor-pointer"
+                               />
+                               <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Trancar Acesso (Em Breve)</span>
+                             </label>
+
+                             <button 
+                               type="button"
+                               onClick={() => {
                                 const isRealId = !isNaN(Number(mod.id));
                                 if (isRealId) {
                                   setDeletedModuleIds(prev => [...prev, Number(mod.id)]);
@@ -833,7 +857,18 @@ export default function AdminCourses() {
                              {/* Lesson Details */}
                              <div className="md:col-span-6 space-y-3">
                                 <div className="flex flex-col gap-1 w-full">
-                                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Nome da Aula</label>
+                                    <div className="flex items-center justify-between w-full">
+                                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Nome da Aula</label>
+                                      <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                                        <input 
+                                          type="checkbox" 
+                                          checked={lesson.is_locked || false}
+                                          onChange={(e) => updateLesson(mod.id, lesson.id, { is_locked: e.target.checked })}
+                                          className="accent-emerald-500 w-3.5 h-3.5 cursor-pointer"
+                                        />
+                                        <span className="text-[9px] font-black text-zinc-500 uppercase tracking-wider">Trancar Aula (Em Breve)</span>
+                                      </label>
+                                    </div>
                                     <input 
                                       type="text" 
                                       placeholder="Título da Aula"
@@ -1046,19 +1081,21 @@ export default function AdminCourses() {
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header Section */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                <BookOpen className="text-primary" />
-                Gestão de Treinamentos (LMS)
-              </h1>
-              <p className="text-zinc-500 text-sm mt-1">Plataforma de capacitação Bananal PRO.</p>
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-2xl border border-emerald-500/20">
+                <BookOpen className="text-[#589c1c] dark:text-[#6ee7b7] w-8 h-8" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Gestão de Treinamentos (LMS)</h1>
+                <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">Plataforma de capacitação Bananal PRO.</p>
+              </div>
             </div>
             <button 
               onClick={() => {
                 resetForm();
                 setIsModalOpen(true);
               }}
-              className="bg-primary hover:bg-primary text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-primary/20 active:scale-95"
+              className="bg-[#589c1c] hover:bg-[#467c16] dark:bg-[#10b981] dark:hover:bg-[#0d9468] text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-600/10 active:scale-95 cursor-pointer"
             >
               <Plus size={20} />
               Novo Treinamento
@@ -1068,16 +1105,16 @@ export default function AdminCourses() {
           {/* Filters */}
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-primary transition-colors" size={20} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 group-focus-within:text-emerald-500 transition-colors" size={20} />
               <input 
                 type="text" 
                 placeholder="Pesquisar nos seus conteúdos..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl pl-12 pr-4 py-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                className="w-full bg-white dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 rounded-2xl pl-12 pr-4 py-4 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
               />
             </div>
-            <button className="bg-zinc-900/50 border border-white/5 p-4 rounded-2xl text-zinc-400 hover:text-white transition-all">
+            <button className="bg-white dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 p-4 rounded-2xl text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white transition-all cursor-pointer">
               <Filter size={20} />
             </button>
           </div>
@@ -1085,7 +1122,7 @@ export default function AdminCourses() {
           {/* Courses Grid */}
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-10 h-10 text-primary animate-spin" />
+              <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -1094,7 +1131,7 @@ export default function AdminCourses() {
                   key={course.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] overflow-hidden group hover:border-primary/30 transition-all flex flex-col"
+                  className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 rounded-[2rem] shadow-sm overflow-hidden flex flex-col group hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all"
                 >
                   <div className="aspect-video relative overflow-hidden">
                     <img 
@@ -1111,21 +1148,21 @@ export default function AdminCourses() {
 
                   <div className="p-8 flex-1 flex flex-col justify-between">
                     <div>
-                      <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">{course.title}</h3>
-                      <p className="text-zinc-500 text-sm line-clamp-2 mb-6">{course.description}</p>
+                      <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2 line-clamp-1">{course.title}</h3>
+                      <p className="text-slate-500 dark:text-zinc-500 text-sm line-clamp-2 mb-6">{course.description}</p>
                     </div>
 
-                    <div className="flex items-center justify-between pt-6 border-t border-white/5">
+                    <div className="flex items-center justify-between pt-6 border-t border-slate-100 dark:border-white/5">
                       <div className="flex items-center gap-2">
                         <div className="p-2 bg-yellow-500/10 rounded-lg">
                           <Star className="text-yellow-500" size={14} />
                         </div>
-                        <span className="text-sm font-bold text-white">{course.points} pts</span>
+                        <span className="text-sm font-bold text-slate-800 dark:text-white">{course.points} pts</span>
                       </div>
                       <div className="flex items-center gap-2 relative">
                          <button 
                            onClick={() => handleEditCourse(course.id.toString())}
-                           className="bg-primary hover:bg-primary/95 text-white px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1 shadow-md active:scale-95"
+                           className="bg-[#589c1c] hover:bg-[#467c16] dark:bg-[#10b981] dark:hover:bg-[#0d9468] text-white px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1 shadow-md cursor-pointer"
                            title="Editar Treinamento"
                          >
                            <Settings size={14} />
@@ -1133,7 +1170,7 @@ export default function AdminCourses() {
                          </button>
                          <button 
                            onClick={() => navigate(`/admin/cursos/detalhes/${course.id}`)}
-                           className="p-2 text-zinc-500 hover:text-white transition-colors"
+                           className="p-2 text-slate-400 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
                            title="Visualizar no Catálogo"
                          >
                            <Eye size={18} />
@@ -1144,7 +1181,7 @@ export default function AdminCourses() {
                                e.stopPropagation();
                                setActiveMenuId(activeMenuId === course.id ? null : course.id);
                              }}
-                             className={`p-2 transition-colors ${activeMenuId === course.id ? 'text-primary' : 'text-zinc-500 hover:text-white'}`}
+                             className={`p-2 transition-colors cursor-pointer ${activeMenuId === course.id ? 'text-[#589c1c] dark:text-[#6ee7b7]' : 'text-slate-400 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-white'}`}
                            >
                              <MoreVertical size={18} />
                            </button>
@@ -1160,11 +1197,11 @@ export default function AdminCourses() {
                                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                    animate={{ opacity: 1, scale: 1, y: 0 }}
                                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                   className="absolute right-0 bottom-full mb-2 w-48 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl z-20 overflow-hidden"
+                                   className="absolute right-0 bottom-full mb-2 w-48 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl z-20 overflow-hidden"
                                  >
                                    <button 
                                       onClick={() => handleEditCourse(course.id.toString())}
-                                      className="w-full px-4 py-3 text-left text-sm text-zinc-400 hover:text-white hover:bg-white/5 flex items-center gap-2 transition-all"
+                                      className="w-full px-4 py-3 text-left text-sm text-slate-650 dark:text-zinc-450 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 transition-all cursor-pointer"
                                     >
                                       <Settings size={14} />
                                       Editar Curso
@@ -1174,7 +1211,7 @@ export default function AdminCourses() {
                                        setActiveMenuId(null);
                                        handleDeleteCourse(course.id);
                                      }}
-                                     className="w-full px-4 py-3 text-left text-sm text-primary hover:bg-primary/10 flex items-center gap-2 transition-all"
+                                     className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 flex items-center gap-2 transition-all cursor-pointer"
                                    >
                                      <Trash2 size={14} />
                                      Excluir Treinamento

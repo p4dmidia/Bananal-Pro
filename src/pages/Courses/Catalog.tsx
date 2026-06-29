@@ -106,6 +106,10 @@ export default function Catalog() {
   const [canScrollRight, setCanScrollRight] = useState(true);
 
   const handleAccessModule = (mod: Module) => {
+    if ((mod as any).is_locked) {
+      toast.warning("Este módulo estará disponível em breve!");
+      return;
+    }
     if (!mod.lessons || mod.lessons.length === 0) return;
     const firstUncompleted = mod.lessons.find(l => !completedLessons.includes(Number(l.id)));
     const targetLesson = firstUncompleted || mod.lessons[0];
@@ -206,8 +210,8 @@ export default function Catalog() {
           const completedInModule = modLessons.filter(l => completedIds.includes(Number(l.id))).length;
           const progressPercent = modLessons.length > 0 ? Math.round((completedInModule / modLessons.length) * 100) : 0;
           
-          let status = "Não iniciado";
-          if (completedInModule > 0) {
+          let status = mod.is_locked ? "Em breve" : "Não iniciado";
+          if (!mod.is_locked && completedInModule > 0) {
             status = completedInModule === modLessons.length ? "Concluído" : "Em andamento";
           }
 
@@ -519,7 +523,7 @@ export default function Catalog() {
                 <Star size={12} className="text-yellow-400 fill-yellow-400" />
                 Selo Premium
               </div>
-              <div className="text-[10px] font-black force-white bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1.5 rounded-full uppercase tracking-widest">
+              <div className="text-[10px] font-black text-white bg-emerald-600 border border-emerald-500/30 px-3.5 py-1.5 rounded-full uppercase tracking-widest">
                 Formação Oficial
               </div>
             </div>
@@ -594,110 +598,123 @@ export default function Catalog() {
               <h2 className="text-3xl font-display font-black text-on-surface tracking-tight">Sua Jornada de Aprendizado</h2>
               <p className="text-on-surface-variant text-sm font-medium">Explore todos os módulos da formação Bananal PRO.</p>
             </div>
-            
-            {/* Controles do Carrossel */}
-            {modules.length > 3 && (
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => scroll("left")}
-                  disabled={!canScrollLeft}
-                  className="p-3 bg-surface-variant text-on-surface hover:bg-outline/20 border border-outline/10 rounded-2xl transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                  title="Anterior"
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <button 
-                  onClick={() => scroll("right")}
-                  disabled={!canScrollRight}
-                  className="p-3 bg-surface-variant text-on-surface hover:bg-outline/20 border border-outline/10 rounded-2xl transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                  title="Próximo"
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </div>
-            )}
           </div>
 
-          {/* Carrossel de Módulos */}
-          <div 
-            ref={carouselRef}
-            className="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory pb-6 px-1"
-          >
-            {modules.map((mod, index) => {
-              const isSelected = selectedModule?.id === mod.id;
-              return (
-                <div 
-                  key={mod.id}
-                  className="snap-start shrink-0"
+          {/* Container do Carrossel com Setas Absolutas Estilo Slide */}
+          <div className="relative group/carousel">
+            {/* Seta Esquerda */}
+            <AnimatePresence>
+              {canScrollLeft && (
+                <motion.button
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  onClick={() => scroll("left")}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 flex items-center justify-center text-white shadow-2xl transition-all cursor-pointer hover:scale-110 active:scale-95"
+                  title="Módulos Anteriores"
                 >
-                  {/* Card Módulo Premium */}
+                  <ChevronLeft size={24} />
+                </motion.button>
+              )}
+            </AnimatePresence>
+
+            {/* Seta Direita */}
+            <AnimatePresence>
+              {canScrollRight && (
+                <motion.button
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  onClick={() => scroll("right")}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-zinc-950/80 hover:bg-zinc-900 border border-white/10 flex items-center justify-center text-white shadow-2xl transition-all cursor-pointer hover:scale-110 active:scale-95"
+                  title="Próximos Módulos"
+                >
+                  <ChevronRight size={24} />
+                </motion.button>
+              )}
+            </AnimatePresence>
+
+            {/* Carrossel de Módulos */}
+            <div 
+              ref={carouselRef}
+              className="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory pb-6 px-1"
+            >
+              {modules.map((mod, index) => {
+                const isSelected = selectedModule?.id === mod.id;
+                return (
                   <div 
-                    onClick={() => handleAccessModule(mod)}
-                    className="relative w-[290px] h-[500px] rounded-[2.5rem] overflow-hidden flex flex-col justify-between p-6 cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border group border-white/10 hover:border-white/20"
+                    key={mod.id}
+                    className="snap-start shrink-0"
                   >
-                    {/* Capa de Fundo (Imagem do Módulo) */}
-                    <div className="absolute inset-0 z-0 bg-zinc-950">
-                      <img 
-                        src={mod.cover} 
-                        className="w-full h-full object-cover opacity-100 group-hover:scale-105 transition-transform duration-700" 
-                        alt={mod.title}
-                      />
-                    </div>
+                    {/* Card Módulo Premium */}
+                    <div 
+                      onClick={() => handleAccessModule(mod)}
+                      className="relative w-[290px] h-[500px] rounded-[2.5rem] overflow-hidden flex flex-col justify-between p-6 cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] border group border-white/10 hover:border-white/20"
+                    >
+                      {/* Capa de Fundo (Imagem do Módulo) */}
+                      <div className="absolute inset-0 z-0 bg-zinc-950">
+                        <img 
+                          src={mod.cover} 
+                          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ${mod.is_locked ? "opacity-45" : "opacity-100"}`} 
+                          alt={mod.title}
+                        />
+                      </div>
 
-                    {/* Badge de Status (Z-10 para ficar acima do fundo) */}
-                    <div className="relative z-10 self-start">
-                      <span className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border backdrop-blur-md ${
-                        mod.status === "Concluído" 
-                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
-                          : mod.status === "Em andamento"
-                          ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                          : "bg-black/45 text-white force-white border-white/10"
-                      }`}>
-                        {mod.status}
-                      </span>
-                    </div>
-
-                    {/* Informações do Módulo (Z-10) */}
-                    <div className="relative z-10 flex flex-col justify-end space-y-4 pt-5">
-                      
-                      {/* Tempo e Aulas */}
-                      <div className="flex items-center justify-between text-xs font-semibold force-white">
-                        <span className="flex items-center gap-1 force-white">
-                          <Clock size={12} className="force-white" />
-                          {mod.lessons.length * 15} min
+                      {/* Badge de Status (Z-10 para ficar acima do fundo) */}
+                      <div className="relative z-10 self-start">
+                        <span className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border backdrop-blur-md ${
+                          mod.status === "Concluído" 
+                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                            : (mod.status === "Em andamento" || mod.status === "Em breve")
+                            ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                            : "bg-black/45 text-white force-white border-white/10"
+                        }`}>
+                          {mod.status}
                         </span>
-                        <span className="force-white">{mod.lessons.length} aulas</span>
                       </div>
 
-                      {/* Barra de Progresso */}
-                      <div className="space-y-1.5">
-                        <div className="w-full h-1 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255, 255, 255, 0.25)' }}>
-                          <div 
-                            className="h-full bg-emerald-500 rounded-full" 
-                            style={{ width: `${mod.progressPercent}%` }}
-                          />
+                      {/* Informações do Módulo (Z-10) */}
+                      <div className="relative z-10 flex flex-col justify-end space-y-4 pt-5">
+                        
+                        {/* Tempo e Aulas */}
+                        <div className="flex items-center justify-between text-xs font-semibold force-white">
+                          <span className="flex items-center gap-1 force-white">
+                            <Clock size={12} className="force-white" />
+                            {mod.lessons.length * 15} min
+                          </span>
+                          <span className="force-white">{mod.lessons.length} aulas</span>
                         </div>
-                        <div className="flex items-center justify-between text-[10px] font-bold force-white">
-                          <span className="force-white">Progresso</span>
-                          <span className="force-white">{mod.progressPercent}%</span>
-                        </div>
-                      </div>
 
-                      {/* Botão Acessar Módulo */}
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAccessModule(mod);
-                        }}
-                        className="btn-card-acessar w-full py-3.5 text-[10px] font-black uppercase tracking-widest text-center rounded-xl transition-all duration-200 cursor-pointer"
-                      >
-                        Acessar Módulo
-                      </button>
+                        {/* Barra de Progresso */}
+                        <div className="space-y-1.5">
+                          <div className="w-full h-1 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255, 255, 255, 0.25)' }}>
+                            <div 
+                              className="h-full bg-emerald-500 rounded-full" 
+                              style={{ width: `${mod.progressPercent}%` }}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between text-[10px] font-bold force-white">
+                            <span className="force-white">Progresso</span>
+                            <span className="force-white">{mod.progressPercent}%</span>
+                          </div>
+                        </div>
+
+                        {/* Botão Acessar Módulo */}
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAccessModule(mod);
+                          }}
+                          className={`btn-card-acessar w-full py-3.5 text-[10px] font-black uppercase tracking-widest text-center rounded-xl transition-all duration-200 cursor-pointer ${mod.is_locked ? "opacity-60 bg-zinc-800 text-zinc-400 border-zinc-700/30 cursor-not-allowed hover:bg-zinc-800" : ""}`}
+                        >
+                          {mod.is_locked ? "Em Breve" : "Acessar Módulo"}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
 

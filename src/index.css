@@ -130,6 +130,11 @@ body {
   box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.7);
 }
 
+.price-card {
+  background: linear-gradient(135deg, #0b2c1b 0%, #061a10 100%) !important;
+  border: 1px solid rgba(117, 252, 167, 0.12) !important;
+}
+
 /* Volumetric Atmospheric Glows */
 .glow-spot {
   position: absolute;
@@ -337,3 +342,273 @@ body:not(.dark-theme) .glow-yellow,
 body:not(.dark-theme) .glow-primary {
   opacity: 0.15 !important;
 }
+
+/* Novos estilos para o Dashboard Premium e Sidebar */
+.sidebar-premium {
+  background: linear-gradient(180deg, #030c07 0%, #010603 100%);
+  border-right: 1px solid rgba(16, 185, 129, 0.08);
+}
+
+.sidebar-item-active {
+  background: rgba(16, 185, 129, 0.07);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.2), inset 0 0 10px rgba(16, 185, 129, 0.1);
+  color: #ffffff !important;
+}
+
+.sidebar-item-active svg {
+  color: #10b981 !important;
+  filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.5));
+}
+
+.glow-card-green {
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+}
+
+.glow-card-green:hover {
+  box-shadow: 0 0 35px rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  transform: translateY(-2px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glow-text-green {
+  text-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+/* ==========================================================================
+   Restilização Global Premium (Tema Claro) - Replicada do Dashboard
+   ========================================================================== */
+
+/* 1. Cabeçalhos de Página Consistentes */
+body:not(.dark-theme) h1.font-display:not(.hero-banner-container *):not(aside *):not(.banner-title),
+body:not(.dark-theme) h1.font-headline:not(.hero-banner-container *):not(aside *):not(.banner-title) {
+  color: #1e293b !important; /* text-slate-800 */
+  font-weight: 900 !important;
+  font-size: 1.875rem !important; /* text-3xl */
+  letter-spacing: -0.025em !important;
+}
+
+body:not(.dark-theme) h1.font-display:not(.hero-banner-container *):not(aside *):not(.banner-title) svg,
+body:not(.dark-theme) h1.font-headline:not(.hero-banner-container *):not(aside *):not(.banner-title) svg {
+  color: #10b981 !important; /* text-emerald-500 */
+  background-color: #f0fdf4 !important; /* bg-emerald-50 */
+  padding: 0.55rem !important;
+  border-radius: 1rem !important; /* rounded-2xl */
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  margin-right: 0.75rem !important;
+}
+
+/* 2. Cards & Contêineres Premium */
+body:not(.dark-theme) .glass-card:not(.hero-banner-container *):not(aside *),
+body:not(.dark-theme) .bg-surface:not(.hero-banner-container *):not(aside *),
+body:not(.dark-theme) .bg-zinc-900\/40:not(.hero-banner-container *):not(aside *),
+body:not(.dark-theme) .bg-zinc-950\/10:not(.hero-banner-container *):not(aside *) {
+  background-color: #ffffff !important;
+  border: 1px solid #f1f5f9 !important; /* border-slate-100 */
+  border-radius: 1.75rem !important; /* rounded-3xl */
+  box-shadow: 0 4px 20px -2px rgba(16, 185, 129, 0.02), 0 2px 8px -1px rgba(0, 0, 0, 0.02) !important;
+}
+
+body:not(.dark-theme) .glass-card:not(.hero-banner-container *):not(aside *):hover,
+body:not(.dark-theme) .bg-surface:not(.hero-banner-container *):not(aside *):hover {
+  box-shadow: 0 10px 30px -5px rgba(16, 185, 129, 0.04), 0 4px 12px -2px rgba(0, 0, 0, 0.03) !important;
+}
+
+/* 3. Inputs, Selects & Textareas Premium */
+body:not(.dark-theme) input:not(.hero-banner-container *):not(aside *),
+body:not(.dark-theme) select:not(.hero-banner-container *):not(aside *),
+body:not(.dark-theme) textarea:not(.hero-banner-container *):not(aside *),
+body:not(.dark-theme) .bg-black\/40 input:not(.hero-banner-container *):not(aside *),
+body:not(.dark-theme) .bg-black\/40 select:not(.hero-banner-container *):not(aside *),
+body:not(.dark-theme) .bg-black\/40 textarea:not(.hero-banner-container *):not(aside *) {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important; /* border-slate-200 */
+  color: #0f172a !important; /* text-slate-900 */
+  border-radius: 1rem !important; /* rounded-2xl */
+  font-size: 0.875rem !important; /* text-sm */
+  padding: 0.75rem 1rem !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+body:not(.dark-theme) input.pl-12:not(.hero-banner-container *):not(aside *) {
+  padding-left: 3rem !important;
+}
+
+body:not(.dark-theme) input.pr-12:not(.hero-banner-container *):not(aside *) {
+  padding-right: 3rem !important;
+}
+
+body:not(.dark-theme) input:not(.hero-banner-container *):not(aside *)::placeholder,
+body:not(.dark-theme) textarea:not(.hero-banner-container *):not(aside *)::placeholder {
+  color: #94a3b8 !important; /* text-slate-400 */
+}
+
+body:not(.dark-theme) input:not(.hero-banner-container *):not(aside *):focus,
+body:not(.dark-theme) select:not(.hero-banner-container *):not(aside *):focus,
+body:not(.dark-theme) textarea:not(.hero-banner-container *):not(aside *):focus {
+  border-color: #10b981 !important; /* border-emerald-500 */
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12) !important;
+  outline: none !important;
+}
+
+/* 4. Botões Principais (Glow & Emerald) */
+body:not(.dark-theme) button.bg-primary:not(.hero-banner-container *):not(aside *),
+body:not(.dark-theme) button[type="submit"].bg-primary:not(.hero-banner-container *):not(aside *),
+body:not(.dark-theme) .btn-primary:not(.hero-banner-container *):not(aside *) {
+  background-color: #0a2413 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border: none !important;
+  border-radius: 0.75rem !important; /* rounded-xl */
+  box-shadow: 0 4px 12px rgba(10, 36, 19, 0.15) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+body:not(.dark-theme) button.bg-primary:not(.hero-banner-container *):not(aside *):hover,
+body:not(.dark-theme) button[type="submit"].bg-primary:not(.hero-banner-container *):not(aside *):hover,
+body:not(.dark-theme) .btn-primary:not(.hero-banner-container *):not(aside *):hover {
+  background-color: #0d2f19 !important;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.25) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* 5. Botões Secundários & Outline */
+body:not(.dark-theme) button:not(.bg-primary):not([type="submit"]):not(.hero-banner-container *):not(aside *),
+body:not(.dark-theme) .btn-secondary:not(.hero-banner-container *):not(aside *),
+body:not(.dark-theme) .border-white\/10:not(.hero-banner-container *):not(aside *) {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important; /* border-slate-300 */
+  color: #334155 !important; /* text-slate-700 */
+  border-radius: 0.75rem !important; /* rounded-xl */
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+body:not(.dark-theme) button:not(.bg-primary):not([type="submit"]):not(.hero-banner-container *):not(aside *):hover,
+body:not(.dark-theme) .btn-secondary:not(.hero-banner-container *):hover,
+body:not(.dark-theme) .border-white\/10:not(.hero-banner-container *):not(aside *):hover {
+  background-color: #f8fafc !important; /* bg-slate-50 */
+  border-color: #94a3b8 !important; /* border-slate-400 */
+  color: #0f172a !important; /* text-slate-900 */
+}
+
+/* 6. Tabelas Premium */
+body:not(.dark-theme) table:not(.hero-banner-container *):not(aside *) {
+  background-color: #ffffff !important;
+  border-radius: 1rem !important;
+  overflow: hidden !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  width: 100% !important;
+}
+
+body:not(.dark-theme) th:not(.hero-banner-container *):not(aside *) {
+  background-color: #f8fafc !important; /* bg-slate-50 */
+  color: #475569 !important; /* text-slate-600 */
+  font-weight: 700 !important;
+  font-size: 0.75rem !important; /* text-xs */
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 1rem !important;
+}
+
+body:not(.dark-theme) td:not(.hero-banner-container *):not(aside *) {
+  border-bottom: 1px solid #f1f5f9 !important;
+  color: #334155 !important; /* text-slate-700 */
+  font-size: 0.875rem !important; /* text-sm */
+  padding: 1rem !important;
+}
+
+/* 7. Gráficos Recharts (Tema Claro) */
+body:not(.dark-theme) .recharts-cartesian-grid-horizontal line,
+body:not(.dark-theme) .recharts-cartesian-grid-vertical line {
+  stroke: #f1f5f9 !important; /* border-slate-100 */
+}
+
+/* 8. Alertas Dinâmicos */
+body:not(.dark-theme) .bg-red-500\/10:not(aside *),
+body:not(.dark-theme) .bg-red-650\/20:not(aside *) {
+  background-color: #fef2f2 !important; /* bg-red-50 */
+  border: 1px solid #fecaca !important; /* border-red-200 */
+  color: #991b1b !important; /* text-red-800 */
+}
+
+body:not(.dark-theme) .bg-amber-500\/10:not(aside *),
+body:not(.dark-theme) .bg-amber-500\/5:not(aside *) {
+  background-color: #fffbeb !important; /* bg-amber-50 */
+  border: 1px solid #fde68a !important; /* border-amber-200 */
+  color: #92400e !important; /* text-amber-800 */
+}
+
+body:not(.dark-theme) .bg-emerald-500\/10:not(aside *),
+body:not(.dark-theme) .bg-emerald-500\/5:not(aside *) {
+  background-color: #f0fdf4 !important; /* bg-emerald-50 */
+  border: 1px solid #a7f3d0 !important; /* border-emerald-200 */
+  color: #065f46 !important; /* text-emerald-800 */
+}
+
+/* 9. Textos do Banner da Fazenda no Topo */
+.banner-title,
+.banner-text {
+  color: #ffffff !important;
+}
+
+/* 10. Ícones de Clima Coloridos e Vibrantes */
+.weather-sun {
+  color: #f97316 !important; /* Laranja conforme pedido */
+  fill: #ffedd5 !important;  /* Laranja claro preenchido */
+  filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.25));
+}
+
+.weather-cloud-sun path {
+  stroke: #fbbf24 !important; /* Sol amarelo */
+}
+
+.weather-cloud-sun path:last-child {
+  stroke: #60a5fa !important; /* Nuvem azul */
+  fill: #eff6ff !important;   /* Nuvem preenchida com azul claro */
+}
+
+.weather-cloud-sun circle {
+  stroke: #fbbf24 !important; /* Sol centro amarelo */
+  fill: #fef08a !important;   /* Sol centro amarelo claro */
+}
+
+.weather-cloud {
+  color: #94a3b8 !important;
+  fill: #f1f5f9 !important;
+}
+
+.weather-rain {
+  color: #1e3a8a !important; /* Azul escuro conforme pedido */
+  fill: #1e3a8a !important;
+  filter: drop-shadow(0 0 2px rgba(30, 58, 138, 0.15));
+}
+
+.weather-lightning {
+  color: #8b5cf6 !important;
+  fill: #e9d5ff !important;
+  filter: drop-shadow(0 0 4px rgba(139, 92, 246, 0.25));
+}
+
+/* 11. Overrides do Card Climático com Imagem de Fundo */
+.weather-card-text {
+  color: #ffffff !important;
+}
+
+.weather-card-subtext {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.weather-metric-icon svg,
+.weather-metric-icon {
+  color: #60a5fa !important; /* Tons de azul */
+}
+

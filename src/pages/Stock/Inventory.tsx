@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Layout from "../../components/Layout/Layout";
+import bannerImg from "../../assets/banana_stock_inventory_banner.png";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Package, 
@@ -547,28 +548,39 @@ Analisamos os **${stockItems.length} insumos** cadastrados no seu estoque. Abaix
   return (
     <Layout>
       <div className="max-w-7xl mx-auto space-y-10 pb-20">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-4xl font-display font-bold text-white mb-2 flex items-center gap-3">
-              <Package className="text-primary w-10 h-10" />
-              Estoque de Insumos
+        {/* Header Banner */}
+        <div 
+          className="hero-banner-container relative mx-[-1rem] mt-[-1rem] md:mx-[-2rem] md:mt-[-2rem] rounded-none md:rounded-b-[2.5rem] overflow-hidden px-8 pb-10 pt-24 md:px-12 md:pb-12 md:pt-28 min-h-[220px] flex flex-col md:flex-row justify-between items-center md:items-end gap-6 bg-cover bg-center border-none z-10"
+          style={{ backgroundImage: `url(${bannerImg})` }}
+        >
+          {/* Película escura do tom do menu lateral (#02160a) para legibilidade perfeita */}
+          <div className="absolute inset-0 bg-[#02160a]/85 backdrop-blur-[1px] z-0 pointer-events-none" />
+
+          {/* Fade to white/page-background at the bottom */}
+          <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
+
+          <div className="relative z-10 max-w-3xl text-left">
+            <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-2 flex items-center gap-3">
+              <span className="!text-white">Estoque</span> <span className="text-[#589c1c] dark:text-[#6ee7b7]">de Insumos</span>
+              <Package className="text-[#589c1c] dark:text-[#6ee7b7] w-8 h-8 shrink-0 animate-pulse" />
             </h1>
-            <p className="text-slate-400 text-lg">
+            <p className="!text-white text-sm md:text-base font-medium leading-relaxed opacity-95">
               Controle de defensivos, fertilizantes, sacos e embalagens para a lavoura.
             </p>
           </div>
-          
-          <button
-            onClick={() => {
-              setStockAiDiagnosis(null);
-              setShowStockAiModal(true);
-            }}
-            className="bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-400 font-bold px-6 py-4 rounded-2xl flex items-center gap-2 cursor-pointer transition-all hover:scale-105 shadow-lg shadow-emerald-500/5 text-xs uppercase tracking-widest self-start md:self-center"
-          >
-            <Sparkles size={16} />
-            Organizar Estoque com IA
-          </button>
+
+          <div className="relative z-10 flex flex-col sm:flex-row gap-4 w-full md:w-auto shrink-0 mb-2">
+            <button
+              onClick={() => {
+                setStockAiDiagnosis(null);
+                setShowStockAiModal(true);
+              }}
+              className="bg-[#589c1c] hover:bg-[#478016] px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-black/25 text-white cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Sparkles size={16} />
+              Organizar Estoque com IA
+            </button>
+          </div>
         </div>
 
         {/* Overview Stats */}

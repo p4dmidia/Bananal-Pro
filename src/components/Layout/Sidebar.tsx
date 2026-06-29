@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import { 
   LayoutDashboard, 
   Users, 
@@ -7,6 +7,7 @@ import {
   Settings, 
   LogOut,
   ChevronRight,
+  ChevronDown,
   Sprout,
   Package,
   Calendar,
@@ -14,14 +15,15 @@ import {
   Camera,
   Tv,
   BookOpen,
-  MessageCircle
+  MessageCircle,
+  Headphones
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { useAuth } from "../../contexts/AuthContext";
 import { getUserDisplayName } from "../../lib/utils";
 import { useTranslation } from "react-i18next";
-import logoImg from "../../assets/logo.png";
+import logoTransparentImg from "../../assets/logo-transparent.png";
 
 const MENU_ITEMS = [
   { icon: LayoutDashboard, labelKey: "nav.dashboard", defaultLabel: "Início", path: "/dashboard" },
@@ -35,7 +37,6 @@ const MENU_ITEMS = [
   { icon: CloudSun, labelKey: "nav.weather", defaultLabel: "Clima", path: "/clima" },
   { icon: Calendar, labelKey: "nav.calendar", defaultLabel: "Calendário Agrícola", path: "/calendario" },
   { icon: Camera, labelKey: "nav.diagnostic", defaultLabel: "Diagnóstico Visual", path: "/diagnostico" },
-  { icon: MessageCircle, labelKey: "nav.whatsapp", defaultLabel: "Suporte WhatsApp", path: "https://wa.me/5531999999999" },
   { icon: Settings, labelKey: "nav.settings", defaultLabel: "Configurações", path: "/configuracoes" },
 ];
 
@@ -50,13 +51,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user, profile, signOut } = useAuth();
   const { t } = useTranslation();
 
-  const activeRef = useRef<HTMLAnchorElement>(null);
+  const navRef = useRef<HTMLElement>(null);
 
   useLayoutEffect(() => {
-    if (activeRef.current) {
-      activeRef.current.scrollIntoView({ behavior: "auto", block: "nearest" });
+    const savedScroll = sessionStorage.getItem("sidebar-scroll-y");
+    if (savedScroll && navRef.current) {
+      navRef.current.scrollTop = Number(savedScroll);
     }
-  }, [location.pathname]);
+  }, []);
+
+  const handleScroll = (e: React.UIEvent<HTMLElement>) => {
+    sessionStorage.setItem("sidebar-scroll-y", String(e.currentTarget.scrollTop));
+  };
 
   const handleLogout = async () => {
     await signOut();
@@ -64,6 +70,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   };
 
   const userDisplayName = getUserDisplayName(profile, user) || user?.user_metadata?.login || "Usuário";
+  const userRole = profile?.role === 'admin' ? "ADMINISTRADOR" : "PRODUTOR";
+  const farmName = profile?.property_name || "Fazenda São José";
 
   return (
     <>
@@ -76,21 +84,27 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       )}
 
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-72 bg-[#0a2413] text-white border-r border-emerald-950 flex flex-col h-screen transition-transform duration-300 lg:translate-x-0
+        fixed inset-y-0 left-0 z-50 w-72 sidebar-premium text-white flex flex-col h-screen transition-transform duration-300 lg:translate-x-0
         ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}>
-        <div className="py-6 px-4 flex flex-col items-center justify-center relative">
-          <Link to="/dashboard" className="flex items-center justify-center bg-white w-48 h-16 rounded-2xl shadow-md p-2 group hover:scale-105 transition-transform">
-            <img src={logoImg} alt="Bananal PRO" className="h-full w-full object-contain" />
+        {/* Header com Logotipo Transparente Anexado */}
+        <div className="py-6 px-6 flex items-center justify-between relative border-b border-emerald-950/30">
+          <Link to="/dashboard" className="flex items-center justify-center w-44 h-12 group hover:scale-[1.02] transition-transform">
+            <img src={logoTransparentImg} alt="Bananal PRO" className="h-full w-full object-contain" />
           </Link>
-          <button onClick={onClose} className="absolute right-6 top-6 lg:hidden text-white/80 hover:text-white cursor-pointer">
-            <LogOut className="w-6 h-6 rotate-180" />
+          <button onClick={onClose} className="lg:hidden text-white/80 hover:text-white cursor-pointer p-1">
+            <LogOut className="w-5 h-5 rotate-180" />
           </button>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto min-h-0">
+        <nav 
+          ref={navRef}
+          onScroll={handleScroll}
+          className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto min-h-0 scrollbar-thin"
+        >
           {MENU_ITEMS.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname === item.path || 
+              (item.path !== "/" && item.path !== "/dashboard" && location.pathname.startsWith(item.path));
             const isExternal = item.path.startsWith("http");
             
             const linkProps = isExternal 
@@ -103,58 +117,71 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               <Tag
                 key={item.path}
                 {...linkProps}
-                ref={!isExternal && isActive ? activeRef : undefined}
                 onClick={onClose}
-                className={`flex items-center justify-between p-4 rounded-2xl transition-all group ${
+                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all group border border-transparent ${
                   !isExternal && isActive 
-                    ? "bg-white text-primary shadow-lg shadow-black/10" 
-                    : "text-white/80 hover:bg-white/5 hover:text-white"
+                    ? "sidebar-item-active font-semibold" 
+                    : "text-white/70 hover:bg-white/5 hover:text-white"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <item.icon size={22} className={!isExternal && isActive ? "text-primary" : "text-white/70 group-hover:text-white transition-colors"} />
-                  <span className="font-semibold">{t(item.labelKey, item.defaultLabel)}</span>
+                  <item.icon size={18} className={!isExternal && isActive ? "text-emerald-400" : "text-white/60 group-hover:text-white transition-colors"} />
+                  <span className="text-sm font-medium tracking-wide">{t(item.labelKey, item.defaultLabel)}</span>
                 </div>
-                {!isExternal && isActive && <motion.div layoutId="active-pill"><ChevronRight size={16} /></motion.div>}
               </Tag>
             );
           })}
-          
-          {/* Administração removida conforme solicitado */}
         </nav>
 
-        <div className="p-4 mt-auto">
-          <Link to="/perfil" onClick={onClose} className="block bg-white hover:bg-slate-50 transition-all p-4 rounded-2xl mb-4 group/profile shadow-md border border-primary/10">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 p-[2px] group-hover/profile:scale-105 transition-transform">
-                <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
-                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userDisplayName}`} alt="User" />
-                </div>
+        {/* Rodapé Reestilizado Fiel ao Layout */}
+        <div className="p-4 border-t border-emerald-950/30 space-y-3">
+          
+          {/* Card do Usuário */}
+          <Link 
+            to="/perfil" 
+            onClick={onClose} 
+            className="flex items-center justify-between p-3 rounded-xl bg-emerald-950/20 hover:bg-emerald-950/40 border border-emerald-950/40 transition-all group/profile"
+          >
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="w-10 h-10 rounded-full border border-emerald-500/20 p-[2px] bg-emerald-900/10 overflow-hidden shrink-0">
+                <img 
+                  src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userDisplayName}`} 
+                  alt="Avatar" 
+                  className="w-full h-full object-cover rounded-full"
+                />
               </div>
-              <div className="overflow-hidden flex-1">
-                <p className="text-sm font-bold truncate text-primary">{userDisplayName}</p>
-                <p className="text-[10px] text-primary/70 uppercase tracking-wider font-bold">
-                  {profile?.role === 'admin' ? t("nav.admin", "Administrador") : `Parceiro • ${profile?.email || user?.email || '---'}`}
-                </p>
+              <div className="overflow-hidden">
+                <p className="text-xs font-bold text-white/70 group-hover/profile:text-white transition-colors truncate leading-snug">{userDisplayName}</p>
+                <p className="text-[9px] text-emerald-400 uppercase tracking-wider font-extrabold mt-0.5">{userRole}</p>
+                <p className="text-[9px] text-white/50 truncate mt-0.5">{farmName}</p>
               </div>
-              <ChevronRight size={14} className="text-primary/70 group-hover/profile:translate-x-1 transition-transform" />
             </div>
-            <div className="h-1 bg-primary/10 rounded-full overflow-hidden">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: "10%" }}
-                className="h-full bg-primary"
-              />
-            </div>
-            <p className="text-[10px] text-primary/70 mt-2 text-right">Iniciando jornada</p>
+            <ChevronDown size={14} className="text-white/40 group-hover/profile:text-white transition-colors shrink-0 ml-2" />
           </Link>
 
+          <a 
+            href="https://wa.me/5521969014654" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center justify-between px-4 py-3 rounded-xl bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/10 hover:border-emerald-500/20 text-white/80 hover:text-white transition-all text-xs group cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <Headphones size={15} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+              <div className="text-left">
+                <p className="font-bold text-[10px] text-white">Precisa de ajuda?</p>
+                <p className="text-[9px] text-white/50">Fale com nosso suporte</p>
+              </div>
+            </div>
+            <ChevronRight size={12} className="text-white/40 group-hover:translate-x-0.5 transition-transform" />
+          </a>
+
+          {/* Sair da Conta */}
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 p-4 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all group cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-white/50 hover:text-red-400 hover:bg-red-500/5 rounded-xl transition-all text-xs group cursor-pointer"
           >
-            <LogOut size={20} className="group-hover:rotate-12 transition-transform text-red-400" />
-            <span className="font-semibold">{t("nav.logout", "Sair da Conta")}</span>
+            <LogOut size={16} className="group-hover:rotate-6 transition-transform" />
+            <span className="font-semibold">Sair da Conta</span>
           </button>
         </div>
       </aside>

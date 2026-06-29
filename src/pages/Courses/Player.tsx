@@ -13,6 +13,7 @@ import {
   AlertCircle,
   Clock,
   ArrowLeft,
+  ArrowRight,
   Share2,
   Bookmark,
   MonitorPlay,
@@ -22,7 +23,9 @@ import {
   Trash2,
   BookOpen,
   Award,
-  User as UserIcon
+  User as UserIcon,
+  X,
+  Lock
 } from "lucide-react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase as supabaseClient } from "../../lib/supabase";
@@ -57,7 +60,7 @@ export default function CoursePlayer() {
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("about");
-  const [expandedModules, setExpandedModules] = useState<number[]>([]);
+  const [expandedModules, setExpandedModules] = useState<any[]>([]);
   
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -72,6 +75,7 @@ export default function CoursePlayer() {
   const [showCertificate, setShowCertificate] = useState(false);
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [showMobilePlaylist, setShowMobilePlaylist] = useState(false);
 
   const fetchBlockedWords = async () => {
     try {
@@ -146,14 +150,14 @@ export default function CoursePlayer() {
         // Determinar aula inicial
         let startingLesson = null;
         if (initialLessonId) {
-          startingLesson = (lessonData || []).find(l => l.id === Number(initialLessonId));
+          startingLesson = (lessonData || []).find(l => String(l.id) === String(initialLessonId));
         }
 
         if (startingLesson) {
           setCurrentLesson(startingLesson);
-          setExpandedModules([Number(startingLesson.module_id)]);
+          setExpandedModules([startingLesson.module_id]);
         } else if (modulesWithLessons.length > 0) {
-          setExpandedModules([Number(modulesWithLessons[0].id)]);
+          setExpandedModules([modulesWithLessons[0].id]);
           if (modulesWithLessons[0].lessons.length > 0) {
             setCurrentLesson(modulesWithLessons[0].lessons[0]);
           }
@@ -330,14 +334,16 @@ export default function CoursePlayer() {
   };
 
   const allLessons = modules.flatMap(m => m.lessons);
-  const currentIndex = allLessons.findIndex(l => l.id === currentLesson?.id);
+  const currentIndex = allLessons.findIndex(l => String(l.id) === String(currentLesson?.id));
   const isLastLesson = currentIndex === allLessons.length - 1 && allLessons.length > 0;
   const nextLesson = !isLastLesson ? allLessons[currentIndex + 1] : null;
+  const isFirstLesson = currentIndex === 0;
+  const prevLesson = !isFirstLesson && allLessons.length > 0 ? allLessons[currentIndex - 1] : null;
 
   const handleNextLesson = () => {
     if (!isLastLesson && nextLesson) {
       setCurrentLesson(nextLesson);
-      setExpandedModules(prev => Array.from(new Set([...prev, Number(nextLesson.module_id)])));
+      setExpandedModules(prev => Array.from(new Set([...prev, nextLesson.module_id])));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (isLastLesson) {
       // Verificar se todas as aulas foram concluídas
@@ -349,6 +355,132 @@ export default function CoursePlayer() {
         toast.warning("Você precisa concluir todas as aulas para emitir o certificado.");
       }
     }
+  };
+
+  const handlePrevLesson = () => {
+    if (!isFirstLesson && prevLesson) {
+      setCurrentLesson(prevLesson);
+      setExpandedModules(prev => Array.from(new Set([...prev, prevLesson.module_id])));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const renderPlaylist = (isMobile = false) => {
+    return (
+      <div className={`${isMobile ? "max-h-none" : "max-h-[70vh] overflow-y-auto"} custom-scrollbar`}>
+         {modules.map((mod, modIdx) => (
+           <div key={mod.id} className="border-b border-emerald-800/20 last:border-0">
+              <button 
+               onClick={() => toggleModule(mod.id)}
+               className="w-full p-6 flex items-center justify-between hover:bg-emerald-950/40 transition-all text-left !bg-transparent !border-none !rounded-none"
+              >
+                 <div className="flex items-center gap-4">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500/15 flex items-center justify-center text-xs font-black text-emerald-400 shrink-0">
+                       {mod.is_locked ? <Lock size={12} className="text-amber-500" /> : modIdx + 1}
+                    </div>
+                    <div>
+                       <div className="flex items-center gap-2">
+                         <h4 className="playlist-module-title text-sm font-bold text-white line-clamp-1">{mod.title}</h4>
+                         {mod.is_locked && (
+                           <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-wider shrink-0">Em Breve</span>
+                         )}
+                       </div>
+                       <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{mod.lessons.length} Aulas</span>
+                    </div>
+                 </div>
+                 {expandedModules.includes(mod.id) ? (
+                   <ChevronUp size={18} className="text-emerald-400" />
+                 ) : (
+                   <ChevronDown size={18} className="text-emerald-400" />
+                 )}
+              </button>
+
+              <AnimatePresence>
+                 {expandedModules.includes(mod.id) && (
+                   <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden bg-[#011409]/95 border-y border-emerald-950/30"
+                   >
+                      {mod.lessons.map((lesson, lessonIdx) => {
+                        const isLessonLocked = lesson.is_locked || mod.is_locked;
+                        return (
+                          <button 
+                           key={lesson.id}
+                           onClick={() => {
+                             if (!isLessonLocked) {
+                               setCurrentLesson(lesson);
+                               if (isMobile) {
+                                 setShowMobilePlaylist(false);
+                               }
+                             } else {
+                               toast.warning("Esta aula ainda não está disponível.");
+                             }
+                           }}
+                           className={`w-full p-6 flex items-start gap-4 transition-all group border-l-4 !rounded-none !border-y-0 !border-r-0 ${
+                             String(currentLesson?.id) === String(lesson.id)
+                               ? "bg-emerald-500/20 border-emerald-400" 
+                               : "bg-emerald-900/10 border-transparent hover:bg-emerald-900/20"
+                           } ${isLessonLocked ? "opacity-70" : ""}`}
+                          >
+                             <div className="w-24 aspect-video rounded-xl overflow-hidden bg-slate-200 dark:bg-zinc-800 shrink-0 border border-slate-300/30 dark:border-white/5 relative">
+                                <img 
+                                 src={lesson.thumbnail_url || course.thumbnail_url || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400"} 
+                                 className={`w-full h-full object-cover transition-transform ${isLessonLocked ? "brightness-[0.45]" : "group-hover:scale-110"}`} 
+                                 alt="" 
+                                />
+                                {isLessonLocked ? (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                     <Lock size={14} className="text-amber-500" />
+                                  </div>
+                                ) : (
+                                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: "rgba(0, 0, 0, 0.4)" }}>
+                                     <Play size={16} className="text-white fill-current" />
+                                  </div>
+                                )}
+                             </div>
+                             <div className="text-left space-y-1">
+                                <h5 className={`playlist-lesson-title text-xs font-bold leading-tight line-clamp-2 ${
+                                  String(currentLesson?.id) === String(lesson.id)
+                                    ? "text-emerald-300 font-extrabold active-lesson" 
+                                    : "text-white group-hover:text-emerald-300"
+                                }`}>
+                                   {lesson.title}
+                                </h5>
+                                <div className="flex items-center gap-2 text-[10px] text-emerald-400/80 dark:text-zinc-500 font-black uppercase tracking-tighter w-full">
+                                   {isLessonLocked ? (
+                                     <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider">Em Breve</span>
+                                   ) : (
+                                     <>
+                                       <Clock size={10} className="text-emerald-400/80 dark:text-zinc-500" />
+                                       <span>{lesson.duration || "Aula "+(lessonIdx+1)}</span>
+                                     </>
+                                   )}
+                                   {completedLessons.includes(Number(lesson.id)) && !isLessonLocked && (
+                                     <span className="flex items-center gap-1 text-emerald-300 ml-auto font-black">
+                                       <CheckCircle size={10} />
+                                       Concluída
+                                     </span>
+                                   )}
+                                </div>
+                             </div>
+                          </button>
+                        );
+                      })}
+                   </motion.div>
+                 )}
+              </AnimatePresence>
+           </div>
+         ))}
+
+         {modules.length === 0 && (
+           <div className="p-12 text-center">
+              <p className="text-slate-400 dark:text-zinc-600 text-xs font-bold uppercase tracking-widest">Nenhuma aula cadastrada ainda.</p>
+           </div>
+         )}
+      </div>
+    );
   };
 
   const fetchComments = async (lessonId: number) => {
@@ -415,7 +547,7 @@ export default function CoursePlayer() {
     }
   };
 
-  const toggleModule = (modId: number) => {
+  const toggleModule = (modId: any) => {
     setExpandedModules(prev => 
       prev.includes(modId) ? prev.filter(id => id !== modId) : [...prev, modId]
     );
@@ -456,8 +588,20 @@ export default function CoursePlayer() {
     );
   }
 
+  const headerActions = (
+    <div className="lg:hidden flex items-center">
+      <button
+        onClick={() => setShowMobilePlaylist(!showMobilePlaylist)}
+        className="aulas-dropdown-btn flex items-center gap-1.5 px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl hover:bg-emerald-500/20 transition-all text-xs font-bold cursor-pointer"
+      >
+        <BookOpen size={14} className="text-emerald-400" />
+        <span className="font-black uppercase tracking-wider">Aulas</span>
+      </button>
+    </div>
+  );
+
   return (
-    <Layout>
+    <Layout headerActions={headerActions}>
       <div className="max-w-[1600px] mx-auto pb-20 player-page-container">
         <style dangerouslySetInnerHTML={{ __html: `
           body:not(.dark-theme) .lg\\:pl-72,
@@ -547,6 +691,55 @@ export default function CoursePlayer() {
           body:has(.player-page-container) ::-webkit-scrollbar-thumb {
             background: #0d2f19 !important;
           }
+          /* Forçar tom verde no botão do menu lateral na página do Player */
+          header button.sidebar-toggle-btn,
+          body:not(.dark-theme) header button.sidebar-toggle-btn {
+            background-color: rgba(16, 185, 129, 0.1) !important;
+            border-color: rgba(16, 185, 129, 0.2) !important;
+            color: #10b981 !important;
+          }
+          header button.sidebar-toggle-btn svg,
+          body:not(.dark-theme) header button.sidebar-toggle-btn svg {
+            color: #10b981 !important;
+          }
+          header button.sidebar-toggle-btn:hover,
+          body:not(.dark-theme) header button.sidebar-toggle-btn:hover {
+            background-color: rgba(16, 185, 129, 0.2) !important;
+          }
+          /* Forçar tom verde no botão Aulas no header */
+          header button.aulas-dropdown-btn,
+          body:not(.dark-theme) header button.aulas-dropdown-btn {
+            background-color: rgba(16, 185, 129, 0.1) !important;
+            border-color: rgba(16, 185, 129, 0.2) !important;
+            color: #10b981 !important;
+          }
+          header button.aulas-dropdown-btn span,
+          header button.aulas-dropdown-btn svg,
+          body:not(.dark-theme) header button.aulas-dropdown-btn span,
+          header button.aulas-dropdown-btn svg {
+            color: #10b981 !important;
+          }
+          header button.aulas-dropdown-btn:hover,
+          body:not(.dark-theme) header button.aulas-dropdown-btn:hover {
+            background-color: rgba(16, 185, 129, 0.2) !important;
+          }
+           /* Forçar cor branca nos títulos dos módulos na playlist */
+          .playlist-module-title,
+          body:not(.dark-theme) .playlist-module-title,
+          body:not(.dark-theme) .player-page-container .playlist-module-title {
+            color: #ffffff !important;
+          }
+          /* Forçar cor branca nos títulos das aulas na playlist */
+          .playlist-lesson-title,
+          body:not(.dark-theme) .playlist-lesson-title,
+          body:not(.dark-theme) .player-page-container .playlist-lesson-title {
+            color: #ffffff !important;
+          }
+          .playlist-lesson-title.active-lesson,
+          body:not(.dark-theme) .playlist-lesson-title.active-lesson,
+          body:not(.dark-theme) .player-page-container .playlist-lesson-title.active-lesson {
+            color: #6ee7b7 !important;
+          }
         `}} />
         {/* Navigation Breadcrumb */}
         <div className="flex items-center gap-4 mb-8">
@@ -571,7 +764,15 @@ export default function CoursePlayer() {
           <div className="lg:col-span-8 space-y-8">
             {/* Cinematic Player Wrapper */}
             <div className="aspect-video bg-black rounded-[2.5rem] overflow-hidden shadow-2xl shadow-emerald-500/5 border border-white/5 relative group">
-              {currentLesson?.video_url ? (
+              {(currentLesson?.is_locked || modules.find(m => m.id === currentLesson?.module_id)?.is_locked) ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#011409]/95 text-center p-8">
+                  <div className="w-16 h-16 rounded-2xl bg-zinc-900/60 border border-white/5 flex items-center justify-center text-zinc-500 mb-4 animate-pulse">
+                    <Lock size={28} className="text-amber-500" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white mb-2">Conteúdo em Breve</h3>
+                  <p className="text-zinc-400 text-xs max-w-sm">Esta aula está trancada e será disponibilizada nas próximas atualizações do treinamento.</p>
+                </div>
+              ) : currentLesson?.video_url ? (
                 <YouTubePlayer
                   url={currentLesson.video_url}
                   title={currentLesson.title}
@@ -579,53 +780,82 @@ export default function CoursePlayer() {
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900/50">
                   <MonitorPlay className="w-20 h-20 text-zinc-800 mb-4" />
-                  <p className="text-zinc-600 font-bold">Nenhum vídeo disponível para esta aula.</p>
+                  <p className="text-zinc-650 font-bold">Nenhum vídeo disponível para esta aula.</p>
                 </div>
               )}
             </div>
 
             {/* Lesson Info Card */}
-            <div className="bg-zinc-900/30 border border-white/5 rounded-[2.5rem] p-8 md:p-12">
-               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-                  <div className="space-y-2">
-                     <span className="text-emerald-500 font-black text-[10px] uppercase tracking-[0.2em]">Você está assistindo:</span>
-                     <h2 className="text-3xl font-black text-white tracking-tighter">{currentLesson?.title || "Selecione uma aula"}</h2>
-                  </div>
-                  <div className="flex items-center gap-3">
-                     <button 
-                        onClick={() => currentLesson && toggleLessonCompletion(Number(currentLesson.id))}
-                        className={`flex items-center gap-2 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
-                          currentLesson && completedLessons.includes(Number(currentLesson.id))
-                            ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
-                            : "bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white"
-                        }`}
-                     >
-                        <CheckCircle size={18} />
-                        {currentLesson && completedLessons.includes(Number(currentLesson.id)) ? "Aula Concluída" : "Concluir Aula"}
-                     </button>
-                  </div>
-               </div>
+             <div className="bg-zinc-900/30 border border-white/5 rounded-[2.5rem] p-8 md:p-12">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                   <div className="space-y-2">
+                      <span className="text-emerald-500 font-black text-[10px] uppercase tracking-[0.2em]">Você está assistindo:</span>
+                      <h2 className="text-3xl font-black text-white tracking-tighter">{currentLesson?.title || "Selecione uma aula"}</h2>
+                   </div>
+                   <div className="hero-banner-container flex flex-col gap-3 w-full md:w-auto">
+                       {/* Linha com Anterior e Próxima Aula */}
+                       {(prevLesson || nextLesson) && (
+                          <div className="flex items-center gap-3 w-full">
+                             {prevLesson && (
+                                <button 
+                                   onClick={handlePrevLesson}
+                                   className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all cursor-pointer active:scale-95 bg-white/5 hover:bg-white/10 text-white border border-white/10"
+                                >
+                                   <ArrowLeft size={18} className="text-white" />
+                                   <span>Anterior</span>
+                                </button>
+                             )}
+                             {nextLesson && (
+                                <button 
+                                   onClick={handleNextLesson}
+                                   className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all cursor-pointer active:scale-95 bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20"
+                                >
+                                   <span>Próxima Aula</span>
+                                   <ArrowRight size={18} className="text-white" />
+                                </button>
+                             )}
+                          </div>
+                       )}
 
-               {/* Tabs Netflix Style */}
-               <div className="flex gap-10 border-b border-white/5 mb-8">
-                  {[
-                    { id: "about", label: "Descrição", icon: <FileText size={16} /> },
-                    { id: "materials", label: "Arquivos", icon: <Download size={16} /> },
-                    { id: "community", label: "Comunidade", icon: <MessageSquare size={16} /> }
-                  ].map(tab => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`pb-6 flex items-center gap-2 text-sm font-black uppercase tracking-widest transition-all relative ${activeTab === tab.id ? "text-white" : "text-zinc-500 hover:text-zinc-300"}`}
-                    >
-                      {tab.icon}
-                      {tab.label}
-                      {activeTab === tab.id && (
-                        <motion.div layoutId="player-tab" className="absolute bottom-0 left-0 right-0 h-1 bg-emerald-500 rounded-full" />
-                      )}
-                    </button>
-                  ))}
-               </div>
+                       {/* Linha abaixo com Concluir Aula */}
+                       <button 
+                          onClick={() => currentLesson && toggleLessonCompletion(Number(currentLesson.id))}
+                          className={`w-full flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all cursor-pointer active:scale-95 text-white ${
+                            currentLesson && completedLessons.includes(Number(currentLesson.id))
+                              ? "bg-emerald-400 hover:bg-emerald-300"
+                              : "bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20"
+                          }`}
+                       >
+                          <CheckCircle size={18} className="text-white" />
+                          <span>
+                             {currentLesson && completedLessons.includes(Number(currentLesson.id)) ? "Concluído" : "Concluir Aula"}
+                          </span>
+                       </button>
+                    </div>
+                </div>
+ 
+                {/* Tabs Netflix Style */}
+                <div className="hero-banner-container flex gap-10 border-b border-white/5 mb-8">
+                   {[
+                     { id: "about", label: "Descrição", icon: <FileText size={16} /> },
+                     { id: "materials", label: "Arquivos", icon: <Download size={16} /> },
+                     { id: "community", label: "Comunidade", icon: <MessageSquare size={16} /> }
+                   ].map(tab => (
+                     <button
+                       key={tab.id}
+                       onClick={() => setActiveTab(tab.id)}
+                       className={`pb-6 flex items-center gap-2 text-sm font-black uppercase tracking-widest transition-all relative !bg-transparent !border-none !rounded-none ${
+                         activeTab === tab.id ? "text-emerald-400" : "text-zinc-400 hover:text-zinc-200"
+                       }`}
+                     >
+                       {tab.icon}
+                       {tab.label}
+                       {activeTab === tab.id && (
+                         <motion.div layoutId="player-tab" className="absolute bottom-0 left-0 right-0 h-1 bg-emerald-500 rounded-full" />
+                       )}
+                     </button>
+                   ))}
+                </div>
 
                <div className="text-zinc-400 text-lg leading-relaxed max-w-4xl">
                   {activeTab === "about" && (
@@ -829,90 +1059,19 @@ export default function CoursePlayer() {
           </div>
 
           {/* Sidebar Playlist (Netflix Style) */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="bg-zinc-900/40 border border-white/5 rounded-[2.5rem] overflow-hidden sticky top-8">
-               <div className="p-8 border-b border-white/5 flex items-center justify-between bg-white/5">
-                  <h3 className="text-lg font-black text-white uppercase tracking-tighter">Conteúdo do Curso</h3>
-                  <div className="p-2 bg-emerald-500/10 rounded-lg">
-                     <Bookmark className="text-emerald-500" size={16} />
-                  </div>
-               </div>
+          <div className="hidden lg:block lg:col-span-4 space-y-6">
+             <div className="hero-banner-container bg-[#03200e]/95 dark:bg-[#02180a]/90 border border-emerald-800/40 rounded-[2rem] overflow-hidden sticky top-8">
+                <div className="p-8 border-b border-emerald-800/40 flex items-center justify-between bg-[#02180a]/90">
+                   <h3 className="text-sm font-black text-[#6ee7b7] uppercase tracking-wider">Conteúdo do Curso</h3>
+                   <div className="p-2 bg-emerald-500/10 rounded-lg">
+                      <Bookmark className="text-emerald-400" size={16} />
+                   </div>
+                </div>
 
-               <div className="max-h-[70vh] overflow-y-auto custom-scrollbar">
-                  {modules.map((mod, modIdx) => (
-                    <div key={mod.id} className="border-b border-white/5 last:border-0">
-                       <button 
-                        onClick={() => toggleModule(Number(mod.id))}
-                        className="w-full p-6 flex items-center justify-between hover:bg-white/5 transition-all text-left"
-                       >
-                          <div className="flex items-center gap-4">
-                             <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-[10px] font-black text-zinc-500">
-                                {modIdx + 1}
-                             </div>
-                             <div>
-                                <h4 className="text-sm font-bold text-white line-clamp-1">{mod.title}</h4>
-                                <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">{mod.lessons.length} Aulas</span>
-                             </div>
-                          </div>
-                          {expandedModules.includes(Number(mod.id)) ? <ChevronUp size={18} className="text-zinc-700" /> : <ChevronDown size={18} className="text-zinc-700" />}
-                       </button>
-
-                       <AnimatePresence>
-                          {expandedModules.includes(Number(mod.id)) && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              className="overflow-hidden bg-black/20"
-                            >
-                               {mod.lessons.map((lesson, lessonIdx) => (
-                                 <button 
-                                  key={lesson.id}
-                                  onClick={() => setCurrentLesson(lesson)}
-                                  className={`w-full p-6 flex items-start gap-4 transition-all group border-l-4 ${currentLesson?.id === lesson.id ? "bg-emerald-500/5 border-emerald-500" : "border-transparent hover:bg-white/5"}`}
-                                 >
-                                    <div className="w-24 aspect-video rounded-xl overflow-hidden bg-zinc-800 shrink-0 border border-white/5 relative">
-                                       <img 
-                                        src={lesson.thumbnail_url || course.thumbnail_url || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400"} 
-                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform" 
-                                        alt="" 
-                                       />
-                                       <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                                          <Play size={16} className="text-white fill-current" />
-                                       </div>
-                                    </div>
-                                    <div className="text-left space-y-1">
-                                       <h5 className={`text-xs font-bold leading-tight line-clamp-2 ${currentLesson?.id === lesson.id ? "text-emerald-500" : "text-zinc-300 group-hover:text-white"}`}>
-                                          {lesson.title}
-                                       </h5>
-                                       <div className="flex items-center gap-2 text-[10px] text-zinc-600 font-black uppercase tracking-tighter">
-                                          <Clock size={10} />
-                                          <span>{lesson.duration || "Aula "+(lessonIdx+1)}</span>
-                                          {completedLessons.includes(Number(lesson.id)) && (
-                                            <span className="flex items-center gap-1 text-emerald-500 ml-auto">
-                                              <CheckCircle size={10} />
-                                              Concluída
-                                            </span>
-                                          )}
-                                       </div>
-                                    </div>
-                                 </button>
-                               ))}
-                            </motion.div>
-                          )}
-                       </AnimatePresence>
-                    </div>
-                  ))}
-
-                  {modules.length === 0 && (
-                    <div className="p-12 text-center">
-                       <p className="text-zinc-600 text-xs font-bold uppercase tracking-widest">Nenhuma aula cadastrada ainda.</p>
-                    </div>
-                  )}
-               </div>
-            </div>
+                {renderPlaylist(false)}
+             </div>
             
-            {/* Promo Card Next Lesson */}
+             {/* Promo Card Next Lesson */}
             <div 
               onClick={handleNextLesson}
               className={`${isLastLesson ? "bg-emerald-600 shadow-emerald-600/20" : "bg-emerald-700 shadow-emerald-700/20"} rounded-[2.5rem] p-8 relative overflow-hidden group cursor-pointer shadow-2xl active:scale-95 transition-all`}
@@ -958,6 +1117,43 @@ export default function CoursePlayer() {
         completionDate={new Date().toLocaleDateString('pt-BR')}
         instructorName="Bananal PRO"
       />
+
+      {/* Mobile Drawer (Conteúdo do Curso) */}
+      <AnimatePresence>
+        {showMobilePlaylist && (
+          <>
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm lg:hidden" 
+              onClick={() => setShowMobilePlaylist(false)} 
+            />
+            {/* Drawer */}
+            <motion.div
+              initial={{ opacity: 0, x: "100%" }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 bottom-0 z-55 w-[85vw] sm:w-[380px] bg-[#03200e] dark:bg-[#02180a] border-l border-emerald-800/30 shadow-2xl flex flex-col h-full overflow-hidden lg:hidden hero-banner-container"
+            >
+              <div className="p-6 border-b border-emerald-800/40 flex items-center justify-between bg-[#02180a]">
+                 <h3 className="text-sm font-black text-[#6ee7b7] uppercase tracking-wider">Conteúdo do Curso</h3>
+                 <button 
+                   onClick={() => setShowMobilePlaylist(false)} 
+                   className="text-zinc-400 hover:text-white p-2 cursor-pointer bg-white/5 rounded-xl border border-white/10"
+                 >
+                   <X size={16} />
+                 </button>
+              </div>
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-2 bg-[#020c08]">
+                {renderPlaylist(true)}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </Layout>
   );
 }

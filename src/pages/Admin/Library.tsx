@@ -290,16 +290,18 @@ export default function AdminLibrary() {
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-              <BookOpen className="text-emerald-500" />
-              Gestão da Biblioteca Técnica
-            </h1>
-            <p className="text-zinc-500 text-sm mt-1">Publique cartilhas, planilhas de cálculo e boletins técnicos para os assinantes realizarem download.</p>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-2xl border border-emerald-500/20">
+              <BookOpen className="text-[#589c1c] dark:text-[#6ee7b7] w-8 h-8" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Gestão da Biblioteca Técnica</h1>
+              <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">Publique cartilhas, planilhas de cálculo e boletins técnicos para os assinantes realizarem download.</p>
+            </div>
           </div>
           <button 
             onClick={() => { resetForm(); setIsModalOpen(true); }}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-4 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-600/20 active:scale-95 self-end md:self-auto cursor-pointer"
+            className="bg-[#589c1c] hover:bg-[#467c16] dark:bg-[#10b981] dark:hover:bg-[#0d9468] text-white px-6 py-4 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-600/10 active:scale-95 self-end md:self-auto cursor-pointer"
           >
             <Plus size={20} />
             Publicar Arquivo
@@ -309,13 +311,13 @@ export default function AdminLibrary() {
         {/* Filters */}
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-emerald-500 transition-colors" size={20} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 group-focus-within:text-emerald-500 transition-colors" size={20} />
             <input 
               type="text" 
               placeholder="Pesquisar arquivos por título, descrição ou autor..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl pl-12 pr-4 py-4 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all placeholder:text-zinc-600"
+              className="w-full bg-white dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 rounded-2xl pl-12 pr-4 py-4 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-slate-400 dark:placeholder:text-zinc-650"
             />
           </div>
         </div>
@@ -328,11 +330,11 @@ export default function AdminLibrary() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredResources.length === 0 ? (
-              <div className="col-span-full py-20 text-center space-y-4 bg-zinc-900/20 rounded-[3rem] border border-dashed border-white/5">
-                <FolderOpen className="mx-auto text-zinc-700 w-12 h-12" />
+              <div className="col-span-full py-20 text-center space-y-4 bg-white dark:bg-zinc-900/20 rounded-[2rem] border border-dashed border-slate-200 dark:border-white/10">
+                <FolderOpen className="mx-auto text-slate-400 dark:text-zinc-600 w-12 h-12" />
                 <div className="space-y-1">
-                  <p className="text-white font-bold">Nenhum arquivo publicado</p>
-                  <p className="text-zinc-500 text-sm">Adicione um novo recurso para começar.</p>
+                  <p className="text-slate-800 dark:text-white font-bold">Nenhum arquivo publicado</p>
+                  <p className="text-slate-500 dark:text-zinc-500 text-sm">Adicione um novo recurso para começar.</p>
                 </div>
               </div>
             ) : (
@@ -341,24 +343,24 @@ export default function AdminLibrary() {
                   key={res.id}
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-zinc-900/40 border border-white/5 p-6 rounded-[2.5rem] flex flex-col justify-between hover:border-emerald-500/30 transition-all"
+                  className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 p-6 rounded-[2rem] shadow-sm flex flex-col justify-between hover:border-emerald-500/30 dark:hover:border-emerald-500/30 transition-all"
                 >
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
-                      <span className="text-[10px] font-black px-3 py-1 rounded-full uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span className="text-[10px] font-black px-3 py-1 rounded-full uppercase bg-emerald-500/10 text-[#589c1c] dark:text-emerald-400 border border-emerald-500/20">
                         {getCategoryLabel(res.category)}
                       </span>
 
                       <div className="flex gap-2">
                         <button 
                           onClick={() => handleEdit(res)}
-                          className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-zinc-400 hover:text-white transition-all text-xs font-bold cursor-pointer"
+                          className="p-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white transition-all text-xs font-bold cursor-pointer"
                         >
                           Editar
                         </button>
                         <button 
                           onClick={() => handleDelete(res.id, res.file_url)}
-                          className="p-2 bg-red-500/10 hover:bg-red-600 rounded-xl text-red-400 hover:text-white transition-all cursor-pointer"
+                          className="p-2 bg-red-500/10 hover:bg-red-600 rounded-xl text-red-655 hover:text-white transition-all cursor-pointer"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -366,29 +368,29 @@ export default function AdminLibrary() {
                     </div>
 
                     <div className="flex gap-4">
-                      <div className="w-12 h-12 shrink-0 bg-white/5 border border-white/5 rounded-2xl flex items-center justify-center text-emerald-500">
+                      <div className="w-12 h-12 shrink-0 bg-slate-50 dark:bg-white/5 border border-slate-150 dark:border-white/5 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                         {res.type === "xlsx" ? <FileSpreadsheet size={24} /> : <FileText size={24} />}
                       </div>
                       <div className="space-y-1">
-                        <h3 className="text-base font-bold text-white leading-tight">{res.title}</h3>
-                        <p className="text-zinc-500 text-xs">
+                        <h3 className="text-base font-bold text-slate-800 dark:text-white leading-tight">{res.title}</h3>
+                        <p className="text-slate-400 dark:text-zinc-500 text-xs">
                           {res.author} • Publicado em {res.year}
                         </p>
                       </div>
                     </div>
 
-                    <p className="text-zinc-400 text-xs leading-relaxed line-clamp-2">{res.description}</p>
+                    <p className="text-slate-500 dark:text-zinc-400 text-xs leading-relaxed line-clamp-2">{res.description}</p>
                   </div>
 
-                  <div className="pt-4 mt-6 border-t border-white/5 flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-zinc-500 bg-white/5 px-2.5 py-1 rounded uppercase tracking-widest border border-white/5">
+                  <div className="pt-4 mt-6 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 bg-slate-50 dark:bg-white/5 px-2.5 py-1 rounded uppercase tracking-widest border border-slate-150 dark:border-white/5">
                       {res.type} • {res.size}
                     </span>
                     <a 
                       href={res.file_url} 
                       target="_blank" 
                       rel="noreferrer"
-                      className="bg-emerald-600/10 hover:bg-emerald-600 text-emerald-400 hover:text-white px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
+                      className="bg-[#589c1c]/10 dark:bg-[#10b981]/10 hover:bg-[#589c1c] dark:hover:bg-[#10b981] text-[#589c1c] dark:text-[#6ee7b7] hover:text-white px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer border border-[#589c1c]/10 dark:border-[#10b981]/10"
                     >
                       <Download size={12} />
                       Baixar Arquivo

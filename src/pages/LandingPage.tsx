@@ -175,7 +175,7 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row gap-4 pt-2 w-full sm:w-auto">
               <Link
-                to="/auth/register?offer=padrao"
+                to="/auth/register?offer=padrao&plan=anual"
                 className="bg-secondary hover:bg-secondary-fixed text-white hover:text-primary-container px-8 py-4 rounded-xl font-headline font-bold text-sm tracking-wide transition-all border-glow duration-300 shadow-lg shadow-secondary/20 flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto text-center"
               >
                 Começar Operações
@@ -798,7 +798,7 @@ export default function LandingPage() {
               </div>
               <div>
                 <Link
-                  to="/auth/register?offer=padrao"
+                  to="/auth/register?offer=padrao&plan=mensal"
                   className="w-full bg-white/5 hover:bg-white/10 text-white py-4 rounded-xl font-headline font-bold text-xs tracking-wider uppercase transition-all duration-300 border border-white/10 active:scale-95 block text-center cursor-pointer"
                 >
                   Assinar Mensal
@@ -810,19 +810,19 @@ export default function LandingPage() {
             {/* Anual */}
             <div className="dark-glass rounded-[2.5rem] p-10 relative price-card hover-card-effect border-glow border-secondary/50 flex flex-col justify-between overflow-hidden shadow-2xl shadow-secondary/5">
               <div className="absolute top-0 right-0 bg-secondary text-white text-[8px] font-black uppercase tracking-widest px-4 py-1.5 rounded-bl-2xl">
-                Melhor Custo-Benefício
+                OFERTA MEMBRO FUNDADOR
               </div>
               <div>
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-secondary text-white px-5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase font-inter border border-secondary-fixed/20 shadow-glow">
                   PLANO ANUAL
                 </div>
                 <div className="mb-6 mt-4">
-                  <span className="text-5xl font-headline font-extrabold text-white">R$ 799</span>
+                  <span className="text-5xl font-headline font-extrabold text-white">R$ 497</span>
                   <span className="text-on-surface-variant font-sans text-sm">/ano</span>
-                  <p className="text-secondary-fixed text-[10px] font-bold mt-1 uppercase tracking-wider">Economize R$ 365 por ano</p>
+                  <p className="text-secondary-fixed text-[10px] font-bold mt-1 uppercase tracking-wider">De R$ 797 por R$ 497 (Economize R$ 300)</p>
                 </div>
                 <p className="text-on-surface-variant mb-8 font-sans text-xs leading-relaxed">
-                  Acesso completo por 12 meses. Parcele em até **12x no cartão** com desconto exclusivo.
+                  Acesso completo por 12 meses. Parcele em até **12x de R$ 49,70** no cartão de crédito.
                 </p>
                 <ul className="space-y-3.5 text-left mb-8 font-sans text-[11px] text-zinc-300">
                   <li className="flex items-center gap-3">
@@ -831,7 +831,7 @@ export default function LandingPage() {
                   </li>
                   <li className="flex items-center gap-3">
                     <span className="material-symbols-outlined text-secondary-fixed text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                    <span>Desconto garantido equivalente a R$ 66,58/mês</span>
+                    <span>Desconto Membro Fundador de R$ 797 por R$ 497</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <span className="material-symbols-outlined text-secondary-fixed text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
@@ -845,10 +845,10 @@ export default function LandingPage() {
               </div>
               <div>
                 <Link
-                  to="/auth/register?offer=padrao"
+                  to="/auth/register?offer=padrao&plan=anual"
                   className="w-full bg-secondary hover:bg-secondary-fixed text-white hover:text-primary-container py-4.5 rounded-xl font-headline font-extrabold text-xs tracking-wider uppercase transition-all duration-300 shadow-lg shadow-secondary/15 active:scale-95 block text-center cursor-pointer"
                 >
-                  Assinar Anual (12x)
+                  Assinar Anual (12x de R$ 49,70)
                 </Link>
                 <p className="text-[9px] text-on-surface-variant mt-4 font-sans uppercase tracking-widest font-semibold">Parcele em até 12x no cartão de crédito</p>
               </div>
@@ -983,7 +983,7 @@ export default function LandingPage() {
               </summary>
               <div className="overflow-hidden transition-all duration-300">
                 <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed">
-                  Todas as assinaturas são processadas de forma segura através do Asaas, um dos maiores gateways de pagamento do Brasil. Você recebe os comprovantes e notas de serviço diretamente no seu e-mail cadastrado.
+                  Todas as assinaturas são processadas de forma segura através do InfinitePay, um dos maiores gateways de pagamento do Brasil. Você recebe os comprovantes de serviço diretamente no seu e-mail cadastrado.
                 </p>
               </div>
             </details>
@@ -1027,7 +1027,7 @@ export default function LandingPage() {
           </p>
           <div className="pt-4">
             <Link
-              to="/auth/register?offer=padrao"
+              to="/auth/register?offer=padrao&plan=anual"
               className="bg-secondary hover:bg-secondary-fixed text-white hover:text-primary-container px-12 py-5 rounded-2xl font-headline font-extrabold text-sm tracking-wider uppercase transition-all duration-300 shadow-2xl shadow-secondary/20 hover:scale-[1.02] active:scale-95 inline-block text-center cursor-pointer"
             >
               Começar Agora

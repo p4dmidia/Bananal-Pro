@@ -13,7 +13,8 @@ import {
   ShieldCheck,
   Zap,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Lock
 } from "lucide-react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
@@ -185,16 +186,21 @@ export default function CourseDetail() {
                   lessons.map((lesson, i) => (
                     <div 
                       key={lesson.id} 
-                      className="bg-white border border-outline/10 p-6 rounded-[2rem] flex items-center justify-between hover:bg-slate-50 transition-all group cursor-pointer shadow-sm" 
+                      className={`bg-white border border-outline/10 p-6 rounded-[2rem] flex items-center justify-between hover:bg-slate-50 transition-all group cursor-pointer shadow-sm ${(lesson as any).is_locked ? "opacity-75" : ""}`} 
                       onClick={() => navigate(isAdminPath ? `/admin/cursos` : `/cursos/player/${course.id}`)}
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary font-bold">
-                          {lesson.order_index || i + 1}
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold ${(lesson as any).is_locked ? "bg-amber-500/10 text-amber-600" : "bg-primary/10 text-primary"}`}>
+                          {(lesson as any).is_locked ? <Lock size={16} /> : (lesson.order_index || i + 1)}
                         </div>
                         <div>
-                          <h4 className="font-bold text-on-surface group-hover:text-primary transition-colors">{lesson.title}</h4>
-                          <p className="text-xs text-on-surface-variant/60">{lesson.duration || "Duração variada"}</p>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-on-surface group-hover:text-primary transition-colors">{lesson.title}</h4>
+                            {(lesson as any).is_locked && (
+                              <span className="bg-amber-500/10 text-amber-600 border border-amber-500/20 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider">Em Breve</span>
+                            )}
+                          </div>
+                          <p className="text-xs text-on-surface-variant/60">{(lesson as any).is_locked ? "Conteúdo em Breve" : (lesson.duration || "Duração variada")}</p>
                         </div>
                       </div>
                       <ArrowRight className="text-on-surface-variant/60 group-hover:text-primary transition-colors" size={20} />

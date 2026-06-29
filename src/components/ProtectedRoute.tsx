@@ -13,11 +13,12 @@ export function ProtectedRoute({
   const { user, profile, loading, profileLoading } = useAuth();
   const location = useLocation();
 
-  // 1. Carregamento inicial do Usuário (Auth do Supabase)
-  if (loading) {
+  // 1. Carregamento inicial do Usuário e Perfil
+  if (loading || profileLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-red-600 animate-spin" />
+      <div className="min-h-screen bg-black flex items-center justify-center flex-col gap-4">
+        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
+        <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Carregando...</p>
       </div>
     );
   }
@@ -30,19 +31,15 @@ export function ProtectedRoute({
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
-  // 3. Se for rota de ADMIN, precisamos esperar o carregamento do perfil
+  // 3. Verificações de permissão e assinatura ativa
   if (adminOnly) {
-    if (profileLoading && !profile) {
-      return (
-        <div className="min-h-screen bg-black flex items-center justify-center flex-col gap-4">
-          <Loader2 className="w-8 h-8 text-red-600 animate-spin" />
-          <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Verificando Permissões...</p>
-        </div>
-      );
-    }
-
     if (profile?.role !== 'admin') {
       return <Navigate to="/dashboard" replace />;
+    }
+  } else {
+    // Usuários comuns precisam ter assinatura ativa (is_active === true)
+    if (profile?.role !== 'admin' && profile?.is_active !== true) {
+      return <Navigate to="/checkout" replace />;
     }
   }
 

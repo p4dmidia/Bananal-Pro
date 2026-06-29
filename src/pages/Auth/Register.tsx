@@ -78,8 +78,9 @@ export default function Register() {
 
       if (data.user) {
         toast.success("Cadastro realizado com sucesso!");
+        const plan = searchParams.get("plan") || "anual";
         // Redirect directly to the checkout page with the offer slug
-        navigate(`/checkout/${offerSlug}`);
+        navigate(`/checkout/${offerSlug}?plan=${plan}`);
       } else {
         toast.success("Conta criada! Verifique seu e-mail.");
         navigate("/auth/login");
@@ -280,7 +281,7 @@ export default function Register() {
             <div className="flex items-start gap-2 px-1 pt-2">
               <input type="checkbox" id="terms" className="accent-emerald-600 w-4 h-4 rounded border-outline/10 mt-1 cursor-pointer" required />
               <label htmlFor="terms" className="text-xs text-on-surface-variant leading-relaxed cursor-pointer select-none">
-                Ao clicar aqui, concordo com os <a href="#" className="text-emerald-500 hover:underline font-semibold">Termos de Uso</a> e <a href="#" className="text-emerald-500 hover:underline font-semibold">Políticas de Privacidade</a> do Bananal PRO.
+                Ao clicar aqui, concordo com os <Link to="/termos-de-uso" target="_blank" className="text-emerald-500 hover:underline font-semibold">Termos de Uso</Link> e <Link to="/politica-de-privacidade" target="_blank" className="text-emerald-500 hover:underline font-semibold">Políticas de Privacidade</Link> do Bananal PRO.
               </label>
             </div>
 

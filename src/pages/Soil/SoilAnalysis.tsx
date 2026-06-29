@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Layout from "../../components/Layout/Layout";
+import bannerImg from "../../assets/banana_soil_analysis_banner.png";
 import { motion } from "motion/react";
 import { 
   Sprout, 
@@ -500,15 +501,26 @@ export default function SoilAnalysis() {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto space-y-10 pb-20">
-        {/* Header */}
-        <div>
-          <h1 className="text-4xl font-display font-bold text-white mb-2 flex items-center gap-3">
-            <Sprout className="text-primary w-10 h-10" />
-            Análise de Solo
-          </h1>
-          <p className="text-slate-400 text-lg">
-            Interpretação química instantânea, cálculo de calagem e recomendação nutricional específica para banana.
-          </p>
+        {/* Header Banner */}
+        <div 
+          className="hero-banner-container relative mx-[-1rem] mt-[-1rem] md:mx-[-2rem] md:mt-[-2rem] rounded-none md:rounded-b-[2.5rem] overflow-hidden px-8 pb-10 pt-24 md:px-12 md:pb-12 md:pt-28 min-h-[220px] flex flex-col md:flex-row justify-between items-center md:items-end gap-6 bg-cover bg-center border-none z-10"
+          style={{ backgroundImage: `url(${bannerImg})` }}
+        >
+          {/* Película escura do tom do menu lateral (#02160a) para legibilidade perfeita */}
+          <div className="absolute inset-0 bg-[#02160a]/85 backdrop-blur-[1px] z-0 pointer-events-none" />
+
+          {/* Fade to white/page-background at the bottom */}
+          <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
+
+          <div className="relative z-10 max-w-3xl text-left">
+            <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-2 flex items-center gap-3">
+              <span className="!text-white">Análise</span> <span className="text-[#589c1c] dark:text-[#6ee7b7]">de Solo</span>
+              <Sprout className="text-[#589c1c] dark:text-[#6ee7b7] w-8 h-8 shrink-0 animate-pulse" />
+            </h1>
+            <p className="!text-white text-sm md:text-base font-medium leading-relaxed opacity-95">
+              Interpretação química instantânea, cálculo de calagem e recomendação nutricional específica para banana.
+            </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

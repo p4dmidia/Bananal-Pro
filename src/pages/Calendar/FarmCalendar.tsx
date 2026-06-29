@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Layout from "../../components/Layout/Layout";
+import bannerImg from "../../assets/banana_calendar_banner.png";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Calendar, 
@@ -41,6 +42,7 @@ export default function FarmCalendar() {
 
   // Estados para Visão Notion e Priorização por IA
   const [viewMode, setViewMode] = useState<"standard" | "notion">("standard");
+  const [isMobileFormOpen, setIsMobileFormOpen] = useState(false);
   const [priorizing, setPrioritizing] = useState(false);
   const [prioritizationStep, setPrioritizationStep] = useState(0);
   const [taskPriorities, setTaskPriorities] = useState<Record<string, { priority: "Alta" | "Média" | "Baixa"; reason: string }>>({});
@@ -366,6 +368,7 @@ export default function FarmCalendar() {
       setDate("");
       setDescription("");
       fetchTasks();
+      setIsMobileFormOpen(false);
     } catch (err) {
       console.error('Error adding farm task:', err);
       toast.error('Erro ao salvar agendamento no Supabase.');
@@ -442,14 +445,23 @@ export default function FarmCalendar() {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto space-y-10 pb-20">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-4xl font-display font-bold text-white mb-2 flex items-center gap-3">
-              <Calendar className="text-primary w-10 h-10" />
-              Calendário Agrícola
+        {/* Header Banner */}
+        <div 
+          className="hero-banner-container relative mx-[-1rem] mt-[-1rem] md:mx-[-2rem] md:mt-[-2rem] rounded-none md:rounded-b-[2.5rem] overflow-hidden px-8 pb-10 pt-24 md:px-12 md:pb-12 md:pt-28 min-h-[220px] flex flex-col md:flex-row justify-between items-center md:items-end gap-6 bg-cover bg-center border-none z-10"
+          style={{ backgroundImage: `url(${bannerImg})` }}
+        >
+          {/* Película escura do tom do menu lateral (#02160a) para legibilidade perfeita */}
+          <div className="absolute inset-0 bg-[#02160a]/85 backdrop-blur-[1px] z-0 pointer-events-none" />
+
+          {/* Fade to white/page-background at the bottom */}
+          <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
+
+          <div className="relative z-10 max-w-3xl text-left">
+            <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-2 flex items-center gap-3">
+              <span className="!text-white">Calendário</span> <span className="text-[#589c1c] dark:text-[#6ee7b7]">Agrícola</span>
+              <Calendar className="text-[#589c1c] dark:text-[#6ee7b7] w-8 h-8 shrink-0 animate-pulse" />
             </h1>
-            <p className="text-slate-400 text-lg">
+            <p className="!text-white text-sm md:text-base font-medium leading-relaxed opacity-95">
               Planejamento e controle de tarefas, adubação, irrigação e colheitas da fazenda.
             </p>
           </div>
@@ -475,34 +487,45 @@ export default function FarmCalendar() {
           </div>
         </div>
 
+        {/* Mobile Add Task Button */}
+        <div className="lg:hidden flex justify-end px-4">
+          <button
+            onClick={() => setIsMobileFormOpen(true)}
+            className="flex items-center gap-2 px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest bg-[#589c1c] hover:bg-[#467c16] dark:bg-[#10b981] dark:hover:bg-[#0d9468] text-white shadow-lg cursor-pointer transition-all active:scale-95"
+          >
+            <Plus size={14} className="text-white" />
+            <span>Tarefa +</span>
+          </button>
+        </div>
+
         {/* View Mode Tabs (Notion style) */}
-        <div className="flex border-b border-white/10 gap-6">
+        <div className="hero-banner-container flex border-b border-slate-100 dark:border-white/10 gap-6">
           <button
             onClick={() => setViewMode("standard")}
-            className={`pb-4 font-bold text-xs uppercase tracking-wider transition-all relative cursor-pointer ${
-              viewMode === "standard" ? "text-primary" : "text-slate-400 hover:text-white"
+            className={`pb-4 font-bold text-xs uppercase tracking-wider transition-all relative cursor-pointer !bg-transparent !border-none !rounded-none ${
+              viewMode === "standard" ? "!text-[#589c1c] dark:!text-[#6ee7b7]" : "text-slate-400 hover:text-slate-800 dark:hover:text-white"
             }`}
           >
             Visão Cronológica
             {viewMode === "standard" && (
               <motion.div 
                 layoutId="calendarTabLine"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" 
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#589c1c] dark:bg-[#6ee7b7]" 
               />
             )}
           </button>
           <button
             onClick={() => setViewMode("notion")}
-            className={`pb-4 font-bold text-xs uppercase tracking-wider transition-all relative cursor-pointer flex items-center gap-2 ${
-              viewMode === "notion" ? "text-primary" : "text-slate-400 hover:text-white"
+            className={`pb-4 font-bold text-xs uppercase tracking-wider transition-all relative cursor-pointer flex items-center gap-2 !bg-transparent !border-none !rounded-none ${
+              viewMode === "notion" ? "!text-[#589c1c] dark:!text-[#6ee7b7]" : "text-slate-400 hover:text-slate-800 dark:hover:text-white"
             }`}
           >
-            <Sparkles size={14} />
+            <Sparkles size={14} className={viewMode === "notion" ? "text-[#589c1c] dark:text-[#6ee7b7]" : "text-slate-400"} />
             Visão Notion (Prioridade IA)
             {viewMode === "notion" && (
               <motion.div 
                 layoutId="calendarTabLine"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" 
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#589c1c] dark:bg-[#6ee7b7]" 
               />
             )}
           </button>
@@ -792,7 +815,7 @@ export default function FarmCalendar() {
           </div>
 
           {/* Form Column */}
-          <div className="space-y-6">
+          <div className="hidden lg:block space-y-6">
             <div className="glass-card p-6 rounded-[2.5rem] border-white/5 bg-zinc-900/40">
               <div className="flex items-center gap-2.5 mb-6">
                 <CalendarDays className="text-primary w-5 h-5" />
@@ -986,6 +1009,111 @@ export default function FarmCalendar() {
                     Cancelar
                   </button>
                 </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MOBILE ADD TASK MODAL */}
+      <AnimatePresence>
+        {isMobileFormOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:hidden">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileFormOpen(false)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-md"
+            />
+
+            <motion.div
+              initial={{ scale: 0.95, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 20, opacity: 0 }}
+              className="bg-zinc-950 border border-white/10 rounded-[2.5rem] w-full max-w-md p-8 relative z-10 overflow-hidden shadow-2xl"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2.5">
+                  <CalendarDays className="text-[#589c1c] dark:text-[#6ee7b7] w-5 h-5" />
+                  <h3 className="text-lg font-bold text-white">Agendar Tarefa</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileFormOpen(false)}
+                  className="p-1.5 rounded-lg hover:bg-white/5 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <p className="text-xs text-zinc-400 mb-6">
+                Preencha os campos abaixo para agendar a nova atividade.
+              </p>
+
+              <form onSubmit={handleAddTask} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-300">Tarefa</label>
+                  <input
+                    type="text"
+                    required
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Ex: Pulverização gleba sul"
+                    className="w-full bg-black/40 border border-white/10 rounded-2xl py-3.5 px-4 text-white text-sm focus:outline-none focus:border-primary/50"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-300">Categoria</label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value as any)}
+                      className="w-full bg-zinc-900 border border-white/10 rounded-2xl py-3.5 px-4 text-white text-sm focus:outline-none h-[48px] cursor-pointer"
+                    >
+                      <option value="Manejo">Manejo Geral</option>
+                      <option value="Irrigação">Irrigação</option>
+                      <option value="Adubação">Adubação</option>
+                      <option value="Pulverização">Pulverização</option>
+                      <option value="Colheita">Colheita</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-300">Data de Execução</label>
+                    <input
+                      type="date"
+                      required
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-300">Descrição / Notas</label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Especificações do manejo, insumos a usar, etc..."
+                    className="w-full bg-black/40 border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:outline-none min-h-[100px] resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-2xl transition-all cursor-pointer text-sm flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Agendando...
+                    </>
+                  ) : (
+                    "Confirmar Agendamento"
+                  )}
+                </button>
               </form>
             </motion.div>
           </div>

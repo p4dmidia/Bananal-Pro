@@ -58,6 +58,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
         }
       }
+
+      if (data) {
+        // Enforce Grace Period Check
+        if (data.is_active && data.role !== 'admin') {
+          try {
+            const { data: orders, error: ordersError } = await supabase
+              .from('orders')
+              .select('*')
+              .eq('user_id', data.id);
+
+            if (!ordersError && orders && orders.length > 0) {
+              const sortedOrders = [...orders].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+              const latestActiveOrCancelled = sortedOrders.find(o => o.status === 'paid' || o.status === 'cancelled');
+
+              if (latestActiveOrCancelled && latestActiveOrCancelled.status === 'cancelled') {
+                const isMonthly = latestActiveOrCancelled.total_amount <= 150;
+                const daysLimit = isMonthly ? 30 : 365;
+                const orderDate = new Date(latestActiveOrCancelled.created_at);
+                const expiryDate = new Date(orderDate.getTime() + daysLimit * 24 * 60 * 60 * 1000);
+                const now = new Date();
+
+                if (now > expiryDate) {
+                  console.log('Auth: Grace period expired. Updating profile to inactive...');
+                  const { error: updateError } = await supabase
+                    .from('user_profiles')
+                    .update({ is_active: false })
+                    .eq('id', data.id);
+
+                  if (!updateError) {
+                    data.is_active = false;
+                  }
+                }
+              }
+            }
+          } catch (graceErr) {
+            console.error('Auth: Error enforcing grace period:', graceErr);
+          }
+        }
+
+        const { data: areasData } = await supabase
+          .from('producer_areas')
+          .select('property_name')
+          .eq('user_id', data.id)
+          .order('created_at', { ascending: true })
+          .limit(1);
+
+        if (areasData && areasData.length > 0 && areasData[0].property_name) {
+          (data as any).property_name = areasData[0].property_name;
+        }
+      }
+
       setProfile(data);
     } catch (err) {
       console.error('Auth: Error fetching profile:', err);

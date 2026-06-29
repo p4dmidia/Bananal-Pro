@@ -32,7 +32,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import logoImg from "../../assets/logo.png";
-import salesHeroImg from "../../assets/sales-hero.jpg";
+import salesHeroImg from "../../assets/sales-hero-new.jpg";
 import videoCoverImg from "../../assets/video-cover.jpg";
 
 export default function SalesPage() {
@@ -671,7 +671,7 @@ export default function SalesPage() {
         {/* OFERTA (Value Stack & Pricing Card) SECTION */}
         <section className="py-12 md:py-16 bg-white text-zinc-900 border-y border-zinc-200/50 relative z-10" id="oferta-pricing">
 
-          <div className="max-w-4xl mx-auto px-6 space-y-10 relative z-10">
+          <div className="max-w-6xl mx-auto px-6 space-y-10 relative z-10">
             <div className="text-center space-y-4">
               <span className="text-secondary font-bold uppercase tracking-widest text-xs font-inter block">Oportunidade Única</span>
               <h2 className="font-headline text-3xl md:text-5xl font-extrabold tracking-tight text-zinc-950 leading-tight">
@@ -682,7 +682,7 @@ export default function SalesPage() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8 items-stretch">
+            <div className="grid md:grid-cols-3 gap-8 items-stretch">
 
               {/* Value Stack Breakdown */}
               <div className="bg-zinc-50 border border-zinc-200 rounded-[2rem] p-6 flex flex-col justify-between shadow-sm">
@@ -723,7 +723,52 @@ export default function SalesPage() {
                 </div>
               </div>
 
-              {/* Real Pricing Box */}
+              {/* Monthly Pricing Box */}
+              <div className="bg-white border border-zinc-200 rounded-[2rem] p-6 flex flex-col justify-between relative overflow-hidden shadow-sm hover:border-zinc-300 transition-all duration-300">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <p className="text-[9px] text-zinc-400 uppercase tracking-widest font-bold">Acesso Mensal Recorrente</p>
+                    <div className="flex items-center gap-3">
+                      <span className="bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded text-[8px] font-black uppercase">Flexibilidade Total</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Por Apenas:</p>
+                    <div className="flex items-baseline gap-1.5 leading-none">
+                      <span className="text-4xl md:text-5xl font-headline font-black text-secondary">R$ 97</span>
+                      <span className="text-zinc-500 font-sans text-sm">/mês</span>
+                    </div>
+                    <p className="text-xs text-zinc-500 font-medium font-sans">
+                      Acesso mensal sem fidelidade
+                    </p>
+                  </div>
+
+                  {/* Micro Cost justification */}
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-50 border border-zinc-200 text-zinc-700 font-medium text-[9px] tracking-wide">
+                    Ideal para testar os recursos.
+                  </div>
+                </div>
+
+                <div className="space-y-4 mt-8">
+                  <Link
+                    to="/auth/register?offer=padrao&plan=mensal"
+                    className="w-full bg-secondary hover:bg-secondary-fixed text-white hover:text-primary-container py-3.5 rounded-xl font-headline font-extrabold text-xs tracking-wider uppercase transition-all duration-300 shadow-xl active:scale-95 block text-center cursor-pointer border-glow"
+                  >
+                    Assinar Plano Mensal
+                  </Link>
+
+                  <p className="text-[10px] text-zinc-500 text-center font-semibold font-sans mt-1">
+                    ✓ Acesso imediato • Cancele quando quiser • Sem fidelidade
+                  </p>
+
+                  <p className="text-[9px] text-zinc-400 leading-relaxed font-sans mt-2">
+                    Tenha acesso a todas as ferramentas de solo, suporte técnico dos agrônomos e comunidade VIP mês a mês.
+                  </p>
+                </div>
+              </div>
+
+              {/* Real Pricing Box (Annual) */}
               <div className="bg-white border-2 border-secondary rounded-[2rem] p-6 flex flex-col justify-between relative overflow-hidden shadow-xl shadow-secondary/5">
                 <div className="absolute top-0 right-0 bg-secondary text-white text-[8px] font-black uppercase tracking-widest px-4 py-1.5 rounded-bl-xl">
                   Poucas Vagas
@@ -733,7 +778,7 @@ export default function SalesPage() {
                   <div className="space-y-2">
                     <p className="text-[9px] text-zinc-400 uppercase tracking-widest font-bold">Acesso Completo de 1 Ano</p>
                     <div className="flex items-center gap-3">
-                      <span className="text-zinc-400 font-bold line-through text-xs">De R$ 897/ano</span>
+                      <span className="text-zinc-400 font-bold line-through text-xs">De R$ 797/ano</span>
                       <span className="bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded text-[8px] font-black uppercase">Desconto Especial</span>
                     </div>
                   </div>
@@ -742,10 +787,10 @@ export default function SalesPage() {
                     <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Por Apenas:</p>
                     <div className="flex items-baseline gap-1.5 leading-none">
                       <span className="text-lg md:text-xl font-headline font-extrabold text-secondary">12x de</span>
-                      <span className="text-4xl md:text-5xl font-headline font-black text-secondary">R$ 34,70</span>
+                      <span className="text-4xl md:text-5xl font-headline font-black text-secondary">R$ 49,70</span>
                     </div>
                     <p className="text-xs text-zinc-500 font-medium font-sans">
-                      ou <span className="font-bold text-zinc-800">R$ 347 à vista</span> por um ano de acesso
+                      ou <span className="font-bold text-zinc-800">R$ 497 à vista</span> por um ano de acesso
                     </p>
                   </div>
 
@@ -757,7 +802,7 @@ export default function SalesPage() {
 
                 <div className="space-y-4 mt-8">
                   <Link
-                    to="/auth/register?offer=padrao"
+                    to="/auth/register?offer=padrao&plan=anual"
                     className="w-full bg-secondary hover:bg-secondary-fixed text-white hover:text-primary-container py-3.5 rounded-xl font-headline font-extrabold text-xs tracking-wider uppercase transition-all duration-300 shadow-xl shadow-secondary/15 hover:scale-[1.01] active:scale-95 block text-center cursor-pointer border-glow"
                   >
                     Quero Garantir Meu Acesso Fundador Agora!
@@ -810,7 +855,7 @@ export default function SalesPage() {
 
             <div className="pt-4">
               <Link
-                to="/auth/register?offer=padrao"
+                to="/auth/register?offer=padrao&plan=anual"
                 className="bg-secondary hover:bg-secondary-fixed text-white hover:text-primary-container px-12 py-5 rounded-2xl font-headline font-extrabold text-sm tracking-wider uppercase transition-all duration-300 shadow-2xl shadow-secondary/20 hover:scale-[1.02] active:scale-95 inline-block text-center cursor-pointer border-glow"
               >
                 Quero Garantir Meu Acesso Fundador Agora!
