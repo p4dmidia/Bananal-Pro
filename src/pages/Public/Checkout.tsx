@@ -23,7 +23,10 @@ export default function Checkout() {
   const [checkingStatus, setCheckingStatus] = useState(false);
 
   const selectedPlan = searchParams.get("plan") === "mensal" ? "mensal" : "anual";
-  const planPrice = selectedPlan === "mensal" ? 97.00 : 497.00;
+
+  // MODO TESTE DE INTEGRAÇÃO: Altere IS_TEST_PRICE para false para voltar aos preços normais
+  const IS_TEST_PRICE = true; 
+  const planPrice = IS_TEST_PRICE ? 1.00 : (selectedPlan === "mensal" ? 97.00 : 497.00);
 
   const fetchProfileAndCheck = async (authUser: any) => {
     try {
@@ -195,7 +198,7 @@ export default function Checkout() {
                   : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white'
               }`}
             >
-              Plano Mensal (R$ 97)
+              Plano Mensal ({IS_TEST_PRICE ? "R$ 1" : "R$ 97"})
             </button>
             <button
               onClick={() => setSearchParams({ plan: 'anual' })}
@@ -205,7 +208,7 @@ export default function Checkout() {
                   : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white'
               }`}
             >
-              Plano Anual (R$ 497)
+              Plano Anual ({IS_TEST_PRICE ? "R$ 1" : "R$ 497"})
               <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
                 Oferta
               </span>
@@ -224,11 +227,13 @@ export default function Checkout() {
               <span className="text-xs font-black text-on-surface-variant uppercase tracking-wider">Preço / Recorrência</span>
               <span className="text-base font-extrabold text-on-surface">
                 {selectedPlan === 'mensal' ? (
-                  <>R$ 97,00 <span className="text-xs text-on-surface-variant font-medium">/ mensal</span></>
+                  <>{IS_TEST_PRICE ? "R$ 1,00" : "R$ 97,00"} <span className="text-xs text-on-surface-variant font-medium">/ mensal</span></>
                 ) : (
                   <div className="text-right">
-                    <span>R$ 497,00 <span className="text-xs text-on-surface-variant font-medium">/ anual</span></span>
-                    <span className="text-xs text-amber-500 font-bold block mt-1">(Ou 12x de R$ 49,70 no cartão)</span>
+                    <span>{IS_TEST_PRICE ? "R$ 1,00" : "R$ 497,00"} <span className="text-xs text-on-surface-variant font-medium">/ anual</span></span>
+                    <span className="text-xs text-amber-500 font-bold block mt-1">
+                      {IS_TEST_PRICE ? "(Ou 12x de R$ 0,10 no cartão)" : "(Ou 12x de R$ 49,70 no cartão)"}
+                    </span>
                   </div>
                 )}
               </span>
