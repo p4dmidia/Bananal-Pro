@@ -11,6 +11,16 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   
+  // Ignorar requisições que não sejam GET (como POST de pagamentos)
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  // Ignorar chamadas da API local/Vercel
+  if (url.pathname.startsWith('/api/')) {
+    return;
+  }
+  
   // Ignorar chamadas para o Supabase (API e Edge Functions)
   if (url.hostname.includes('supabase.co')) {
     return;
