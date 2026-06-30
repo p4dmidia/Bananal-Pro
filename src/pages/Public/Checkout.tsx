@@ -249,6 +249,7 @@ export default function Checkout() {
                 email: profile.email || user?.email || "",
                 firstName: profile.full_name?.split(" ")[0] || "",
                 lastName: profile.full_name?.split(" ").slice(1).join(" ") || "",
+                entityType: "individual",
                 identification: {
                   type: "CPF",
                   number: profile.cpf || ""
