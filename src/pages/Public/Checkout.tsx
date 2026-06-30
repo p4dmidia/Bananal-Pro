@@ -44,14 +44,79 @@ export default function Checkout() {
 
   const fetchProfileAndCheck = async (authUser: any) => {
     try {
-      const { data: profileData, error: profileError } = await supabase
+      let profileData: any = null;
+      
+      const { data: dbProfile, error: profileError } = await supabase
         .from("user_profiles")
         .select("*")
         .eq("mocha_user_id", authUser.id)
         .maybeSingle();
 
       if (profileError) throw profileError;
-      
+      profileData = dbProfile;
+
+      // Se o perfil não for encontrado por mocha_user_id (ex: novo login do Google)
+      if (!profileData) {
+        console.log("Perfil não encontrado pelo mocha_user_id. Buscando pelo e-mail:", authUser.email);
+        const { data: emailProfile } = await supabase
+          .from("user_profiles")
+          .select("*")
+          .ilike("email", authUser.email || "")
+          .maybeSingle();
+
+        if (emailProfile) {
+          // Perfil já existia pelo e-mail, atualiza o mocha_user_id correspondente
+          console.log("Perfil localizado pelo e-mail. Vinculando mocha_user_id...");
+          const { data: updatedProfile, error: updateErr } = await supabase
+            .from("user_profiles")
+            .update({ mocha_user_id: authUser.id })
+            .eq("id", emailProfile.id)
+            .select()
+            .single();
+
+          if (!updateErr && updatedProfile) {
+            profileData = updatedProfile;
+          } else {
+            profileData = emailProfile;
+          }
+        } else {
+          // Cria um novo perfil de usuário caso não exista no banco
+          console.log("Nenhum perfil localizado por e-mail. Criando novo perfil...");
+          const newProfile = {
+            mocha_user_id: authUser.id,
+            email: authUser.email,
+            full_name: authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || "Usuário",
+            is_active: false,
+            role: "user"
+          };
+
+          const { data: insertedProfile, error: insertErr } = await supabase
+            .from("user_profiles")
+            .insert(newProfile)
+            .select()
+            .single();
+
+          if (insertErr) {
+            console.error("Falha ao inserir perfil de usuário:", insertErr);
+            // Tentativa final de busca (em caso de concorrência com trigger do banco)
+            const { data: retryProfile } = await supabase
+              .from("user_profiles")
+              .select("*")
+              .eq("mocha_user_id", authUser.id)
+              .maybeSingle();
+            
+            if (retryProfile) {
+              profileData = retryProfile;
+            } else {
+              setPaymentError("Não foi possível criar ou localizar o seu perfil de usuário. Entre em contato com o suporte.");
+              return false;
+            }
+          } else {
+            profileData = insertedProfile;
+          }
+        }
+      }
+
       if (profileData) {
         if (profileData.role === 'admin') {
           setProfile(profileData);
