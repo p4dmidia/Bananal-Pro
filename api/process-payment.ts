@@ -25,6 +25,10 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  if (!MERCADO_PAGO_ACCESS_TOKEN) {
+    return res.status(500).json({ error: 'Erro de configuração: A variável MERCADO_PAGO_ACCESS_TOKEN não está definida no painel da Vercel. Cadastre-a nas configurações do projeto.' });
+  }
+
   try {
     const { formData, plan, user_id } = req.body;
     

@@ -21,6 +21,11 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  if (!MERCADO_PAGO_ACCESS_TOKEN) {
+    console.error('Webhook: MERCADO_PAGO_ACCESS_TOKEN não está configurado.');
+    return res.status(500).json({ error: 'MERCADO_PAGO_ACCESS_TOKEN not configured.' });
+  }
+
   try {
     const body = req.body;
     console.log('Webhook do Mercado Pago recebido:', JSON.stringify(body));
