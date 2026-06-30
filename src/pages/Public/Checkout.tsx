@@ -8,11 +8,20 @@ import {
   AlertCircle, 
   ArrowLeft,
   Sprout,
-  ExternalLink,
+  Copy,
+  Check,
   RefreshCw,
-  MessageCircle
+  MessageCircle,
+  CreditCard,
+  QrCode
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+
+declare global {
+  interface Window {
+    MercadoPago: any;
+  }
+}
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -20,7 +29,12 @@ export default function Checkout() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [checkingStatus, setCheckingStatus] = useState(false);
+  
+  // Dados do PIX gerado
+  const [pixData, setPixData] = useState<{ qr_code: string; qr_code_base64: string; payment_id: string } | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const selectedPlan = searchParams.get("plan") === "mensal" ? "mensal" : "anual";
 
@@ -46,7 +60,6 @@ export default function Checkout() {
           return true;
         }
 
-        // Check if the user has any orders in the database
         const { data: userOrders, error: ordersError } = await supabase
           .from("orders")
           .select("*")
@@ -62,7 +75,6 @@ export default function Checkout() {
         if (!hasOrders) {
           console.log("New user detected with no orders. Initializing pending order...");
           
-          // 1. Force is_active to false in the database
           const { error: updateProfileError } = await supabase
             .from("user_profiles")
             .update({ is_active: false })
@@ -74,21 +86,19 @@ export default function Checkout() {
             profileData.is_active = false;
           }
 
-          // 2. Create pending order in the database
           const { error: insertOrderError } = await supabase
             .from("orders")
             .insert({
               user_id: profileData.id,
               total_amount: planPrice,
               status: "pending",
-              payment_method: "PIX"
+              payment_method: "Mercado Pago"
             });
 
           if (insertOrderError) {
             console.error("Error creating pending order:", insertOrderError);
           }
         } else if (pendingOrder && Number(pendingOrder.total_amount) !== planPrice) {
-          console.log("Updating existing pending order to match selected plan price:", planPrice);
           const { error: updateOrderPriceError } = await supabase
             .from("orders")
             .update({ total_amount: planPrice })
@@ -130,6 +140,7 @@ export default function Checkout() {
     checkAuth();
   }, [navigate, selectedPlan]);
 
+  // Polling de 3 segundos para detectar aprovação do pagamento
   useEffect(() => {
     if (!user || profile?.is_active) return;
 
@@ -140,9 +151,148 @@ export default function Checkout() {
     return () => clearInterval(interval);
   }, [user, profile?.is_active]);
 
-  const handleRedirectToInfinitePay = () => {
-    const formattedPrice = planPrice.toFixed(2).replace(".", ",");
-    window.location.href = `https://pay.infinitepay.io/jean-carlos-fjc/${formattedPrice}`;
+  // Efeito para renderizar o Mercado Pago Payment Brick
+  useEffect(() => {
+    if (loading || !profile || pixData) return;
+
+    let cardBrickController: any;
+
+    const initMercadoPago = async () => {
+      try {
+        if (!window.MercadoPago) {
+          console.error("Mercado Pago SDK script não foi carregado na janela global.");
+          return;
+        }
+
+        const publicKey = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY;
+        const mp = new window.MercadoPago(publicKey, {
+          locale: "pt-BR"
+        });
+
+        const bricksBuilder = mp.bricks();
+
+        const renderPaymentBrick = async () => {
+          const settings = {
+            initialization: {
+              amount: planPrice,
+              payer: {
+                email: profile.email || user?.email || "",
+                firstName: profile.full_name?.split(" ")[0] || "",
+                lastName: profile.full_name?.split(" ").slice(1).join(" ") || "",
+                identification: {
+                  type: "CPF",
+                  number: profile.cpf || ""
+                }
+              }
+            },
+            customization: {
+              paymentMethods: {
+                creditCard: "all",
+                debitCard: "all",
+                ticket: "none",
+                bankTransfer: ["pix"]
+              },
+              visual: {
+                style: {
+                  theme: "default"
+                }
+              }
+            },
+            callbacks: {
+              onReady: () => {
+                console.log("Mercado Pago Payment Brick pronto.");
+              },
+              onSubmit: ({ selectedPaymentMethod, formData }: any) => {
+                return new Promise<void>((resolve, reject) => {
+                  setSubmittingPayment(true);
+                  setPaymentError(null);
+
+                  fetch("/api/process-payment", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                      formData,
+                      plan: selectedPlan,
+                      user_id: profile.id
+                    })
+                  })
+                  .then(async (res) => {
+                    const data = await res.json();
+                    if (!res.ok) {
+                      throw new Error(data.error || "Erro ao processar o pagamento.");
+                    }
+
+                    if (data.payment_method_id === "pix") {
+                      setPixData({
+                        qr_code: data.qr_code,
+                        qr_code_base64: data.qr_code_base64,
+                        payment_id: data.payment_id
+                      });
+                      resolve();
+                    } else if (data.status === "approved") {
+                      toast.success("Assinatura realizada com sucesso!");
+                      navigate("/dashboard");
+                      resolve();
+                    } else {
+                      throw new Error("O pagamento não pôde ser aprovado. Verifique os dados do cartão.");
+                    }
+                  })
+                  .catch((err) => {
+                    console.error("Payment submission error:", err);
+                    setPaymentError(err.message || "Erro no processamento do pagamento.");
+                    toast.error(err.message || "Erro no processamento do pagamento.");
+                    reject(err);
+                  })
+                  .finally(() => {
+                    setSubmittingPayment(false);
+                  });
+                });
+              },
+              onError: (error: any) => {
+                console.error("Mercado Pago Brick error callback:", error);
+                setPaymentError("Erro ao carregar o formulário de pagamento.");
+              }
+            }
+          };
+
+          const container = document.getElementById("paymentBrick_container");
+          if (container) {
+            container.innerHTML = "";
+            cardBrickController = await bricksBuilder.create(
+              "payment",
+              "paymentBrick_container",
+              settings
+            );
+          }
+        };
+
+        await renderPaymentBrick();
+      } catch (err) {
+        console.error("Erro geral na inicialização do Mercado Pago:", err);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      initMercadoPago();
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      if (cardBrickController && cardBrickController.unmount) {
+        cardBrickController.unmount();
+      }
+    };
+  }, [loading, profile, selectedPlan, planPrice, pixData]);
+
+  const handleCopyPix = () => {
+    if (pixData?.qr_code) {
+      navigator.clipboard.writeText(pixData.qr_code);
+      setCopied(true);
+      toast.success("Chave Pix copiada!");
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   if (loading) {
@@ -156,13 +306,10 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen bg-background text-on-surface font-sans py-12 px-6 relative selection:bg-emerald-500/30 flex items-center justify-center">
-      {/* Background Volumetric Glows */}
       <div className="glow-spot glow-green absolute top-[10%] left-[-15%] w-[45%] aspect-square rounded-full blur-[120px] pointer-events-none" />
       <div className="glow-spot glow-primary absolute bottom-[20%] right-[-15%] w-[45%] aspect-square rounded-full blur-[120px] pointer-events-none" />
 
       <div className="max-w-xl w-full relative z-10 space-y-6">
-        
-        {/* Top bar back link */}
         <div className="flex items-center justify-between border-b border-outline/10 pb-4">
           <Link to="/" className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors text-xs font-bold uppercase tracking-wider">
             <ArrowLeft size={16} />
@@ -175,7 +322,6 @@ export default function Checkout() {
         </div>
 
         <div className="bg-surface border border-outline/10 rounded-[2.5rem] p-8 shadow-2xl space-y-6 text-center">
-          
           <div className="mx-auto w-16 h-16 rounded-3xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-md">
             <Sprout size={36} />
           </div>
@@ -185,38 +331,38 @@ export default function Checkout() {
               Assinatura Bananal PRO
             </h1>
             <p className="text-on-surface-variant text-sm leading-relaxed max-w-md mx-auto">
-              Seu cadastro foi realizado com sucesso! Para começar a usar a plataforma e liberar o seu acesso completo aos cursos, ferramentas agrícolas e suporte com agrônomos, conclua a contratação da sua assinatura.
+              Seu cadastro foi realizado com sucesso! Para começar a usar a plataforma e liberar o seu acesso completo, conclua o pagamento da sua assinatura abaixo.
             </p>
           </div>
 
-          {/* Plan Selector Toggle */}
-          <div className="flex bg-slate-100 dark:bg-zinc-900/60 p-1.5 rounded-2xl border border-outline/10 gap-2 max-w-sm mx-auto">
-            <button
-              onClick={() => setSearchParams({ plan: 'mensal' })}
-              className={`flex-grow py-2.5 px-4 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                selectedPlan === 'mensal'
-                  ? 'bg-emerald-600 text-white shadow-md'
-                  : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white'
-              }`}
-            >
-              Plano Mensal ({IS_TEST_PRICE ? "R$ 1" : "R$ 97"})
-            </button>
-            <button
-              onClick={() => setSearchParams({ plan: 'anual' })}
-              className={`flex-grow py-2.5 px-4 rounded-xl text-xs font-black transition-all cursor-pointer relative ${
-                selectedPlan === 'anual'
-                  ? 'bg-emerald-600 text-white shadow-md'
-                  : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white'
-              }`}
-            >
-              Plano Anual ({IS_TEST_PRICE ? "R$ 1" : "R$ 497"})
-              <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
-                Oferta
-              </span>
-            </button>
-          </div>
+          {!pixData && (
+            <div className="flex bg-slate-100 dark:bg-zinc-900/60 p-1.5 rounded-2xl border border-outline/10 gap-2 max-w-sm mx-auto">
+              <button
+                onClick={() => setSearchParams({ plan: 'mensal' })}
+                className={`flex-grow py-2.5 px-4 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                  selectedPlan === 'mensal'
+                    ? 'bg-emerald-600 text-white shadow-md'
+                    : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white'
+                }`}
+              >
+                Plano Mensal ({IS_TEST_PRICE ? "R$ 1" : "R$ 97"})
+              </button>
+              <button
+                onClick={() => setSearchParams({ plan: 'anual' })}
+                className={`flex-grow py-2.5 px-4 rounded-xl text-xs font-black transition-all cursor-pointer relative ${
+                  selectedPlan === 'anual'
+                    ? 'bg-emerald-600 text-white shadow-md'
+                    : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white'
+                }`}
+              >
+                Plano Anual ({IS_TEST_PRICE ? "R$ 1" : "R$ 497"})
+                <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                  Oferta
+                </span>
+              </button>
+            </div>
+          )}
 
-          {/* Plan Info Card */}
           <div className="bg-surface-variant border border-outline/10 p-5 rounded-[2rem] text-left space-y-2">
             <div className="flex justify-between items-center border-b border-outline/10 pb-2">
               <span className="text-xs font-black text-on-surface-variant uppercase tracking-wider">Produto</span>
@@ -241,39 +387,91 @@ export default function Checkout() {
             </div>
           </div>
 
-          <div className="space-y-3 pt-2">
-            {/* Primary InfinitePay button */}
-            <button
-              onClick={handleRedirectToInfinitePay}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 px-6 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-emerald-600/10 active:scale-95 cursor-pointer text-sm"
-            >
-              <ExternalLink size={18} />
-              Finalizar Pagamento na InfinitePay
-            </button>
+          <div className="pt-2 text-left">
+            {paymentError && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-550 dark:text-red-400 p-4 rounded-2xl mb-4 text-xs font-bold flex items-center gap-2">
+                <AlertCircle size={16} className="shrink-0" />
+                <span>{paymentError}</span>
+              </div>
+            )}
 
-            {/* Auto status check indicator */}
-            <div className="flex items-center justify-center gap-2 py-3 text-xs font-semibold text-slate-500 dark:text-zinc-400">
-              <Loader2 size={14} className="animate-spin text-emerald-500" />
-              Aguardando confirmação de pagamento... O acesso será liberado automaticamente.
-            </div>
+            {submittingPayment && (
+              <div className="flex flex-col items-center justify-center py-8 space-y-3 bg-slate-50 dark:bg-zinc-900/40 rounded-2xl border border-outline/10">
+                <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Processando seu pagamento...</p>
+              </div>
+            )}
+
+            {pixData ? (
+              <div className="space-y-6 text-center bg-slate-50 dark:bg-zinc-900/40 border border-outline/10 p-6 rounded-[2rem] animate-fade-in">
+                <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 font-black text-sm uppercase tracking-wider">
+                  <QrCode size={20} />
+                  PIX Gerado com Sucesso!
+                </div>
+
+                {pixData.qr_code_base64 && (
+                  <div className="bg-white p-4 rounded-2xl inline-block shadow-md border border-slate-200">
+                    <img 
+                      src={`data:image/jpeg;base64,${pixData.qr_code_base64}`} 
+                      alt="QR Code do PIX" 
+                      className="w-48 h-48 mx-auto"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider text-left">Código Pix Copia e Cola</p>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      readOnly 
+                      value={pixData.qr_code}
+                      className="flex-grow bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-mono text-slate-650 dark:text-zinc-350 focus:outline-none"
+                    />
+                    <button
+                      onClick={handleCopyPix}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white p-3.5 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer"
+                      title="Copiar código"
+                    >
+                      {copied ? <Check size={16} /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-center gap-2 py-2 text-xs font-bold text-slate-500">
+                  <Loader2 size={14} className="animate-spin text-emerald-500" />
+                  Aguardando confirmação de pagamento...
+                </div>
+
+                <button
+                  onClick={() => setPixData(null)}
+                  className="text-xs font-bold text-slate-400 hover:text-slate-650 dark:hover:text-white transition-colors underline cursor-pointer"
+                >
+                  Escolher outra forma de pagamento
+                </button>
+              </div>
+            ) : (
+              <div 
+                id="paymentBrick_container" 
+                className={`w-full transition-opacity ${submittingPayment ? "opacity-30 pointer-events-none" : "opacity-100"}`}
+              ></div>
+            )}
           </div>
 
-          {/* Secure details */}
           <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 pt-2 border-t border-outline/10">
             <Lock size={12} />
             Pagamento Processado com Criptografia SSL
           </div>
         </div>
 
-        {/* Support Banner */}
         <div className="bg-emerald-500/5 dark:bg-emerald-950/10 border border-emerald-500/10 rounded-[2rem] p-6 flex items-start gap-4">
           <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400">
             <MessageCircle size={24} />
           </div>
           <div className="space-y-1 text-left">
-            <h4 className="text-sm font-bold text-on-surface">Precisa de Ajuda Técnica ou Financeira?</h4>
+            <h4 className="text-sm font-bold text-on-surface">Precisa de Ajuda com a Assinatura?</h4>
             <p className="text-xs text-on-surface-variant leading-relaxed">
-              Fale conosco diretamente pelo nosso suporte no WhatsApp. Estamos disponíveis para te auxiliar na liberação da sua conta e dúvidas.
+              Fale conosco diretamente pelo nosso suporte no WhatsApp. Estamos disponíveis para te auxiliar na liberação da sua conta e tirar dúvidas.
             </p>
             <a 
               href="https://wa.me/5521969014654" 
@@ -285,7 +483,6 @@ export default function Checkout() {
             </a>
           </div>
         </div>
-
       </div>
     </div>
   );
