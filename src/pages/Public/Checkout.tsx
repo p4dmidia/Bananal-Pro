@@ -128,54 +128,7 @@ export default function Checkout() {
           return true;
         }
 
-        const { data: userOrders, error: ordersError } = await supabase
-          .from("orders")
-          .select("*")
-          .eq("user_id", profileData.id);
 
-        if (ordersError) {
-          console.error("Error loading orders:", ordersError);
-        }
-
-        const pendingOrder = userOrders?.find(o => o.status === 'pending');
-        const hasOrders = userOrders && userOrders.length > 0;
-
-        if (!hasOrders) {
-          console.log("New user detected with no orders. Initializing pending order...");
-          
-          const { error: updateProfileError } = await supabase
-            .from("user_profiles")
-            .update({ is_active: false })
-            .eq("id", profileData.id);
-
-          if (updateProfileError) {
-            console.error("Error updating profile status:", updateProfileError);
-          } else {
-            profileData.is_active = false;
-          }
-
-          const { error: insertOrderError } = await supabase
-            .from("orders")
-            .insert({
-              user_id: profileData.id,
-              total_amount: planPrice,
-              status: "pending",
-              payment_method: "Mercado Pago"
-            });
-
-          if (insertOrderError) {
-            console.error("Error creating pending order:", insertOrderError);
-          }
-        } else if (pendingOrder && Number(pendingOrder.total_amount) !== planPrice) {
-          const { error: updateOrderPriceError } = await supabase
-            .from("orders")
-            .update({ total_amount: planPrice })
-            .eq("id", pendingOrder.id);
-          
-          if (updateOrderPriceError) {
-            console.error("Error updating pending order price:", updateOrderPriceError);
-          }
-        }
 
         setProfile((prev: any) => {
           if (
