@@ -260,7 +260,6 @@ export default function Checkout() {
               paymentMethods: {
                 creditCard: "all",
                 debitCard: "all",
-                ticket: "none",
                 bankTransfer: ["pix"]
               },
               visual: {
