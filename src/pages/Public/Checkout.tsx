@@ -142,7 +142,7 @@ export default function Checkout() {
 
   const handleRedirectToInfinitePay = () => {
     const formattedPrice = planPrice.toFixed(2).replace(".", ",");
-    window.location.href = `https://infinitepay.io/$jeancarlosfjc/${formattedPrice}`;
+    window.location.href = `https://pay.infinitepay.io/jean-carlos-fjc/${formattedPrice}`;
   };
 
   if (loading) {
