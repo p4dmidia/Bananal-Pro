@@ -219,6 +219,22 @@ export default function Checkout() {
     checkAuth();
   }, [navigate, selectedPlan]);
 
+  // Auto-remoção do Service Worker na tela de checkout para evitar qualquer interceptação de requisições de pagamento
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const registration of registrations) {
+          registration.unregister().then((unregistered) => {
+            if (unregistered) {
+              console.log('Service Worker desativado com sucesso para o checkout.');
+              window.location.reload();
+            }
+          });
+        }
+      });
+    }
+  }, []);
+
   // Polling de 3 segundos para detectar aprovação do pagamento
   useEffect(() => {
     if (!user || profile?.is_active) return;
