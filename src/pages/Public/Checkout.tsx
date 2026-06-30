@@ -223,13 +223,25 @@ export default function Checkout() {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then((registrations) => {
+        let hasActive = false;
         for (const registration of registrations) {
+          hasActive = true;
           registration.unregister().then((unregistered) => {
             if (unregistered) {
               console.log('Service Worker desativado com sucesso para o checkout.');
-              window.location.reload();
             }
           });
+        }
+        // Recarrega apenas UMA vez para limpar a sessão caso houvesse um SW ativo controlando a página
+        if (hasActive) {
+          const hasReloadedKey = 'checkout_sw_cleared_reload';
+          const hasReloaded = sessionStorage.getItem(hasReloadedKey);
+          if (!hasReloaded) {
+            sessionStorage.setItem(hasReloadedKey, 'true');
+            setTimeout(() => {
+              window.location.reload();
+            }, 500);
+          }
         }
       });
     }
@@ -280,10 +292,12 @@ export default function Checkout() {
                 firstName: profile.full_name?.split(" ")[0] || "",
                 lastName: profile.full_name?.split(" ").slice(1).join(" ") || "",
                 entityType: "individual",
-                identification: {
-                  type: "CPF",
-                  number: profile.cpf || ""
-                }
+                ...(profile.cpf ? {
+                  identification: {
+                    type: "CPF",
+                    number: profile.cpf
+                  }
+                } : {})
               }
             },
             customization: {

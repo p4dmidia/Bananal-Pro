@@ -7,8 +7,7 @@ import { AuthProvider } from './contexts/AuthContext.tsx';
 import { NotificationProvider } from './contexts/NotificationContext.tsx';
 
 // Register Service Worker
-// Register Service Worker
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && !window.location.pathname.startsWith('/checkout')) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').then(registration => {
       console.log('SW registered: ', registration);
