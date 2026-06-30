@@ -119,7 +119,10 @@ export default function Checkout() {
 
       if (profileData) {
         if (profileData.role === 'admin') {
-          setProfile(profileData);
+          setProfile((prev: any) => {
+            if (prev?.id === profileData.id && prev?.role === profileData.role) return prev;
+            return profileData;
+          });
           toast.success("Bem-vindo, Administrador!");
           navigate("/dashboard");
           return true;
@@ -174,7 +177,18 @@ export default function Checkout() {
           }
         }
 
-        setProfile(profileData);
+        setProfile((prev: any) => {
+          if (
+            prev?.id === profileData.id && 
+            prev?.is_active === profileData.is_active && 
+            prev?.email === profileData.email &&
+            prev?.full_name === profileData.full_name &&
+            prev?.cpf === profileData.cpf
+          ) {
+            return prev;
+          }
+          return profileData;
+        });
 
         if (profileData.is_active) {
           toast.success("Sua assinatura já está ativa!");
@@ -357,7 +371,16 @@ export default function Checkout() {
         cardBrickController.unmount();
       }
     };
-  }, [loading, profile, selectedPlan, planPrice, pixData]);
+  }, [
+    loading, 
+    profile?.id, 
+    profile?.email, 
+    profile?.full_name, 
+    profile?.cpf, 
+    selectedPlan, 
+    planPrice, 
+    pixData ? true : false
+  ]);
 
   const handleCopyPix = () => {
     if (pixData?.qr_code) {
