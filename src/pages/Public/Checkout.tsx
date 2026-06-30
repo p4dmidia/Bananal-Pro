@@ -165,6 +165,11 @@ export default function Checkout() {
         }
 
         const publicKey = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY;
+        if (!publicKey) {
+          setPaymentError("Aviso para o Administrador: A chave pública do Mercado Pago (VITE_MERCADO_PAGO_PUBLIC_KEY) não está configurada no ambiente.");
+          return;
+        }
+
         const mp = new window.MercadoPago(publicKey, {
           locale: "pt-BR"
         });
@@ -194,7 +199,10 @@ export default function Checkout() {
               },
               visual: {
                 style: {
-                  theme: "default"
+                  theme: "default",
+                  customVariables: {
+                    baseColor: "#10b981"
+                  }
                 }
               }
             },
@@ -328,38 +336,21 @@ export default function Checkout() {
 
           <div className="space-y-2">
             <h1 className="text-2xl md:text-3xl font-black tracking-tight text-on-surface uppercase leading-tight">
-              Assinatura Bananal PRO
+              Adquirir Treinamento Bananal PRO
             </h1>
             <p className="text-on-surface-variant text-sm leading-relaxed max-w-md mx-auto">
-              Seu cadastro foi realizado com sucesso! Para começar a usar a plataforma e liberar o seu acesso completo, conclua o pagamento da sua assinatura abaixo.
+              Seu cadastro foi realizado com sucesso! Para liberar o seu acesso imediato ao treinamento e às ferramentas, conclua a aquisição abaixo.
             </p>
           </div>
 
           {!pixData && (
-            <div className="flex bg-slate-100 dark:bg-zinc-900/60 p-1.5 rounded-2xl border border-outline/10 gap-2 max-w-sm mx-auto">
-              <button
-                onClick={() => setSearchParams({ plan: 'mensal' })}
-                className={`flex-grow py-2.5 px-4 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                  selectedPlan === 'mensal'
-                    ? 'bg-emerald-600 text-white shadow-md'
-                    : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white'
-                }`}
+            <div className="text-center pt-2">
+              <Link 
+                to="/vendas" 
+                className="text-xs font-bold text-slate-400 hover:text-emerald-500 transition-colors underline cursor-pointer"
               >
-                Plano Mensal ({IS_TEST_PRICE ? "R$ 1" : "R$ 97"})
-              </button>
-              <button
-                onClick={() => setSearchParams({ plan: 'anual' })}
-                className={`flex-grow py-2.5 px-4 rounded-xl text-xs font-black transition-all cursor-pointer relative ${
-                  selectedPlan === 'anual'
-                    ? 'bg-emerald-600 text-white shadow-md'
-                    : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white'
-                }`}
-              >
-                Plano Anual ({IS_TEST_PRICE ? "R$ 1" : "R$ 497"})
-                <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
-                  Oferta
-                </span>
-              </button>
+                Deseja outro plano? Voltar para as ofertas
+              </Link>
             </div>
           )}
 
@@ -367,7 +358,7 @@ export default function Checkout() {
             <div className="flex justify-between items-center border-b border-outline/10 pb-2">
               <span className="text-xs font-black text-on-surface-variant uppercase tracking-wider">Produto</span>
               <span className="text-xs font-bold text-emerald-500 dark:text-emerald-400">
-                {selectedPlan === 'mensal' ? 'Assinatura Mensal' : 'Assinatura Anual (Oferta Membro Fundador)'}
+                {selectedPlan === 'mensal' ? 'Acesso Mensal ao Treinamento' : 'Acesso Anual ao Treinamento (Membro Fundador)'}
               </span>
             </div>
             <div className="flex justify-between items-center pt-1">
@@ -440,7 +431,7 @@ export default function Checkout() {
 
                 <div className="flex items-center justify-center gap-2 py-2 text-xs font-bold text-slate-500">
                   <Loader2 size={14} className="animate-spin text-emerald-500" />
-                  Aguardando confirmação de pagamento...
+                  Aguardando confirmação... Seu acesso ao treinamento será liberado em segundos!
                 </div>
 
                 <button
@@ -469,9 +460,9 @@ export default function Checkout() {
             <MessageCircle size={24} />
           </div>
           <div className="space-y-1 text-left">
-            <h4 className="text-sm font-bold text-on-surface">Precisa de Ajuda com a Assinatura?</h4>
+            <h4 className="text-sm font-bold text-on-surface">Precisa de Ajuda com o Acesso?</h4>
             <p className="text-xs text-on-surface-variant leading-relaxed">
-              Fale conosco diretamente pelo nosso suporte no WhatsApp. Estamos disponíveis para te auxiliar na liberação da sua conta e tirar dúvidas.
+              Fale conosco diretamente pelo nosso suporte no WhatsApp. Estamos disponíveis para te auxiliar na liberação do seu acesso e tirar dúvidas.
             </p>
             <a 
               href="https://wa.me/5521969014654" 

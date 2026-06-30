@@ -29,10 +29,11 @@ export default function Register() {
     setGoogleLoading(true);
     setError(null);
     try {
+      const plan = searchParams.get("plan") || "anual";
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/checkout/${offerSlug}`,
+          redirectTo: `${window.location.origin}/checkout/${offerSlug}?plan=${plan}`,
         },
       });
 

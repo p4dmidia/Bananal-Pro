@@ -21,8 +21,9 @@ export default function Login() {
     setGoogleLoading(true);
     setError(null);
     try {
+      const plan = searchParams.get("plan") || "anual";
       const redirectTo = offerSlug 
-        ? `${window.location.origin}/checkout/${offerSlug}` 
+        ? `${window.location.origin}/checkout/${offerSlug}?plan=${plan}` 
         : `${window.location.origin}/dashboard`;
 
       const { error } = await supabase.auth.signInWithOAuth({
@@ -52,7 +53,8 @@ export default function Login() {
       if (error) throw error;
 
       if (offerSlug) {
-        navigate(`/checkout/${offerSlug}`);
+        const plan = searchParams.get("plan") || "anual";
+        navigate(`/checkout/${offerSlug}?plan=${plan}`);
       } else {
         navigate("/dashboard");
       }
