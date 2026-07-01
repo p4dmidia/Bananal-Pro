@@ -76,9 +76,10 @@ export default async function handler(req: any, res: any) {
 
       if (!response.ok) {
         console.error('Erro na resposta do PIX Mercado Pago:', paymentData);
-        return res.status(response.status).json({ 
-          error: paymentData.message || 'Erro ao processar Pix na API do Mercado Pago.' 
-        });
+        const errMsg = paymentData.error === 'internal_error' || !paymentData.message
+          ? 'Erro temporário nos servidores de teste do Mercado Pago. Por favor, tente novamente.'
+          : paymentData.message;
+        return res.status(response.status).json({ error: errMsg });
       }
 
       // Registra a ordem de pagamento pendente no banco de dados
@@ -189,7 +190,10 @@ export default async function handler(req: any, res: any) {
       
       if (!preRes.ok) {
         console.error('Erro ao criar assinatura Preapproval:', preData);
-        return res.status(400).json({ error: preData.message || 'Erro ao processar assinatura no Mercado Pago.' });
+        const errMsg = preData.error === 'internal_error' || !preData.message
+          ? 'Erro temporário nos servidores de teste do Mercado Pago. Por favor, tente novamente.'
+          : preData.message;
+        return res.status(400).json({ error: errMsg });
       }
 
       // Assinatura criada com sucesso! Atualiza o banco de dados.
