@@ -13,7 +13,11 @@ import {
   RefreshCw,
   MessageCircle,
   CreditCard,
-  QrCode
+  QrCode,
+  Zap,
+  Award,
+  CheckCircle2,
+  Clock
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -36,11 +40,46 @@ export default function Checkout() {
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  const selectedPlan = searchParams.get("plan") === "mensal" ? "mensal" : "anual";
+  // Estados para o popup de intenção de saída (Exit Intent)
+  const [showExitPopup, setShowExitPopup] = useState(false);
+  const [exitPopupShown, setExitPopupShown] = useState(false);
 
-  // MODO TESTE DE INTEGRAÇÃO: Altere IS_TEST_PRICE para false para voltar aos preços normais
-  const IS_TEST_PRICE = true; 
-  const planPrice = IS_TEST_PRICE ? 1.00 : (selectedPlan === "mensal" ? 97.00 : 497.00);
+  useEffect(() => {
+    const handleMouseLeave = (e: MouseEvent) => {
+      if (e.clientY < 20 && !exitPopupShown) {
+        setShowExitPopup(true);
+        setExitPopupShown(true);
+      }
+    };
+
+    document.addEventListener("mouseleave", handleMouseLeave);
+    return () => {
+      document.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, [exitPopupShown]);
+
+  // Estado para armazenar o plano selecionado (inicia a partir da URL)
+  const [selectedPlan, setSelectedPlan] = useState<'mensal' | 'anual'>(
+    searchParams.get("plan") === "mensal" ? "mensal" : "anual"
+  );
+
+  // Sincroniza o estado do plano com as mudanças de parâmetro de busca na URL
+  useEffect(() => {
+    const planParam = searchParams.get("plan");
+    if (planParam === "mensal" || planParam === "anual") {
+      setSelectedPlan(planParam);
+    }
+  }, [searchParams]);
+
+  // Preço oficial de produção (R$ 97 mensal / R$ 497 anual)
+  const planPrice = selectedPlan === "mensal" ? 97.00 : 497.00;
+
+  const handlePlanChange = (plan: 'mensal' | 'anual') => {
+    setSelectedPlan(plan);
+    setSearchParams({ plan });
+    setPixData(null);
+    setPaymentError(null);
+  };
 
   const fetchProfileAndCheck = async (authUser: any) => {
     try {
@@ -170,7 +209,7 @@ export default function Checkout() {
     };
 
     checkAuth();
-  }, [navigate, selectedPlan]);
+  }, [navigate]);
 
   // Auto-remoção do Service Worker na tela de checkout para evitar qualquer interceptação de requisições de pagamento
   useEffect(() => {
@@ -378,6 +417,10 @@ export default function Checkout() {
     }
   };
 
+  const closeExitPopup = () => {
+    setShowExitPopup(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background text-on-surface flex flex-col items-center justify-center p-6">
@@ -388,173 +431,406 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-on-surface font-sans py-12 px-6 relative selection:bg-emerald-500/30 flex items-center justify-center">
-      <div className="glow-spot glow-green absolute top-[10%] left-[-15%] w-[45%] aspect-square rounded-full blur-[120px] pointer-events-none" />
-      <div className="glow-spot glow-primary absolute bottom-[20%] right-[-15%] w-[45%] aspect-square rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-[#070b0e] text-zinc-200 font-sans py-12 px-4 md:px-8 relative selection:bg-emerald-500/30 overflow-x-hidden">
+      {/* Decorative backdrop glow spots */}
+      <div className="glow-spot glow-green absolute top-[10%] left-[-15%] w-[65%] aspect-square rounded-full bg-emerald-500/5 blur-[150px] pointer-events-none" />
+      <div className="glow-spot glow-primary absolute bottom-[20%] right-[-15%] w-[65%] aspect-square rounded-full bg-emerald-800/5 blur-[150px] pointer-events-none" />
 
-      <div className="max-w-xl w-full relative z-10 space-y-6">
-        <div className="flex items-center justify-between border-b border-outline/10 pb-4">
-          <Link to="/" className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors text-xs font-bold uppercase tracking-wider">
+      {/* Main Container */}
+      <div className="max-w-6xl w-full mx-auto relative z-10 space-y-6">
+        
+        {/* Navigation & Header */}
+        <div className="flex items-center justify-between border-b border-zinc-800/50 pb-4">
+          <Link to="/" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider">
             <ArrowLeft size={16} />
             Voltar para o início
           </Link>
-          <div className="flex items-center gap-1.5 bg-emerald-500/10 dark:bg-emerald-950/40 border border-emerald-500/20 px-3 py-1.5 rounded-full text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+          <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
             Conexão Segura
           </div>
         </div>
 
-        <div className="bg-surface border border-outline/10 rounded-[2.5rem] p-8 shadow-2xl space-y-6 text-center">
-          <div className="mx-auto w-16 h-16 rounded-3xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-md">
-            <Sprout size={36} />
-          </div>
-
-          <div className="space-y-2">
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-on-surface uppercase leading-tight">
-              Adquirir Treinamento Bananal PRO
-            </h1>
-            <p className="text-on-surface-variant text-sm leading-relaxed max-w-md mx-auto">
-              Seu cadastro foi realizado com sucesso! Para liberar o seu acesso imediato ao treinamento e às ferramentas, conclua a aquisição abaixo.
-            </p>
-          </div>
-
-          {!pixData && (
-            <div className="text-center pt-2">
-              <Link 
-                to="/vendas" 
-                className="text-xs font-bold text-slate-400 hover:text-emerald-500 transition-colors underline cursor-pointer"
-              >
-                Deseja outro plano? Voltar para as ofertas
-              </Link>
-            </div>
-          )}
-
-          <div className="bg-surface-variant border border-outline/10 p-5 rounded-[2rem] text-left space-y-2">
-            <div className="flex justify-between items-center border-b border-outline/10 pb-2">
-              <span className="text-xs font-black text-on-surface-variant uppercase tracking-wider">Produto</span>
-              <span className="text-xs font-bold text-emerald-500 dark:text-emerald-400">
-                {selectedPlan === 'mensal' ? 'Acesso Mensal ao Treinamento' : 'Acesso Anual ao Treinamento (Membro Fundador)'}
-              </span>
-            </div>
-            <div className="flex justify-between items-center pt-1">
-              <span className="text-xs font-black text-on-surface-variant uppercase tracking-wider">Preço / Recorrência</span>
-              <span className="text-base font-extrabold text-on-surface">
-                {selectedPlan === 'mensal' ? (
-                  <>{IS_TEST_PRICE ? "R$ 1,00" : "R$ 97,00"} <span className="text-xs text-on-surface-variant font-medium">/ mensal</span></>
-                ) : (
-                  <div className="text-right">
-                    <span>{IS_TEST_PRICE ? "R$ 1,00" : "R$ 497,00"} <span className="text-xs text-on-surface-variant font-medium">/ anual</span></span>
-                    <span className="text-xs text-amber-500 font-bold block mt-1">
-                      {IS_TEST_PRICE ? "(Ou 12x de R$ 0,10 no cartão)" : "(Ou 12x de R$ 49,70 no cartão)"}
-                    </span>
-                  </div>
-                )}
-              </span>
-            </div>
-          </div>
-
-          <div className="pt-2 text-left">
-            {paymentError && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-550 dark:text-red-400 p-4 rounded-2xl mb-4 text-xs font-bold flex items-center gap-2">
-                <AlertCircle size={16} className="shrink-0" />
-                <span>{paymentError}</span>
+        {/* 2-Column Responsive Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Column Left: Plan Selection and Form (lg:col-span-7) */}
+          <div className="lg:col-span-7 space-y-6">
+            
+            <div className="bg-zinc-900 border border-zinc-850 rounded-[2.5rem] shadow-2xl overflow-hidden">
+              {/* Top Banner image or styled header */}
+              <div className="w-full relative bg-gradient-to-r from-emerald-950 to-zinc-950 min-h-[140px] flex flex-col justify-center px-6 py-6 border-b border-zinc-850">
+                <img 
+                  src="/images/checkout-banner.png" 
+                  alt="Bananal PRO Checkout Banner" 
+                  className="absolute inset-0 w-full h-full object-cover opacity-35 mix-blend-overlay"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+                <div className="relative z-10 space-y-1.5 text-left">
+                  <span className="text-[9px] font-black tracking-widest text-emerald-400 uppercase bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                    Acesso Imediato
+                  </span>
+                  <h2 className="text-xl md:text-2xl font-black text-white leading-tight uppercase tracking-tight">
+                    Adquirir Treinamento Bananal PRO
+                  </h2>
+                  <p className="text-xs text-zinc-400 max-w-md">
+                    Seu cadastro foi realizado com sucesso! Conclua sua aquisição abaixo para liberar o acesso instantâneo ao ecossistema.
+                  </p>
+                </div>
               </div>
-            )}
 
-            {submittingPayment && (
-              <div className="flex flex-col items-center justify-center py-8 space-y-3 bg-slate-50 dark:bg-zinc-900/40 rounded-2xl border border-outline/10">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Processando seu pagamento...</p>
-              </div>
-            )}
+              {/* Plan Selector inside Card */}
+              <div className="p-6 md:p-8 space-y-6 text-left">
+                
+                {/* Selector Header */}
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">
+                    Escolha o seu plano de acesso:
+                  </label>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Plano Anual (Recomendado) */}
+                    <button
+                      type="button"
+                      onClick={() => handlePlanChange('anual')}
+                      className={`relative p-5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between min-h-[120px] ${
+                        selectedPlan === 'anual' 
+                          ? 'bg-emerald-950/20 border-emerald-500 text-white ring-1 ring-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]' 
+                          : 'bg-zinc-950/50 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                      }`}
+                    >
+                      <span className="absolute top-2 right-2 bg-emerald-500 text-black text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        Economize 57%
+                      </span>
+                      <div className="space-y-0.5">
+                        <span className="text-xs font-black uppercase tracking-wider block">Plano Anual</span>
+                        <span className="text-[9px] text-zinc-500 block">Acesso completo por 12 meses</span>
+                      </div>
+                      <div className="mt-4 pt-2 border-t border-zinc-800/80 w-full flex items-baseline gap-1">
+                        <span className="text-[9px] text-zinc-500 font-medium">12x de</span>
+                        <span className="text-base font-black text-white">R$ 49,70</span>
+                        <span className="text-[9px] text-zinc-500">ou R$ 497 à vista</span>
+                      </div>
+                    </button>
 
-            {/* Custom PIX Screen */}
-            <div style={{ display: pixData ? "block" : "none" }}>
-              {pixData && (
-                <div className="space-y-6 text-center bg-slate-50 dark:bg-zinc-900/40 border border-outline/10 p-6 rounded-[2rem] animate-fade-in">
-                  <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 font-black text-sm uppercase tracking-wider">
-                    <QrCode size={20} />
-                    PIX Gerado com Sucesso!
+                    {/* Plano Mensal */}
+                    <button
+                      type="button"
+                      onClick={() => handlePlanChange('mensal')}
+                      className={`p-5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between min-h-[120px] ${
+                        selectedPlan === 'mensal' 
+                          ? 'bg-emerald-950/20 border-emerald-500 text-white ring-1 ring-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]' 
+                          : 'bg-zinc-950/50 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                      }`}
+                    >
+                      <div className="space-y-0.5">
+                        <span className="text-xs font-black uppercase tracking-wider block">Plano Mensal</span>
+                        <span className="text-[9px] text-zinc-500 block">Cobrança recorrente automática</span>
+                      </div>
+                      <div className="mt-4 pt-2 border-t border-zinc-800/80 w-full flex items-baseline gap-1">
+                        <span className="text-base font-black text-white">R$ 97,00</span>
+                        <span className="text-[9px] text-zinc-500">/ mês</span>
+                      </div>
+                    </button>
                   </div>
+                </div>
 
-                  {pixData.qr_code_base64 && (
-                    <div className="bg-white p-4 rounded-2xl inline-block shadow-md border border-slate-200">
-                      <img 
-                        src={`data:image/jpeg;base64,${pixData.qr_code_base64}`} 
-                        alt="QR Code do PIX" 
-                        className="w-48 h-48 mx-auto"
-                      />
+                {/* Divider */}
+                <div className="border-t border-zinc-850 pt-6">
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-4">
+                    Dados do Pagamento:
+                  </label>
+
+                  {paymentError && (
+                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl mb-4 text-xs font-bold flex items-center gap-2">
+                      <AlertCircle size={16} className="shrink-0" />
+                      <span>{paymentError}</span>
                     </div>
                   )}
 
-                  <div className="space-y-2">
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider text-left">Código Pix Copia e Cola</p>
-                    <div className="flex gap-2">
-                      <input 
-                        type="text" 
-                        readOnly 
-                        value={pixData.qr_code}
-                        className="flex-grow bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-mono text-slate-650 dark:text-zinc-350 focus:outline-none"
-                      />
-                      <button
-                        onClick={handleCopyPix}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white p-3.5 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer"
-                        title="Copiar código"
-                      >
-                        {copied ? <Check size={16} /> : <Copy size={16} />}
-                      </button>
+                  {submittingPayment && (
+                    <div className="flex flex-col items-center justify-center py-8 space-y-3 bg-zinc-950/55 rounded-2xl border border-zinc-850">
+                      <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+                      <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Processando seu pagamento...</p>
                     </div>
+                  )}
+
+                  {/* Custom PIX Screen */}
+                  <div style={{ display: pixData ? "block" : "none" }}>
+                    {pixData && (
+                      <div className="space-y-6 text-center bg-zinc-950/50 border border-zinc-850 p-6 rounded-[2rem] animate-fade-in">
+                        <div className="flex items-center justify-center gap-2 text-emerald-400 font-black text-sm uppercase tracking-wider">
+                          <QrCode size={20} />
+                          PIX Gerado com Sucesso!
+                        </div>
+
+                        {pixData.qr_code_base64 && (
+                          <div className="bg-white p-4 rounded-2xl inline-block shadow-md border border-zinc-800">
+                            <img 
+                              src={`data:image/jpeg;base64,${pixData.qr_code_base64}`} 
+                              alt="QR Code do PIX" 
+                              className="w-48 h-48 mx-auto"
+                            />
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider text-left">Código Pix Copia e Cola</p>
+                          <div className="flex gap-2">
+                            <input 
+                              type="text" 
+                              readOnly 
+                              value={pixData.qr_code}
+                              className="flex-grow bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-xs font-mono text-zinc-300 focus:outline-none"
+                            />
+                            <button
+                              onClick={handleCopyPix}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white p-3.5 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer"
+                              title="Copiar código"
+                            >
+                              {copied ? <Check size={16} /> : <Copy size={16} />}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-center gap-2 py-2 text-xs font-bold text-zinc-500">
+                          <Loader2 size={14} className="animate-spin text-emerald-500" />
+                          Aguardando confirmação... Seu acesso ao treinamento será liberado em segundos!
+                        </div>
+
+                        <button
+                          onClick={() => setPixData(null)}
+                          className="text-xs font-bold text-zinc-500 hover:text-white transition-colors underline cursor-pointer"
+                        >
+                          Escolher outra forma de pagamento
+                        </button>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex items-center justify-center gap-2 py-2 text-xs font-bold text-slate-500">
-                    <Loader2 size={14} className="animate-spin text-emerald-500" />
-                    Aguardando confirmação... Seu acesso ao treinamento será liberado em segundos!
-                  </div>
-
-                  <button
-                    onClick={() => setPixData(null)}
-                    className="text-xs font-bold text-slate-400 hover:text-slate-650 dark:hover:text-white transition-colors underline cursor-pointer"
-                  >
-                    Escolher outra forma de pagamento
-                  </button>
+                  {/* Mercado Pago Payment Brick Container */}
+                  <div 
+                    id="paymentBrick_container" 
+                    style={{ display: pixData ? "none" : "block" }}
+                    className={`w-full transition-opacity ${submittingPayment ? "opacity-30 pointer-events-none" : "opacity-100"}`}
+                  ></div>
                 </div>
-              )}
+
+              </div>
             </div>
 
-            {/* Mercado Pago Payment Brick Container (must remain in the DOM to avoid unmount/transition crashes) */}
-            <div 
-              id="paymentBrick_container" 
-              style={{ display: pixData ? "none" : "block" }}
-              className={`w-full transition-opacity ${submittingPayment ? "opacity-30 pointer-events-none" : "opacity-100"}`}
-            ></div>
+            {/* Trust Footer below left card */}
+            <div className="flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-zinc-500 py-2">
+              <Lock size={12} className="text-emerald-500" />
+              Pagamento Processado com Criptografia SSL
+            </div>
+
           </div>
 
-          <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 pt-2 border-t border-outline/10">
-            <Lock size={12} />
-            Pagamento Processado com Criptografia SSL
+          {/* Column Right: Product Details, Guarantee and Urgency (lg:col-span-5) */}
+          <div className="lg:col-span-5 space-y-6">
+            
+            {/* Product Card */}
+            <div className="bg-zinc-900 border border-zinc-850 rounded-[2.5rem] p-8 shadow-2xl space-y-6 text-center">
+              
+              {/* Product Image / Mockup with robust CSS Fallback */}
+              <div className="w-full relative aspect-square max-w-[240px] mx-auto rounded-[2rem] overflow-hidden flex items-center justify-center bg-gradient-to-br from-emerald-950/20 to-zinc-950 border border-zinc-800 shadow-md">
+                <img 
+                  src="/images/product-box.png" 
+                  alt="Mockup Bananal PRO" 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    const placeholder = e.currentTarget.parentElement?.querySelector(".box-placeholder");
+                    if (placeholder) placeholder.setAttribute("style", "display: flex;");
+                  }}
+                />
+                <div 
+                  className="box-placeholder w-full h-full hidden flex-col items-center justify-center p-6 text-center space-y-4 bg-gradient-to-br from-emerald-600/20 to-zinc-950"
+                >
+                  <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
+                    <Sprout size={36} />
+                  </div>
+                  <div>
+                    <h3 className="text-md font-black text-white uppercase tracking-tight">Comunidade Bananal PRO</h3>
+                    <p className="text-[9px] text-zinc-500 uppercase tracking-widest mt-1">Treinamento & Tecnologia</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Product Pricing Summary Badge */}
+              <div className="bg-zinc-950/50 border border-zinc-850 p-4 rounded-2xl text-left space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider">Assinatura Selecionada</span>
+                  <span className="text-xs font-black text-emerald-400 uppercase tracking-wider">
+                    {selectedPlan === 'mensal' ? 'Plano Mensal' : 'Plano Anual'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-baseline pt-1">
+                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider">Total</span>
+                  <span className="text-lg font-black text-white">
+                    {selectedPlan === 'mensal' ? 'R$ 97,00/mês' : 'R$ 497,00/ano'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Urgency Counter */}
+              <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-4 flex items-center gap-3 text-left">
+                <span className="flex h-2 w-2 relative shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <p className="text-[11px] text-zinc-400">
+                  <strong className="text-white">27 produtores</strong> estão finalizando a inscrição na plataforma nesta semana.
+                </p>
+              </div>
+
+              {/* O QUE VOCÊ VAI RECEBER */}
+              <div className="space-y-4 text-left">
+                <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest border-b border-zinc-850 pb-2">
+                  O QUE VOCÊ VAI RECEBER:
+                </h3>
+                <ul className="space-y-3.5 text-xs text-zinc-300">
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-white">Treinamento Bananal PRO</strong>: Acesso completo aos cursos técnicos de recomendação de adubação e manejo.
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-white">Calculadoras de Nutrição</strong>: Interpretação de química de solo e dosagem ideal de calagem instantânea.
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-white">Alertas de Sigatoka</strong>: Ferramenta climática avançada para controle estratégico de pulverizações.
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-white">Cartão Digital de Produtor</strong>: Acesso a convênios de desconto em fertilizantes, mudas e defensivos.
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-white">Fórum da Comunidade</strong>: Espaço de networking com outros bananicultores e especialistas.
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+            </div>
+
+            {/* Satisfaction Guarantee Seal */}
+            <div className="bg-zinc-900 border border-zinc-850 rounded-[2rem] p-6 flex items-start gap-4 text-left shadow-md">
+              <Award size={36} className="text-amber-500 shrink-0" />
+              <div className="space-y-1">
+                <h4 className="text-xs font-black text-white uppercase tracking-wider">GARANTIA INCONDICIONAL DE 7 DIAS</h4>
+                <p className="text-[10px] text-zinc-400 leading-relaxed">
+                  Sem riscos! Se por qualquer motivo você decidir que a plataforma não vale o investimento, envie uma mensagem de cancelamento em até 7 dias e devolvemos cada centavo.
+                </p>
+              </div>
+            </div>
+
+            {/* Direct Support WhatsApp Box */}
+            <div className="bg-[#25D366]/5 border border-[#25D366]/10 rounded-[2rem] p-6 flex items-start gap-4 shadow-md">
+              <div className="w-12 h-12 rounded-full bg-[#25D366]/10 border border-[#25D366]/20 flex items-center justify-center shrink-0 text-[#25D366]">
+                <MessageCircle size={24} />
+              </div>
+              <div className="space-y-1 text-left">
+                <h4 className="text-sm font-bold text-white">Precisa de Ajuda com a Compra?</h4>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Fale com nosso suporte para resolver dúvidas sobre faturamento, nota fiscal ou liberação de acesso.
+                </p>
+                <a 
+                  href="https://wa.me/5521969014654?text=Olá!%20Gostaria%20de%20ajuda%20com%20o%20checkout%20do%20Bananal%20PRO." 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="text-xs font-bold text-[#25D366] hover:underline inline-flex items-center gap-1 pt-1.5 cursor-pointer"
+                >
+                  Chamar Suporte no WhatsApp (21) 96901-4654
+                </a>
+              </div>
+            </div>
+
           </div>
+
         </div>
 
-        <div className="bg-emerald-500/5 dark:bg-emerald-950/10 border border-emerald-500/10 rounded-[2rem] p-6 flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400">
-            <MessageCircle size={24} />
-          </div>
-          <div className="space-y-1 text-left">
-            <h4 className="text-sm font-bold text-on-surface">Precisa de Ajuda com o Acesso?</h4>
-            <p className="text-xs text-on-surface-variant leading-relaxed">
-              Fale conosco diretamente pelo nosso suporte no WhatsApp. Estamos disponíveis para te auxiliar na liberação do seu acesso e tirar dúvidas.
-            </p>
-            <a 
-              href="https://wa.me/5521969014654" 
-              target="_blank" 
-              rel="noreferrer"
-              className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-1 pt-1.5"
-            >
-              Chamar Suporte no WhatsApp (21) 96901-4654
-            </a>
-          </div>
-        </div>
       </div>
+
+      {/* Exit Intent Popup Modal */}
+      {showExitPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
+          <div className="relative max-w-sm w-full bg-zinc-900 border border-zinc-800 rounded-[2rem] p-8 text-center space-y-6 shadow-2xl">
+            {/* Close Button */}
+            <button 
+              onClick={closeExitPopup}
+              className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors cursor-pointer"
+              title="Fechar"
+            >
+              <AlertCircle size={20} className="rotate-45" />
+            </button>
+
+            {/* humanization image with fallback */}
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-zinc-800 mx-auto overflow-hidden border border-emerald-500/20 shadow-md">
+              <img 
+                src="/images/support-face.png" 
+                alt="Jean Carlos Suporte" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                  const fallback = e.currentTarget.parentElement?.querySelector(".face-fallback");
+                  if (fallback) fallback.setAttribute("style", "display: flex;");
+                }}
+              />
+              <div 
+                className="face-fallback w-full h-full hidden items-center justify-center text-emerald-400 font-bold uppercase tracking-wider text-2xl"
+              >
+                JC
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full">
+                Não vá embora com dúvidas!
+              </span>
+              <h3 className="text-lg font-black text-white leading-tight uppercase">
+                Posso te ajudar a começar?
+              </h3>
+              <p className="text-[11px] text-zinc-400 leading-relaxed">
+                Ficou com alguma dúvida sobre as ferramentas, calculadoras ou o processo de pagamento? Me chame no WhatsApp e te ajudo agora mesmo.
+              </p>
+            </div>
+
+            <a 
+              href="https://wa.me/5521969014654?text=Olá!%20Estou%20na%20tela%20de%20checkout%20do%20Bananal%20PRO%20e%20gostaria%20de%20tirar%20uma%20dúvida."
+              target="_blank"
+              rel="noreferrer"
+              onClick={closeExitPopup}
+              className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-zinc-950 font-black text-xs uppercase tracking-wider py-4 px-6 rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <MessageCircle size={18} fill="currentColor" />
+              Conversar no WhatsApp
+            </a>
+
+            <button 
+              onClick={closeExitPopup}
+              className="text-xs font-bold text-zinc-505 hover:text-zinc-300 transition-colors underline cursor-pointer"
+            >
+              Continuar no Checkout
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
