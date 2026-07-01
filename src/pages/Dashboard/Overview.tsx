@@ -24,7 +24,8 @@ import {
   Cloud,
   CloudLightning,
   AlertTriangle,
-  FileText
+  FileText,
+  ArrowUpRight
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../contexts/AuthContext";
@@ -93,7 +94,7 @@ export default function Overview() {
   const [city, setCity] = useState("Sete Lagoas");
   const [state, setState] = useState("MG");
   const [cep, setCep] = useState<string | null>(null);
-  const [farmName, setFarmName] = useState(profile?.property_name || "Fazenda São José");
+  const [farmName, setFarmName] = useState(profile?.property_name || "");
 
   // Core KPIs
   const [areaTotal, setAreaTotal] = useState(0.0);
@@ -606,7 +607,7 @@ export default function Overview() {
           city: userCity,
           state: userState,
           cep: userCep,
-          farmName: profile.property_name || "Fazenda São José",
+          farmName: profile.property_name || "",
           areaSparkline,
           yieldSparkline,
           profitSparkline
@@ -648,8 +649,23 @@ export default function Overview() {
             <div className="space-y-1">
               <span className="banner-text text-xs font-semibold tracking-wide" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Bem-vindo de volta, {profile?.full_name || "Produtor"}!</span>
               <div className="flex items-center gap-2">
-                <h1 className="banner-title text-3xl font-display font-black tracking-tight" style={{ color: '#ffffff' }}>{farmName}</h1>
-                <Sprout className="text-emerald-400 w-5 h-5 fill-emerald-400/20" />
+                {!loading && talhoes.length === 0 ? (
+                  <Link 
+                    to="/configuracoes" 
+                    className="banner-title text-2xl md:text-3xl font-display font-black tracking-tight hover:text-emerald-350 transition-colors flex items-center gap-2 group cursor-pointer" 
+                    style={{ color: '#ffffff' }}
+                  >
+                    <span>Cadastrar Minha Fazenda</span>
+                    <ArrowUpRight className="w-6 h-6 text-emerald-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  </Link>
+                ) : (
+                  <>
+                    <h1 className="banner-title text-3xl font-display font-black tracking-tight" style={{ color: '#ffffff' }}>
+                      {farmName || "Minha Fazenda"}
+                    </h1>
+                    <Sprout className="text-emerald-400 w-5 h-5 fill-emerald-400/20" />
+                  </>
+                )}
               </div>
               <p className="banner-text text-xs font-medium tracking-wide mt-1" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>Monitoramento inteligente da sua produção</p>
             </div>
