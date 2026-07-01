@@ -350,8 +350,12 @@ export default function Checkout() {
 
     return () => {
       clearTimeout(timer);
-      if (cardBrickController && cardBrickController.unmount) {
-        cardBrickController.unmount();
+      if (cardBrickController && typeof cardBrickController.unmount === "function") {
+        try {
+          cardBrickController.unmount();
+        } catch (unmountErr) {
+          console.warn("Erro ao desmontar o Mercado Pago Brick:", unmountErr);
+        }
       }
     };
   }, [
@@ -464,60 +468,65 @@ export default function Checkout() {
               </div>
             )}
 
-            {pixData ? (
-              <div className="space-y-6 text-center bg-slate-50 dark:bg-zinc-900/40 border border-outline/10 p-6 rounded-[2rem] animate-fade-in">
-                <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 font-black text-sm uppercase tracking-wider">
-                  <QrCode size={20} />
-                  PIX Gerado com Sucesso!
-                </div>
-
-                {pixData.qr_code_base64 && (
-                  <div className="bg-white p-4 rounded-2xl inline-block shadow-md border border-slate-200">
-                    <img 
-                      src={`data:image/jpeg;base64,${pixData.qr_code_base64}`} 
-                      alt="QR Code do PIX" 
-                      className="w-48 h-48 mx-auto"
-                    />
+            {/* Custom PIX Screen */}
+            <div style={{ display: pixData ? "block" : "none" }}>
+              {pixData && (
+                <div className="space-y-6 text-center bg-slate-50 dark:bg-zinc-900/40 border border-outline/10 p-6 rounded-[2rem] animate-fade-in">
+                  <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 font-black text-sm uppercase tracking-wider">
+                    <QrCode size={20} />
+                    PIX Gerado com Sucesso!
                   </div>
-                )}
 
-                <div className="space-y-2">
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider text-left">Código Pix Copia e Cola</p>
-                  <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      readOnly 
-                      value={pixData.qr_code}
-                      className="flex-grow bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-mono text-slate-650 dark:text-zinc-350 focus:outline-none"
-                    />
-                    <button
-                      onClick={handleCopyPix}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white p-3.5 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer"
-                      title="Copiar código"
-                    >
-                      {copied ? <Check size={16} /> : <Copy size={16} />}
-                    </button>
+                  {pixData.qr_code_base64 && (
+                    <div className="bg-white p-4 rounded-2xl inline-block shadow-md border border-slate-200">
+                      <img 
+                        src={`data:image/jpeg;base64,${pixData.qr_code_base64}`} 
+                        alt="QR Code do PIX" 
+                        className="w-48 h-48 mx-auto"
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider text-left">Código Pix Copia e Cola</p>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        readOnly 
+                        value={pixData.qr_code}
+                        className="flex-grow bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-mono text-slate-650 dark:text-zinc-350 focus:outline-none"
+                      />
+                      <button
+                        onClick={handleCopyPix}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white p-3.5 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer"
+                        title="Copiar código"
+                      >
+                        {copied ? <Check size={16} /> : <Copy size={16} />}
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center justify-center gap-2 py-2 text-xs font-bold text-slate-500">
-                  <Loader2 size={14} className="animate-spin text-emerald-500" />
-                  Aguardando confirmação... Seu acesso ao treinamento será liberado em segundos!
-                </div>
+                  <div className="flex items-center justify-center gap-2 py-2 text-xs font-bold text-slate-500">
+                    <Loader2 size={14} className="animate-spin text-emerald-500" />
+                    Aguardando confirmação... Seu acesso ao treinamento será liberado em segundos!
+                  </div>
 
-                <button
-                  onClick={() => setPixData(null)}
-                  className="text-xs font-bold text-slate-400 hover:text-slate-650 dark:hover:text-white transition-colors underline cursor-pointer"
-                >
-                  Escolher outra forma de pagamento
-                </button>
-              </div>
-            ) : (
-              <div 
-                id="paymentBrick_container" 
-                className={`w-full transition-opacity ${submittingPayment ? "opacity-30 pointer-events-none" : "opacity-100"}`}
-              ></div>
-            )}
+                  <button
+                    onClick={() => setPixData(null)}
+                    className="text-xs font-bold text-slate-400 hover:text-slate-650 dark:hover:text-white transition-colors underline cursor-pointer"
+                  >
+                    Escolher outra forma de pagamento
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Mercado Pago Payment Brick Container (must remain in the DOM to avoid unmount/transition crashes) */}
+            <div 
+              id="paymentBrick_container" 
+              style={{ display: pixData ? "none" : "block" }}
+              className={`w-full transition-opacity ${submittingPayment ? "opacity-30 pointer-events-none" : "opacity-100"}`}
+            ></div>
           </div>
 
           <div className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-zinc-500 pt-2 border-t border-outline/10">
