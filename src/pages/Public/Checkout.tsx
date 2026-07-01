@@ -303,7 +303,7 @@ export default function Checkout() {
                 style: {
                   theme: "default",
                   customVariables: {
-                    baseColor: "#10b981"
+                    baseColor: "#22C55E"
                   }
                 }
               }
@@ -431,7 +431,7 @@ if (loading) {
   }
 
   return (
-    <div className="min-h-screen bg-[#021B13] text-[#FAFAFA] font-sans selection:bg-[#22C55E]/30 overflow-x-hidden pb-16">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-800 font-sans selection:bg-[#22C55E]/30 overflow-x-hidden pb-16">
       {/* CSS Keyframes and Float Animations */}
       <style>{`
         @keyframes float {
@@ -439,8 +439,8 @@ if (loading) {
           50% { transform: translateY(-10px); }
         }
         @keyframes shadowPulse {
-          0%, 100% { transform: scale(1); opacity: 0.35; }
-          50% { transform: scale(0.85); opacity: 0.15; }
+          0%, 100% { transform: scale(1); opacity: 0.12; }
+          50% { transform: scale(0.85); opacity: 0.05; }
         }
         .animate-float {
           animation: float 4s ease-in-out infinite;
@@ -462,43 +462,16 @@ if (loading) {
         }
       `}</style>
 
-      {/* Hero Superior Cinematográfico */}
-      <div className="relative w-full bg-[#021B13] py-16 px-6 overflow-hidden border-b border-[#22C55E]/10">
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="/images/checkout-hero.jpg" 
-            alt="Lavoura Bananal" 
-            className="w-full h-full object-cover opacity-20 mix-blend-luminosity"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#021B13] via-[#021B13]/90 to-transparent" />
-        </div>
-        
-        <div className="max-w-6xl w-full mx-auto relative z-10 text-center space-y-4">
-          <span className="text-[10px] font-inter-extrabold tracking-[0.25em] text-[#D9FF5A] bg-[#22C55E]/15 border border-[#22C55E]/20 px-4 py-1.5 rounded-full inline-block uppercase">
-            BANANAL PRO
-          </span>
-          <h1 className="text-3xl md:text-5xl font-inter-extrabold text-[#FAFAFA] uppercase tracking-tight leading-none max-w-3xl mx-auto">
-            O Maior Ecossistema da <span className="text-[#22C55E]">Bananicultura</span> Brasileira
-          </h1>
-          <p className="text-zinc-300 text-xs md:text-sm max-w-xl mx-auto font-inter-medium leading-relaxed">
-            Aprenda com produtores reais, especialistas e ferramentas exclusivas para aumentar produtividade e lucro.
-          </p>
-        </div>
-      </div>
-
       {/* Main Content Area */}
-      <div className="max-w-6xl w-full mx-auto relative z-10 space-y-6 px-4 md:px-8 mt-8">
+      <div className="max-w-6xl w-full mx-auto relative z-10 space-y-6 px-4 md:px-8 pt-8">
         
         {/* Navigation & Header */}
-        <div className="flex items-center justify-between border-b border-zinc-800/40 pb-4">
-          <Link to="/" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-xs font-inter-semibold uppercase tracking-wider">
+        <div className="flex items-center justify-between border-b border-zinc-200 pb-4">
+          <Link to="/" className="flex items-center gap-2 text-zinc-500 hover:text-[#021B13] transition-colors text-xs font-inter-semibold uppercase tracking-wider">
             <ArrowLeft size={16} />
             Voltar para o início
           </Link>
-          <div className="flex items-center gap-1.5 bg-[#22C55E]/10 border border-[#22C55E]/20 px-3 py-1.5 rounded-full text-[10px] font-inter-semibold text-[#22C55E] uppercase tracking-widest">
+          <div className="flex items-center gap-1.5 bg-[#22C55E]/10 border border-[#22C55E]/20 px-3 py-1.5 rounded-full text-[10px] font-inter-semibold text-[#16a34a] uppercase tracking-widest">
             <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse"></span>
             Conexão Segura
           </div>
@@ -510,7 +483,7 @@ if (loading) {
           {/* Column Left: Plan Selection and Form (lg:col-span-7) */}
           <div className="lg:col-span-7 space-y-6">
             
-            <div className="bg-[#04241a]/60 border border-[#22C55E]/10 rounded-[2.5rem] shadow-2xl overflow-hidden backdrop-blur-md">
+            <div className="bg-white border border-zinc-200/80 rounded-[2.5rem] shadow-lg overflow-hidden">
               {/* Top Banner image - displayed fully and without cuts */}
               <div className="w-full relative bg-zinc-950/40">
                 <img 
@@ -524,7 +497,7 @@ if (loading) {
                   }}
                 />
                 <div 
-                  className="banner-fallback hidden w-full min-h-[120px] flex-col justify-center px-6 py-6 border-b border-[#22C55E]/10"
+                  className="banner-fallback hidden w-full min-h-[120px] flex-col justify-center px-6 py-6 border-b border-zinc-250 bg-gradient-to-r from-[#021B13] to-[#042c1f]"
                 >
                   <span className="text-[9px] font-inter-extrabold tracking-widest text-[#22C55E] uppercase bg-[#22C55E]/10 px-2 py-0.5 rounded-full w-max">
                     Acesso Imediato
@@ -532,7 +505,7 @@ if (loading) {
                   <h2 className="text-xl font-inter-extrabold text-white leading-tight uppercase mt-1.5">
                     Adquirir Treinamento Bananal PRO
                   </h2>
-                  <p className="text-xs text-zinc-400 max-w-md">
+                  <p className="text-xs text-zinc-300 max-w-md">
                     Seu cadastro foi realizado com sucesso! Conclua sua aquisição abaixo para liberar o acesso instantâneo.
                   </p>
                 </div>
@@ -543,7 +516,7 @@ if (loading) {
                 
                 {/* Selector Header */}
                 <div className="space-y-3">
-                  <label className="text-[10px] font-inter-extrabold text-zinc-400 uppercase tracking-widest block">
+                  <label className="text-[10px] font-inter-extrabold text-zinc-500 uppercase tracking-widest block">
                     Escolha o seu plano de acesso:
                   </label>
                   
@@ -554,21 +527,21 @@ if (loading) {
                       onClick={() => handlePlanChange('anual')}
                       className={`relative p-5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between min-h-[120px] ${
                         selectedPlan === 'anual' 
-                          ? 'bg-[#04241a]/90 border-[#22C55E] text-white ring-1 ring-[#22C55E] shadow-[0_0_20px_rgba(34,197,94,0.15)]' 
-                          : 'bg-zinc-950/20 border-zinc-850 text-zinc-400 hover:border-zinc-800 hover:text-zinc-200'
+                          ? 'bg-[#f0fdf4] border-[#22C55E] text-[#021B13] ring-1 ring-[#22C55E] shadow-[0_4px_20px_rgba(34,197,94,0.08)]' 
+                          : 'bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-800'
                       }`}
                     >
-                      <span className="absolute -top-2.5 right-4 bg-[#22C55E] text-zinc-950 text-[8px] font-inter-extrabold px-2.5 py-1 rounded-full uppercase tracking-widest shadow-md">
+                      <span className="absolute -top-2.5 right-4 bg-[#22C55E] text-white text-[8px] font-inter-extrabold px-2.5 py-1 rounded-full uppercase tracking-widest shadow-md">
                         MAIS ESCOLHIDO
                       </span>
                       <div className="space-y-0.5">
-                        <span className="text-xs font-inter-extrabold uppercase tracking-wider block text-[#FAFAFA]">Plano Anual</span>
-                        <span className="text-[9px] text-[#22C55E] font-bold block">Economize 57%</span>
+                        <span className="text-xs font-inter-extrabold uppercase tracking-wider block">Plano Anual</span>
+                        <span className="text-[9px] text-[#16a34a] font-bold block">Economize 57%</span>
                       </div>
-                      <div className="mt-4 pt-2 border-t border-zinc-850 w-full flex items-baseline gap-1">
-                        <span className="text-[9px] text-zinc-400 font-medium font-inter-medium">12x de</span>
-                        <span className="text-base font-inter-extrabold text-[#D9FF5A]">R$ 49,70</span>
-                        <span className="text-[9px] text-zinc-500 font-inter-medium">ou R$ 497 à vista</span>
+                      <div className="mt-4 pt-2 border-t border-zinc-150 w-full flex items-baseline gap-1">
+                        <span className="text-[9px] text-zinc-500 font-medium font-inter-medium">12x de</span>
+                        <span className="text-base font-inter-extrabold text-[#16a34a]">R$ 49,70</span>
+                        <span className="text-[9px] text-zinc-400 font-inter-medium">ou R$ 497 à vista</span>
                       </div>
                     </button>
 
@@ -578,38 +551,38 @@ if (loading) {
                       onClick={() => handlePlanChange('mensal')}
                       className={`p-5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between min-h-[120px] ${
                         selectedPlan === 'mensal' 
-                          ? 'bg-[#04241a]/90 border-[#22C55E] text-white ring-1 ring-[#22C55E] shadow-[0_0_20px_rgba(34,197,94,0.15)]' 
-                          : 'bg-zinc-950/20 border-zinc-850 text-zinc-400 hover:border-zinc-800 hover:text-zinc-200'
+                          ? 'bg-[#f0fdf4] border-[#22C55E] text-[#021B13] ring-1 ring-[#22C55E] shadow-[0_4px_20px_rgba(34,197,94,0.08)]' 
+                          : 'bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-800'
                       }`}
                     >
                       <div className="space-y-0.5">
-                        <span className="text-xs font-inter-extrabold uppercase tracking-wider block text-[#FAFAFA]">Plano Mensal</span>
-                        <span className="text-[9px] text-zinc-500 block">Sem fidelidade, cancele quando quiser</span>
+                        <span className="text-xs font-inter-extrabold uppercase tracking-wider block">Plano Mensal</span>
+                        <span className="text-[9px] text-zinc-500 block font-inter-medium">Sem fidelidade, cancele quando quiser</span>
                       </div>
-                      <div className="mt-4 pt-2 border-t border-zinc-850 w-full flex items-baseline gap-1">
-                        <span className="text-base font-inter-extrabold text-white">R$ 97,00</span>
-                        <span className="text-[9px] text-zinc-500">/ mês</span>
+                      <div className="mt-4 pt-2 border-t border-zinc-150 w-full flex items-baseline gap-1">
+                        <span className="text-base font-inter-extrabold text-zinc-800">R$ 97,00</span>
+                        <span className="text-[9px] text-zinc-500 font-inter-medium">/ mês</span>
                       </div>
                     </button>
                   </div>
                 </div>
 
                 {/* Divider */}
-                <div className="border-t border-zinc-850 pt-6">
-                  <label className="text-[10px] font-inter-extrabold text-zinc-400 uppercase tracking-widest block mb-4">
+                <div className="border-t border-zinc-200 pt-6">
+                  <label className="text-[10px] font-inter-extrabold text-zinc-500 uppercase tracking-widest block mb-4">
                     Dados do Pagamento:
                   </label>
 
                   {paymentError && (
-                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl mb-4 text-xs font-inter-semibold flex items-center gap-2">
+                    <div className="bg-red-500/10 border border-red-500/20 text-red-650 p-4 rounded-2xl mb-4 text-xs font-inter-semibold flex items-center gap-2">
                       <AlertCircle size={16} className="shrink-0" />
                       <span>{paymentError}</span>
                     </div>
                   )}
 
                   {submittingPayment && (
-                    <div className="flex flex-col items-center justify-center py-8 space-y-3 bg-zinc-950/55 rounded-2xl border border-zinc-850">
-                      <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+                    <div className="flex flex-col items-center justify-center py-8 space-y-3 bg-zinc-50 rounded-2xl border border-zinc-200">
+                      <Loader2 className="w-8 h-8 animate-spin text-[#22C55E]" />
                       <p className="text-xs font-inter-semibold text-zinc-500 uppercase tracking-wider">Processando seu pagamento...</p>
                     </div>
                   )}
@@ -617,14 +590,14 @@ if (loading) {
                   {/* Custom PIX Screen */}
                   <div style={{ display: pixData ? "block" : "none" }}>
                     {pixData && (
-                      <div className="space-y-6 text-center bg-zinc-950/50 border border-zinc-850 p-6 rounded-[2rem] animate-fade-in">
-                        <div className="flex items-center justify-center gap-2 text-emerald-400 font-inter-extrabold text-sm uppercase tracking-wider">
+                      <div className="space-y-6 text-center bg-zinc-50 border border-zinc-200 p-6 rounded-[2rem] animate-fade-in">
+                        <div className="flex items-center justify-center gap-2 text-[#16a34a] font-inter-extrabold text-sm uppercase tracking-wider">
                           <QrCode size={20} />
                           PIX Gerado com Sucesso!
                         </div>
 
                         {pixData.qr_code_base64 && (
-                          <div className="bg-white p-4 rounded-2xl inline-block shadow-md border border-zinc-800">
+                          <div className="bg-white p-4 rounded-2xl inline-block shadow-md border border-zinc-200">
                             <img 
                               src={`data:image/jpeg;base64,${pixData.qr_code_base64}`} 
                               alt="QR Code do PIX" 
@@ -640,11 +613,11 @@ if (loading) {
                               type="text" 
                               readOnly 
                               value={pixData.qr_code}
-                              className="flex-grow bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-xs font-mono text-zinc-300 focus:outline-none"
+                              className="flex-grow bg-white border border-zinc-200 rounded-xl px-4 py-3 text-xs font-mono text-zinc-700 focus:outline-none"
                             />
                             <button
                               onClick={handleCopyPix}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white p-3.5 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer"
+                              className="bg-[#22C55E] hover:bg-[#16a34a] text-white p-3.5 rounded-xl transition-all flex items-center justify-center shrink-0 shadow-md cursor-pointer"
                               title="Copiar código"
                             >
                               {copied ? <Check size={16} /> : <Copy size={16} />}
@@ -653,13 +626,13 @@ if (loading) {
                         </div>
 
                         <div className="flex items-center justify-center gap-2 py-2 text-xs font-inter-semibold text-zinc-500">
-                          <Loader2 size={14} className="animate-spin text-emerald-500" />
+                          <Loader2 size={14} className="animate-spin text-[#22C55E]" />
                           Aguardando confirmação... Seu acesso ao treinamento será liberado em segundos!
                         </div>
 
                         <button
                           onClick={() => setPixData(null)}
-                          className="text-xs font-inter-semibold text-zinc-500 hover:text-white transition-colors underline cursor-pointer"
+                          className="text-xs font-inter-semibold text-zinc-500 hover:text-zinc-800 transition-colors underline cursor-pointer"
                         >
                           Escolher outra forma de pagamento
                         </button>
@@ -679,7 +652,7 @@ if (loading) {
             </div>
 
             {/* Trust Footer below left card */}
-            <div className="flex items-center justify-center gap-2 text-[9px] font-inter-extrabold uppercase tracking-widest text-zinc-500 py-2">
+            <div className="flex items-center justify-center gap-2 text-[9px] font-inter-extrabold uppercase tracking-widest text-zinc-400 py-2">
               <Lock size={12} className="text-[#22C55E]" />
               Pagamento Processado com Criptografia SSL
             </div>
@@ -690,19 +663,19 @@ if (loading) {
           <div className="lg:col-span-5 space-y-6">
             
             {/* Product Card */}
-            <div className="bg-[#04241a]/60 border border-[#22C55E]/10 rounded-[2.5rem] p-8 shadow-2xl space-y-6 text-center backdrop-blur-md">
+            <div className="bg-white border border-zinc-200/80 rounded-[2.5rem] p-8 shadow-lg space-y-6 text-center">
               
               {/* Product Image / Mockup with Floating Animation */}
               <div className="relative w-full max-w-[280px] mx-auto py-6 flex flex-col items-center">
                 {/* Glow effect behind */}
-                <div className="absolute top-[20%] w-[180px] h-[180px] rounded-full bg-[#22C55E]/10 blur-[50px] pointer-events-none" />
+                <div className="absolute top-[20%] w-[180px] h-[180px] rounded-full bg-[#22C55E]/5 blur-[40px] pointer-events-none" />
                 
                 {/* Floating Mockup Image */}
                 <div className="relative z-10 animate-float">
                   <img 
                     src="/images/product-box.png" 
                     alt="Mockup Bananal PRO" 
-                    className="w-full h-auto object-contain max-h-[300px] mx-auto"
+                    className="w-full h-auto object-contain max-h-[260px] mx-auto"
                     onError={(e) => {
                       e.currentTarget.style.display = "none";
                       const fallback = e.currentTarget.parentElement?.querySelector(".box-fallback");
@@ -710,69 +683,69 @@ if (loading) {
                     }}
                   />
                   <div 
-                    className="box-fallback w-[220px] aspect-[4/5] hidden flex-col items-center justify-center p-6 text-center space-y-4 rounded-3xl bg-gradient-to-br from-[#042c1f] to-zinc-950 border border-[#22C55E]/20 shadow-[0_20px_50px_rgba(4,44,31,0.5)] mx-auto"
+                    className="box-fallback w-[200px] aspect-[4/5] hidden flex-col items-center justify-center p-6 text-center space-y-4 rounded-3xl bg-gradient-to-br from-zinc-50 to-zinc-100 border border-zinc-200 shadow-md mx-auto"
                   >
-                    <div className="w-14 h-14 rounded-2xl bg-[#22C55E]/10 border border-[#22C55E]/25 flex items-center justify-center text-[#D9FF5A]">
-                      <Sprout size={32} />
+                    <div className="w-12 h-12 rounded-2xl bg-[#22C55E]/10 border border-[#22C55E]/20 flex items-center justify-center text-[#22C55E]">
+                      <Sprout size={28} />
                     </div>
                     <div>
-                      <h3 className="text-sm font-inter-extrabold text-[#FAFAFA] uppercase tracking-tight">Comunidade Bananal PRO</h3>
-                      <span className="text-[9px] text-[#22C55E] font-inter-extrabold uppercase tracking-widest block mt-1">Plataforma Premium</span>
+                      <h3 className="text-xs font-inter-extrabold text-[#021B13] uppercase tracking-tight">Comunidade Bananal PRO</h3>
+                      <span className="text-[8px] text-zinc-500 font-inter-extrabold uppercase tracking-widest block mt-1">Plataforma Premium</span>
                     </div>
                   </div>
                 </div>
                 
                 {/* Floating Shadow Underneath */}
-                <div className="w-[180px] h-[12px] bg-black/40 rounded-full blur-[6px] mt-4 animate-shadow" />
+                <div className="w-[150px] h-[10px] bg-zinc-300/60 rounded-full blur-[5px] mt-4 animate-shadow" />
               </div>
 
               {/* Prova Social */}
-              <div className="bg-[#22C55E]/10 border border-[#22C55E]/20 rounded-2xl p-5 text-left flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-[#22C55E]/20 border border-[#22C55E]/30 flex items-center justify-center text-[#D9FF5A] shrink-0">
-                  <Users size={20} />
+              <div className="bg-[#22C55E]/5 border border-[#22C55E]/10 rounded-2xl p-4 text-left flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-[#22C55E]/10 border border-[#22C55E]/20 flex items-center justify-center text-[#16a34a] shrink-0">
+                  <Users size={16} />
                 </div>
-                <p className="text-xs text-zinc-300 font-inter-medium">
-                  Mais de <strong className="text-[#D9FF5A] font-inter-extrabold text-sm">1.500 produtores</strong> já fazem parte da comunidade <strong className="text-white">Bananal PRO</strong>.
+                <p className="text-xs text-slate-600 font-inter-medium">
+                  Mais de <strong className="text-[#021B13] font-inter-extrabold">1.500 produtores</strong> já fazem parte da comunidade <strong className="text-[#021B13]">Bananal PRO</strong>.
                 </p>
               </div>
 
               {/* O QUE VOCÊ RECEBE */}
               <div className="space-y-4 text-left">
-                <h3 className="text-[10px] font-inter-extrabold text-zinc-400 uppercase tracking-widest border-b border-zinc-850 pb-2">
+                <h3 className="text-[10px] font-inter-extrabold text-zinc-500 uppercase tracking-widest border-b border-zinc-200 pb-2">
                   O QUE VOCÊ RECEBE:
                 </h3>
-                <ul className="space-y-3.5 text-xs text-zinc-300">
+                <ul className="space-y-3.5 text-xs text-slate-700">
                   <li className="flex items-center gap-2.5">
                     <CheckCircle2 size={16} className="text-[#22C55E] shrink-0" />
-                    <span className="font-inter-medium">Treinamento completo</span>
+                    <span className="font-inter-medium text-slate-800">Treinamento completo</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle2 size={16} className="text-[#22C55E] shrink-0" />
-                    <span className="font-inter-medium">Lives semanais</span>
+                    <span className="font-inter-medium text-slate-800">Lives semanais</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle2 size={16} className="text-[#22C55E] shrink-0" />
-                    <span className="font-inter-medium">Biblioteca técnica</span>
+                    <span className="font-inter-medium text-slate-800">Biblioteca técnica</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle2 size={16} className="text-[#22C55E] shrink-0" />
-                    <span className="font-inter-medium">Comunidade exclusiva</span>
+                    <span className="font-inter-medium text-slate-800">Comunidade exclusiva</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle2 size={16} className="text-[#22C55E] shrink-0" />
-                    <span className="font-inter-medium">Ferramentas de cálculo</span>
+                    <span className="font-inter-medium text-slate-800">Ferramentas de cálculo</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle2 size={16} className="text-[#22C55E] shrink-0" />
-                    <span className="font-inter-medium">Atualizações constantes</span>
+                    <span className="font-inter-medium text-slate-800">Atualizações constantes</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle2 size={16} className="text-[#22C55E] shrink-0" />
-                    <span className="font-inter-medium">Suporte especializado</span>
+                    <span className="font-inter-medium text-slate-800">Suporte especializado</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <CheckCircle2 size={16} className="text-[#22C55E] shrink-0" />
-                    <span className="font-inter-medium">Acesso imediato</span>
+                    <span className="font-inter-medium text-slate-800">Acesso imediato</span>
                   </li>
                 </ul>
               </div>
@@ -781,41 +754,56 @@ if (loading) {
 
             {/* Garantias */}
             <div className="grid grid-cols-2 gap-4 text-left">
-              <div className="bg-[#04241a]/60 border border-[#22C55E]/10 p-4 rounded-xl flex items-center gap-2.5 backdrop-blur-sm">
+              <div className="bg-white border border-zinc-200/80 p-4 rounded-xl flex items-center gap-2.5 shadow-sm">
                 <Lock size={15} className="text-[#22C55E] shrink-0" />
-                <span className="text-[10px] font-inter-semibold text-zinc-300 uppercase tracking-wider">Pagamento seguro</span>
+                <span className="text-[10px] font-inter-semibold text-slate-700 uppercase tracking-wider">Pagamento seguro</span>
               </div>
-              <div className="bg-[#04241a]/60 border border-[#22C55E]/10 p-4 rounded-xl flex items-center gap-2.5 backdrop-blur-sm">
-                <Zap size={15} className="text-[#D9FF5A] shrink-0" />
-                <span className="text-[10px] font-inter-semibold text-zinc-300 uppercase tracking-wider">Liberação imediata</span>
+              <div className="bg-white border border-zinc-200/80 p-4 rounded-xl flex items-center gap-2.5 shadow-sm">
+                <Zap size={15} className="text-[#16a34a] shrink-0" />
+                <span className="text-[10px] font-inter-semibold text-slate-700 uppercase tracking-wider">Liberação imediata</span>
               </div>
-              <div className="bg-[#04241a]/60 border border-[#22C55E]/10 p-4 rounded-xl flex items-center gap-2.5 backdrop-blur-sm">
+              <div className="bg-white border border-zinc-200/80 p-4 rounded-xl flex items-center gap-2.5 shadow-sm">
                 <ShieldCheck size={15} className="text-[#22C55E] shrink-0" />
-                <span className="text-[10px] font-inter-semibold text-zinc-300 uppercase tracking-wider">Plataforma própria</span>
+                <span className="text-[10px] font-inter-semibold text-slate-700 uppercase tracking-wider">Plataforma própria</span>
               </div>
-              <div className="bg-[#04241a]/60 border border-[#22C55E]/10 p-4 rounded-xl flex items-center gap-2.5 backdrop-blur-sm">
-                <MessageCircle size={15} className="text-[#D9FF5A] shrink-0" />
-                <span className="text-[10px] font-inter-semibold text-zinc-300 uppercase tracking-wider">Suporte especializado</span>
+              <div className="bg-white border border-zinc-200/80 p-4 rounded-xl flex items-center gap-2.5 shadow-sm">
+                <MessageCircle size={15} className="text-[#16a34a] shrink-0" />
+                <span className="text-[10px] font-inter-semibold text-slate-700 uppercase tracking-wider">Suporte especializado</span>
               </div>
             </div>
 
             {/* Direct Support WhatsApp Box */}
-            <div className="bg-[#25D366]/5 border border-[#25D366]/10 rounded-[2rem] p-6 flex items-start gap-4 shadow-md">
-              <div className="w-12 h-12 rounded-full bg-[#25D366]/10 border border-[#25D366]/20 flex items-center justify-center shrink-0 text-[#25D366]">
-                <MessageCircle size={24} />
+            <div className="bg-white border border-zinc-200/80 rounded-[2rem] p-6 flex items-start gap-4 shadow-md">
+              <div className="w-12 h-12 rounded-full overflow-hidden border border-zinc-200 flex items-center justify-center shrink-0 bg-zinc-100">
+                <img 
+                  src="/images/support-face.png" 
+                  alt="Suporte Jean Carlos" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    const fallback = e.currentTarget.parentElement?.querySelector(".face-fallback");
+                    if (fallback) fallback.setAttribute("style", "display: flex;");
+                  }}
+                />
+                <div 
+                  className="face-fallback hidden w-full h-full items-center justify-center bg-[#22C55E] text-white font-inter-extrabold text-xs"
+                >
+                  JC
+                </div>
               </div>
               <div className="space-y-1 text-left">
-                <h4 className="text-sm font-inter-semibold text-white">Precisa de Ajuda com a Compra?</h4>
-                <p className="text-xs text-zinc-400 leading-relaxed font-inter-medium">
+                <h4 className="text-sm font-inter-semibold text-slate-800">Precisa de Ajuda com a Compra?</h4>
+                <p className="text-xs text-slate-500 leading-relaxed font-inter-medium">
                   Fale com nosso suporte para resolver dúvidas sobre faturamento, nota fiscal ou liberação de acesso.
                 </p>
                 <a 
                   href="https://wa.me/5521969014654?text=Olá!%20Gostaria%20de%20ajuda%20com%20o%20checkout%20do%20Bananal%20PRO." 
                   target="_blank" 
                   rel="noreferrer"
-                  className="text-xs font-inter-semibold text-[#25D366] hover:underline inline-flex items-center gap-1 pt-1.5 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 mt-2 bg-[#22C55E] hover:bg-[#16a34a] text-white font-inter-semibold text-xs rounded-xl shadow-sm transition-all cursor-pointer"
                 >
-                  Chamar Suporte no WhatsApp (21) 96901-4654
+                  <MessageCircle size={14} />
+                  Falar no WhatsApp
                 </a>
               </div>
             </div>
@@ -828,19 +816,19 @@ if (loading) {
 
       {/* Exit Intent Popup Modal */}
       {showExitPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
-          <div className="relative max-w-sm w-full bg-[#021B13] border border-[#22C55E]/20 rounded-[2rem] p-8 text-center space-y-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="relative max-w-sm w-full bg-white border border-zinc-200 rounded-[2rem] p-8 text-center space-y-6 shadow-2xl">
             {/* Close Button */}
             <button 
               onClick={closeExitPopup}
-              className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors cursor-pointer"
+              className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-800 transition-colors cursor-pointer"
               title="Fechar"
             >
               <AlertCircle size={20} className="rotate-45" />
             </button>
 
             {/* humanization image with fallback */}
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#22C55E] to-zinc-800 mx-auto overflow-hidden border border-[#22C55E]/20 shadow-md">
+            <div className="w-24 h-24 rounded-full bg-zinc-100 mx-auto overflow-hidden border border-zinc-200 shadow-md">
               <img 
                 src="/images/support-face.png" 
                 alt="Jean Carlos Suporte" 
@@ -852,20 +840,20 @@ if (loading) {
                 }}
               />
               <div 
-                className="face-fallback w-full h-full hidden items-center justify-center text-[#22C55E] font-inter-extrabold uppercase tracking-wider text-2xl"
+                className="face-fallback w-full h-full hidden items-center justify-center bg-[#22C55E] text-white font-inter-extrabold text-2xl"
               >
                 JC
               </div>
             </div>
 
             <div className="space-y-2">
-              <span className="text-[9px] font-inter-extrabold uppercase tracking-widest text-[#22C55E] bg-[#22C55E]/10 px-3 py-1 rounded-full">
+              <span className="text-[9px] font-inter-extrabold uppercase tracking-widest text-[#16a34a] bg-[#22C55E]/10 px-3 py-1 rounded-full">
                 Não vá embora com dúvidas!
               </span>
-              <h3 className="text-lg font-inter-extrabold text-white leading-tight uppercase">
+              <h3 className="text-lg font-inter-extrabold text-slate-800 leading-tight uppercase">
                 Posso te ajudar a começar?
               </h3>
-              <p className="text-[11px] text-zinc-400 leading-relaxed font-inter-medium">
+              <p className="text-[11px] text-slate-500 leading-relaxed font-inter-medium">
                 Ficou com alguma dúvida sobre as ferramentas, calculadoras ou o processo de pagamento? Me chame no WhatsApp e te ajudo agora mesmo.
               </p>
             </div>
@@ -875,7 +863,7 @@ if (loading) {
               target="_blank"
               rel="noreferrer"
               onClick={closeExitPopup}
-              className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-zinc-950 font-inter-extrabold text-xs uppercase tracking-wider py-4 px-6 rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full bg-[#22C55E] hover:bg-[#16a34a] text-white font-inter-extrabold text-xs uppercase tracking-wider py-4 px-6 rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
             >
               <MessageCircle size={18} fill="currentColor" />
               Conversar no WhatsApp
@@ -883,7 +871,7 @@ if (loading) {
 
             <button 
               onClick={closeExitPopup}
-              className="text-xs font-inter-semibold text-zinc-500 hover:text-zinc-300 transition-colors underline cursor-pointer"
+              className="text-xs font-inter-semibold text-zinc-500 hover:text-zinc-850 transition-colors underline cursor-pointer"
             >
               Continuar no Checkout
             </button>
