@@ -35,8 +35,18 @@ export default function Checkout() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
-  // Dados do PIX gerado
-  const [pixData, setPixData] = useState<{ qr_code: string; qr_code_base64: string; payment_id: string } | null>(null);
+  // Dados do PIX gerado (restaura do sessionStorage se houver)
+  const [pixData, setPixData] = useState<{ qr_code: string; qr_code_base64: string; payment_id: string } | null>(() => {
+    const saved = sessionStorage.getItem("pending_pix_data");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Erro ao restaurar pixData do sessionStorage:", e);
+      }
+    }
+    return null;
+  });
   const [copied, setCopied] = useState(false);
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
@@ -164,6 +174,7 @@ export default function Checkout() {
             if (prev?.id === profileData.id && prev?.role === profileData.role) return prev;
             return profileData;
           });
+          sessionStorage.removeItem("pending_pix_data");
           toast.success("Bem-vindo, Administrador!");
           navigate("/dashboard");
           return true;
@@ -185,6 +196,7 @@ export default function Checkout() {
         });
 
         if (profileData.is_active) {
+          sessionStorage.removeItem("pending_pix_data");
           toast.success("Sua assinatura já está ativa!");
           navigate("/dashboard");
           return true;
@@ -241,7 +253,7 @@ export default function Checkout() {
     }
   }, []);
 
-  // Polling de 3 segundos para detectar aprovação do pagamento
+  // Polling de 3 segundos para detectar aprovação do pagamento geral
   useEffect(() => {
     if (!user || profile?.is_active) return;
 
@@ -251,6 +263,30 @@ export default function Checkout() {
 
     return () => clearInterval(interval);
   }, [user, profile?.is_active]);
+
+  // Polling de 3 segundos para detectar aprovação do pagamento PIX de forma ativa
+  useEffect(() => {
+    if (!pixData || !user || profile?.is_active) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/check-payment-status?payment_id=${pixData.payment_id}&user_id=${profile?.id || ""}`);
+        const data = await res.json();
+        
+        if (data.status === "approved") {
+          clearInterval(interval);
+          sessionStorage.removeItem("pending_pix_data");
+          toast.success("Pagamento aprovado com sucesso! Redirecionando...");
+          await fetchProfileAndCheck(user);
+          navigate("/dashboard");
+        }
+      } catch (err) {
+        console.error("Erro ao verificar status do pagamento PIX:", err);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [pixData, user, profile?.id, profile?.is_active, navigate]);
 
   // Efeito para renderizar o Mercado Pago Payment Brick
   useEffect(() => {
@@ -336,11 +372,13 @@ export default function Checkout() {
                     }
 
                     if (data.payment_method_id === "pix") {
-                      setPixData({
+                      const pixObj = {
                         qr_code: data.qr_code,
                         qr_code_base64: data.qr_code_base64,
                         payment_id: data.payment_id
-                      });
+                      };
+                      sessionStorage.setItem("pending_pix_data", JSON.stringify(pixObj));
+                      setPixData(pixObj);
                       resolve();
                     } else if (data.status === "approved") {
                       toast.success("Assinatura realizada com sucesso!");
@@ -632,7 +670,10 @@ if (loading) {
                         </div>
 
                         <button
-                          onClick={() => setPixData(null)}
+                          onClick={() => {
+                            sessionStorage.removeItem("pending_pix_data");
+                            setPixData(null);
+                          }}
                           className="text-xs font-inter-semibold text-zinc-500 hover:text-zinc-800 transition-colors underline cursor-pointer"
                         >
                           Escolher outra forma de pagamento

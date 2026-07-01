@@ -104,6 +104,49 @@ export default defineConfig(({mode}) => {
                   res.end(JSON.stringify({ error: err.message || 'Internal dev server error' }));
                 }
               });
+            } else if (req.url?.startsWith('/api/check-payment-status') && req.method === 'GET') {
+              (async () => {
+                try {
+                  const urlObj = new URL(req.url || '', `http://${req.headers.host || 'localhost'}`);
+                  const payment_id = urlObj.searchParams.get('payment_id');
+                  const user_id = urlObj.searchParams.get('user_id');
+                  
+                  const checkStatusModule = await server.ssrLoadModule('/api/check-payment-status.ts');
+                  
+                  const mockReq = {
+                    method: 'GET',
+                    query: { payment_id, user_id },
+                    headers: req.headers
+                  };
+                  
+                  const mockRes = {
+                    status(code: number) {
+                      res.statusCode = code;
+                      return this;
+                    },
+                    json(data: any) {
+                      res.setHeader('Content-Type', 'application/json');
+                      res.end(JSON.stringify(data));
+                      return this;
+                    },
+                    setHeader(name: string, value: string) {
+                      res.setHeader(name, value);
+                      return this;
+                    },
+                    end(val: string) {
+                      res.end(val);
+                      return this;
+                    }
+                  };
+
+                  await checkStatusModule.default(mockReq, mockRes);
+                } catch (err: any) {
+                  console.error('Local check-payment-status error:', err);
+                  res.statusCode = 500;
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({ error: err.message || 'Internal dev server error' }));
+                }
+              })();
             } else {
               next();
             }

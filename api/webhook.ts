@@ -27,7 +27,21 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const body = req.body;
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (err: any) {
+        console.error('Webhook: Erro ao fazer parse do corpo da requisição:', err);
+        return res.status(400).json({ error: 'Invalid JSON body' });
+      }
+    }
+
+    if (!body) {
+      console.warn('Webhook: Corpo da requisição vazio.');
+      return res.status(400).json({ error: 'Empty request body' });
+    }
+
     console.log('Webhook do Mercado Pago recebido:', JSON.stringify(body));
 
     let paymentId = '';
