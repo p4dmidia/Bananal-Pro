@@ -36,10 +36,8 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes: formData, plan e user_id.' });
     }
 
-    const amount = plan === 'mensal' ? 97.00 : 497.00;
-    // Se for chaves de teste, vamos forçar R$ 1.00 conforme as configurações do frontend
-    const IS_TEST = MERCADO_PAGO_ACCESS_TOKEN.startsWith('TEST-');
-    const finalAmount = IS_TEST ? 1.00 : amount;
+    // Temporário para teste de fluxo (R$ 1.00 para ambos os planos)
+    const finalAmount = 1.00;
 
     const { payment_method_id, token, installments, issuer_id, payer } = formData;
 
