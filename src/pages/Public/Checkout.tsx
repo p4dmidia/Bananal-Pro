@@ -17,7 +17,8 @@ import {
   Zap,
   Award,
   CheckCircle2,
-  Clock
+  Clock,
+  Users
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -420,8 +421,7 @@ export default function Checkout() {
   const closeExitPopup = () => {
     setShowExitPopup(false);
   };
-
-  if (loading) {
+if (loading) {
     return (
       <div className="min-h-screen bg-background text-on-surface flex flex-col items-center justify-center p-6">
         <Loader2 className="w-10 h-10 animate-spin text-emerald-500 mb-4" />
@@ -431,22 +431,75 @@ export default function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#070b0e] text-zinc-200 font-sans py-12 px-4 md:px-8 relative selection:bg-emerald-500/30 overflow-x-hidden">
-      {/* Decorative backdrop glow spots */}
-      <div className="glow-spot glow-green absolute top-[10%] left-[-15%] w-[65%] aspect-square rounded-full bg-emerald-500/5 blur-[150px] pointer-events-none" />
-      <div className="glow-spot glow-primary absolute bottom-[20%] right-[-15%] w-[65%] aspect-square rounded-full bg-emerald-800/5 blur-[150px] pointer-events-none" />
+    <div className="min-h-screen bg-[#021B13] text-[#FAFAFA] font-sans selection:bg-[#22C55E]/30 overflow-x-hidden pb-16">
+      {/* CSS Keyframes and Float Animations */}
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        @keyframes shadowPulse {
+          0%, 100% { transform: scale(1); opacity: 0.35; }
+          50% { transform: scale(0.85); opacity: 0.15; }
+        }
+        .animate-float {
+          animation: float 4s ease-in-out infinite;
+        }
+        .animate-shadow {
+          animation: shadowPulse 4s ease-in-out infinite;
+        }
+        .font-inter-extrabold {
+          font-family: 'Inter', sans-serif;
+          font-weight: 800;
+        }
+        .font-inter-medium {
+          font-family: 'Inter', sans-serif;
+          font-weight: 500;
+        }
+        .font-inter-semibold {
+          font-family: 'Inter', sans-serif;
+          font-weight: 600;
+        }
+      `}</style>
 
-      {/* Main Container */}
-      <div className="max-w-6xl w-full mx-auto relative z-10 space-y-6">
+      {/* Hero Superior Cinematográfico */}
+      <div className="relative w-full bg-[#021B13] py-16 px-6 overflow-hidden border-b border-[#22C55E]/10">
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="/images/checkout-hero.jpg" 
+            alt="Lavoura Bananal" 
+            className="w-full h-full object-cover opacity-20 mix-blend-luminosity"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#021B13] via-[#021B13]/90 to-transparent" />
+        </div>
+        
+        <div className="max-w-6xl w-full mx-auto relative z-10 text-center space-y-4">
+          <span className="text-[10px] font-inter-extrabold tracking-[0.25em] text-[#D9FF5A] bg-[#22C55E]/15 border border-[#22C55E]/20 px-4 py-1.5 rounded-full inline-block uppercase">
+            BANANAL PRO
+          </span>
+          <h1 className="text-3xl md:text-5xl font-inter-extrabold text-[#FAFAFA] uppercase tracking-tight leading-none max-w-3xl mx-auto">
+            O Maior Ecossistema da <span className="text-[#22C55E]">Bananicultura</span> Brasileira
+          </h1>
+          <p className="text-zinc-300 text-xs md:text-sm max-w-xl mx-auto font-inter-medium leading-relaxed">
+            Aprenda com produtores reais, especialistas e ferramentas exclusivas para aumentar produtividade e lucro.
+          </p>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="max-w-6xl w-full mx-auto relative z-10 space-y-6 px-4 md:px-8 mt-8">
         
         {/* Navigation & Header */}
-        <div className="flex items-center justify-between border-b border-zinc-800/50 pb-4">
-          <Link to="/" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider">
+        <div className="flex items-center justify-between border-b border-zinc-800/40 pb-4">
+          <Link to="/" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-xs font-inter-semibold uppercase tracking-wider">
             <ArrowLeft size={16} />
             Voltar para o início
           </Link>
-          <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <div className="flex items-center gap-1.5 bg-[#22C55E]/10 border border-[#22C55E]/20 px-3 py-1.5 rounded-full text-[10px] font-inter-semibold text-[#22C55E] uppercase tracking-widest">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse"></span>
             Conexão Segura
           </div>
         </div>
@@ -457,26 +510,30 @@ export default function Checkout() {
           {/* Column Left: Plan Selection and Form (lg:col-span-7) */}
           <div className="lg:col-span-7 space-y-6">
             
-            <div className="bg-zinc-900 border border-zinc-850 rounded-[2.5rem] shadow-2xl overflow-hidden">
-              {/* Top Banner image or styled header */}
-              <div className="w-full relative bg-gradient-to-r from-emerald-950 to-zinc-950 min-h-[140px] flex flex-col justify-center px-6 py-6 border-b border-zinc-850">
+            <div className="bg-[#04241a]/60 border border-[#22C55E]/10 rounded-[2.5rem] shadow-2xl overflow-hidden backdrop-blur-md">
+              {/* Top Banner image - displayed fully and without cuts */}
+              <div className="w-full relative bg-zinc-950/40">
                 <img 
                   src="/images/checkout-banner.png" 
-                  alt="Bananal PRO Checkout Banner" 
-                  className="absolute inset-0 w-full h-full object-cover opacity-35 mix-blend-overlay"
+                  alt="Bananal PRO Checkout" 
+                  className="w-full h-auto block"
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
+                    const fallback = e.currentTarget.parentElement?.querySelector(".banner-fallback");
+                    if (fallback) fallback.setAttribute("style", "display: flex;");
                   }}
                 />
-                <div className="relative z-10 space-y-1.5 text-left">
-                  <span className="text-[9px] font-black tracking-widest text-emerald-400 uppercase bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                <div 
+                  className="banner-fallback hidden w-full min-h-[120px] flex-col justify-center px-6 py-6 border-b border-[#22C55E]/10"
+                >
+                  <span className="text-[9px] font-inter-extrabold tracking-widest text-[#22C55E] uppercase bg-[#22C55E]/10 px-2 py-0.5 rounded-full w-max">
                     Acesso Imediato
                   </span>
-                  <h2 className="text-xl md:text-2xl font-black text-white leading-tight uppercase tracking-tight">
+                  <h2 className="text-xl font-inter-extrabold text-white leading-tight uppercase mt-1.5">
                     Adquirir Treinamento Bananal PRO
                   </h2>
                   <p className="text-xs text-zinc-400 max-w-md">
-                    Seu cadastro foi realizado com sucesso! Conclua sua aquisição abaixo para liberar o acesso instantâneo ao ecossistema.
+                    Seu cadastro foi realizado com sucesso! Conclua sua aquisição abaixo para liberar o acesso instantâneo.
                   </p>
                 </div>
               </div>
@@ -486,32 +543,32 @@ export default function Checkout() {
                 
                 {/* Selector Header */}
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">
+                  <label className="text-[10px] font-inter-extrabold text-zinc-400 uppercase tracking-widest block">
                     Escolha o seu plano de acesso:
                   </label>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Plano Anual (Recomendado) */}
+                    {/* Plano Anual (Mais Escolhido) */}
                     <button
                       type="button"
                       onClick={() => handlePlanChange('anual')}
                       className={`relative p-5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between min-h-[120px] ${
                         selectedPlan === 'anual' 
-                          ? 'bg-emerald-950/20 border-emerald-500 text-white ring-1 ring-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]' 
-                          : 'bg-zinc-950/50 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                          ? 'bg-[#04241a]/90 border-[#22C55E] text-white ring-1 ring-[#22C55E] shadow-[0_0_20px_rgba(34,197,94,0.15)]' 
+                          : 'bg-zinc-950/20 border-zinc-850 text-zinc-400 hover:border-zinc-800 hover:text-zinc-200'
                       }`}
                     >
-                      <span className="absolute top-2 right-2 bg-emerald-500 text-black text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                        Economize 57%
+                      <span className="absolute -top-2.5 right-4 bg-[#22C55E] text-zinc-950 text-[8px] font-inter-extrabold px-2.5 py-1 rounded-full uppercase tracking-widest shadow-md">
+                        MAIS ESCOLHIDO
                       </span>
                       <div className="space-y-0.5">
-                        <span className="text-xs font-black uppercase tracking-wider block">Plano Anual</span>
-                        <span className="text-[9px] text-zinc-500 block">Acesso completo por 12 meses</span>
+                        <span className="text-xs font-inter-extrabold uppercase tracking-wider block text-[#FAFAFA]">Plano Anual</span>
+                        <span className="text-[9px] text-[#22C55E] font-bold block">Economize 57%</span>
                       </div>
-                      <div className="mt-4 pt-2 border-t border-zinc-800/80 w-full flex items-baseline gap-1">
-                        <span className="text-[9px] text-zinc-500 font-medium">12x de</span>
-                        <span className="text-base font-black text-white">R$ 49,70</span>
-                        <span className="text-[9px] text-zinc-500">ou R$ 497 à vista</span>
+                      <div className="mt-4 pt-2 border-t border-zinc-850 w-full flex items-baseline gap-1">
+                        <span className="text-[9px] text-zinc-400 font-medium font-inter-medium">12x de</span>
+                        <span className="text-base font-inter-extrabold text-[#D9FF5A]">R$ 49,70</span>
+                        <span className="text-[9px] text-zinc-500 font-inter-medium">ou R$ 497 à vista</span>
                       </div>
                     </button>
 
@@ -521,16 +578,16 @@ export default function Checkout() {
                       onClick={() => handlePlanChange('mensal')}
                       className={`p-5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between min-h-[120px] ${
                         selectedPlan === 'mensal' 
-                          ? 'bg-emerald-950/20 border-emerald-500 text-white ring-1 ring-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]' 
-                          : 'bg-zinc-950/50 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                          ? 'bg-[#04241a]/90 border-[#22C55E] text-white ring-1 ring-[#22C55E] shadow-[0_0_20px_rgba(34,197,94,0.15)]' 
+                          : 'bg-zinc-950/20 border-zinc-850 text-zinc-400 hover:border-zinc-800 hover:text-zinc-200'
                       }`}
                     >
                       <div className="space-y-0.5">
-                        <span className="text-xs font-black uppercase tracking-wider block">Plano Mensal</span>
-                        <span className="text-[9px] text-zinc-500 block">Cobrança recorrente automática</span>
+                        <span className="text-xs font-inter-extrabold uppercase tracking-wider block text-[#FAFAFA]">Plano Mensal</span>
+                        <span className="text-[9px] text-zinc-500 block">Sem fidelidade, cancele quando quiser</span>
                       </div>
-                      <div className="mt-4 pt-2 border-t border-zinc-800/80 w-full flex items-baseline gap-1">
-                        <span className="text-base font-black text-white">R$ 97,00</span>
+                      <div className="mt-4 pt-2 border-t border-zinc-850 w-full flex items-baseline gap-1">
+                        <span className="text-base font-inter-extrabold text-white">R$ 97,00</span>
                         <span className="text-[9px] text-zinc-500">/ mês</span>
                       </div>
                     </button>
@@ -539,12 +596,12 @@ export default function Checkout() {
 
                 {/* Divider */}
                 <div className="border-t border-zinc-850 pt-6">
-                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-4">
+                  <label className="text-[10px] font-inter-extrabold text-zinc-400 uppercase tracking-widest block mb-4">
                     Dados do Pagamento:
                   </label>
 
                   {paymentError && (
-                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl mb-4 text-xs font-bold flex items-center gap-2">
+                    <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl mb-4 text-xs font-inter-semibold flex items-center gap-2">
                       <AlertCircle size={16} className="shrink-0" />
                       <span>{paymentError}</span>
                     </div>
@@ -553,7 +610,7 @@ export default function Checkout() {
                   {submittingPayment && (
                     <div className="flex flex-col items-center justify-center py-8 space-y-3 bg-zinc-950/55 rounded-2xl border border-zinc-850">
                       <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-                      <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Processando seu pagamento...</p>
+                      <p className="text-xs font-inter-semibold text-zinc-500 uppercase tracking-wider">Processando seu pagamento...</p>
                     </div>
                   )}
 
@@ -561,7 +618,7 @@ export default function Checkout() {
                   <div style={{ display: pixData ? "block" : "none" }}>
                     {pixData && (
                       <div className="space-y-6 text-center bg-zinc-950/50 border border-zinc-850 p-6 rounded-[2rem] animate-fade-in">
-                        <div className="flex items-center justify-center gap-2 text-emerald-400 font-black text-sm uppercase tracking-wider">
+                        <div className="flex items-center justify-center gap-2 text-emerald-400 font-inter-extrabold text-sm uppercase tracking-wider">
                           <QrCode size={20} />
                           PIX Gerado com Sucesso!
                         </div>
@@ -577,7 +634,7 @@ export default function Checkout() {
                         )}
 
                         <div className="space-y-2">
-                          <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider text-left">Código Pix Copia e Cola</p>
+                          <p className="text-xs font-inter-semibold text-zinc-500 uppercase tracking-wider text-left">Código Pix Copia e Cola</p>
                           <div className="flex gap-2">
                             <input 
                               type="text" 
@@ -595,14 +652,14 @@ export default function Checkout() {
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-center gap-2 py-2 text-xs font-bold text-zinc-500">
+                        <div className="flex items-center justify-center gap-2 py-2 text-xs font-inter-semibold text-zinc-500">
                           <Loader2 size={14} className="animate-spin text-emerald-500" />
                           Aguardando confirmação... Seu acesso ao treinamento será liberado em segundos!
                         </div>
 
                         <button
                           onClick={() => setPixData(null)}
-                          className="text-xs font-bold text-zinc-500 hover:text-white transition-colors underline cursor-pointer"
+                          className="text-xs font-inter-semibold text-zinc-500 hover:text-white transition-colors underline cursor-pointer"
                         >
                           Escolher outra forma de pagamento
                         </button>
@@ -622,8 +679,8 @@ export default function Checkout() {
             </div>
 
             {/* Trust Footer below left card */}
-            <div className="flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest text-zinc-500 py-2">
-              <Lock size={12} className="text-emerald-500" />
+            <div className="flex items-center justify-center gap-2 text-[9px] font-inter-extrabold uppercase tracking-widest text-zinc-500 py-2">
+              <Lock size={12} className="text-[#22C55E]" />
               Pagamento Processado com Criptografia SSL
             </div>
 
@@ -633,109 +690,112 @@ export default function Checkout() {
           <div className="lg:col-span-5 space-y-6">
             
             {/* Product Card */}
-            <div className="bg-zinc-900 border border-zinc-850 rounded-[2.5rem] p-8 shadow-2xl space-y-6 text-center">
+            <div className="bg-[#04241a]/60 border border-[#22C55E]/10 rounded-[2.5rem] p-8 shadow-2xl space-y-6 text-center backdrop-blur-md">
               
-              {/* Product Image / Mockup with robust CSS Fallback */}
-              <div className="w-full relative aspect-square max-w-[240px] mx-auto rounded-[2rem] overflow-hidden flex items-center justify-center bg-gradient-to-br from-emerald-950/20 to-zinc-950 border border-zinc-800 shadow-md">
-                <img 
-                  src="/images/product-box.png" 
-                  alt="Mockup Bananal PRO" 
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                    const placeholder = e.currentTarget.parentElement?.querySelector(".box-placeholder");
-                    if (placeholder) placeholder.setAttribute("style", "display: flex;");
-                  }}
-                />
-                <div 
-                  className="box-placeholder w-full h-full hidden flex-col items-center justify-center p-6 text-center space-y-4 bg-gradient-to-br from-emerald-600/20 to-zinc-950"
-                >
-                  <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400">
-                    <Sprout size={36} />
-                  </div>
-                  <div>
-                    <h3 className="text-md font-black text-white uppercase tracking-tight">Comunidade Bananal PRO</h3>
-                    <p className="text-[9px] text-zinc-500 uppercase tracking-widest mt-1">Treinamento & Tecnologia</p>
+              {/* Product Image / Mockup with Floating Animation */}
+              <div className="relative w-full max-w-[280px] mx-auto py-6 flex flex-col items-center">
+                {/* Glow effect behind */}
+                <div className="absolute top-[20%] w-[180px] h-[180px] rounded-full bg-[#22C55E]/10 blur-[50px] pointer-events-none" />
+                
+                {/* Floating Mockup Image */}
+                <div className="relative z-10 animate-float">
+                  <img 
+                    src="/images/product-box.png" 
+                    alt="Mockup Bananal PRO" 
+                    className="w-full h-auto object-contain max-h-[300px] mx-auto"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      const fallback = e.currentTarget.parentElement?.querySelector(".box-fallback");
+                      if (fallback) fallback.setAttribute("style", "display: flex;");
+                    }}
+                  />
+                  <div 
+                    className="box-fallback w-[220px] aspect-[4/5] hidden flex-col items-center justify-center p-6 text-center space-y-4 rounded-3xl bg-gradient-to-br from-[#042c1f] to-zinc-950 border border-[#22C55E]/20 shadow-[0_20px_50px_rgba(4,44,31,0.5)] mx-auto"
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-[#22C55E]/10 border border-[#22C55E]/25 flex items-center justify-center text-[#D9FF5A]">
+                      <Sprout size={32} />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-inter-extrabold text-[#FAFAFA] uppercase tracking-tight">Comunidade Bananal PRO</h3>
+                      <span className="text-[9px] text-[#22C55E] font-inter-extrabold uppercase tracking-widest block mt-1">Plataforma Premium</span>
+                    </div>
                   </div>
                 </div>
+                
+                {/* Floating Shadow Underneath */}
+                <div className="w-[180px] h-[12px] bg-black/40 rounded-full blur-[6px] mt-4 animate-shadow" />
               </div>
 
-              {/* Product Pricing Summary Badge */}
-              <div className="bg-zinc-950/50 border border-zinc-850 p-4 rounded-2xl text-left space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider">Assinatura Selecionada</span>
-                  <span className="text-xs font-black text-emerald-400 uppercase tracking-wider">
-                    {selectedPlan === 'mensal' ? 'Plano Mensal' : 'Plano Anual'}
-                  </span>
+              {/* Prova Social */}
+              <div className="bg-[#22C55E]/10 border border-[#22C55E]/20 rounded-2xl p-5 text-left flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-[#22C55E]/20 border border-[#22C55E]/30 flex items-center justify-center text-[#D9FF5A] shrink-0">
+                  <Users size={20} />
                 </div>
-                <div className="flex justify-between items-baseline pt-1">
-                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-wider">Total</span>
-                  <span className="text-lg font-black text-white">
-                    {selectedPlan === 'mensal' ? 'R$ 97,00/mês' : 'R$ 497,00/ano'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Urgency Counter */}
-              <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-4 flex items-center gap-3 text-left">
-                <span className="flex h-2 w-2 relative shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                <p className="text-[11px] text-zinc-400">
-                  <strong className="text-white">27 produtores</strong> estão finalizando a inscrição na plataforma nesta semana.
+                <p className="text-xs text-zinc-300 font-inter-medium">
+                  Mais de <strong className="text-[#D9FF5A] font-inter-extrabold text-sm">1.500 produtores</strong> já fazem parte da comunidade <strong className="text-white">Bananal PRO</strong>.
                 </p>
               </div>
 
-              {/* O QUE VOCÊ VAI RECEBER */}
+              {/* O QUE VOCÊ RECEBE */}
               <div className="space-y-4 text-left">
-                <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest border-b border-zinc-850 pb-2">
-                  O QUE VOCÊ VAI RECEBER:
+                <h3 className="text-[10px] font-inter-extrabold text-zinc-400 uppercase tracking-widest border-b border-zinc-850 pb-2">
+                  O QUE VOCÊ RECEBE:
                 </h3>
                 <ul className="space-y-3.5 text-xs text-zinc-300">
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="text-white">Treinamento Bananal PRO</strong>: Acesso completo aos cursos técnicos de recomendação de adubação e manejo.
-                    </div>
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle2 size={16} className="text-[#22C55E] shrink-0" />
+                    <span className="font-inter-medium">Treinamento completo</span>
                   </li>
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="text-white">Calculadoras de Nutrição</strong>: Interpretação de química de solo e dosagem ideal de calagem instantânea.
-                    </div>
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle2 size={16} className="text-[#22C55E] shrink-0" />
+                    <span className="font-inter-medium">Lives semanais</span>
                   </li>
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="text-white">Alertas de Sigatoka</strong>: Ferramenta climática avançada para controle estratégico de pulverizações.
-                    </div>
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle2 size={16} className="text-[#22C55E] shrink-0" />
+                    <span className="font-inter-medium">Biblioteca técnica</span>
                   </li>
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="text-white">Cartão Digital de Produtor</strong>: Acesso a convênios de desconto em fertilizantes, mudas e defensivos.
-                    </div>
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle2 size={16} className="text-[#22C55E] shrink-0" />
+                    <span className="font-inter-medium">Comunidade exclusiva</span>
                   </li>
-                  <li className="flex items-start gap-2.5">
-                    <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="text-white">Fórum da Comunidade</strong>: Espaço de networking com outros bananicultores e especialistas.
-                    </div>
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle2 size={16} className="text-[#22C55E] shrink-0" />
+                    <span className="font-inter-medium">Ferramentas de cálculo</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle2 size={16} className="text-[#22C55E] shrink-0" />
+                    <span className="font-inter-medium">Atualizações constantes</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle2 size={16} className="text-[#22C55E] shrink-0" />
+                    <span className="font-inter-medium">Suporte especializado</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <CheckCircle2 size={16} className="text-[#22C55E] shrink-0" />
+                    <span className="font-inter-medium">Acesso imediato</span>
                   </li>
                 </ul>
               </div>
 
             </div>
 
-            {/* Satisfaction Guarantee Seal */}
-            <div className="bg-zinc-900 border border-zinc-850 rounded-[2rem] p-6 flex items-start gap-4 text-left shadow-md">
-              <Award size={36} className="text-amber-500 shrink-0" />
-              <div className="space-y-1">
-                <h4 className="text-xs font-black text-white uppercase tracking-wider">GARANTIA INCONDICIONAL DE 7 DIAS</h4>
-                <p className="text-[10px] text-zinc-400 leading-relaxed">
-                  Sem riscos! Se por qualquer motivo você decidir que a plataforma não vale o investimento, envie uma mensagem de cancelamento em até 7 dias e devolvemos cada centavo.
-                </p>
+            {/* Garantias */}
+            <div className="grid grid-cols-2 gap-4 text-left">
+              <div className="bg-[#04241a]/60 border border-[#22C55E]/10 p-4 rounded-xl flex items-center gap-2.5 backdrop-blur-sm">
+                <Lock size={15} className="text-[#22C55E] shrink-0" />
+                <span className="text-[10px] font-inter-semibold text-zinc-300 uppercase tracking-wider">Pagamento seguro</span>
+              </div>
+              <div className="bg-[#04241a]/60 border border-[#22C55E]/10 p-4 rounded-xl flex items-center gap-2.5 backdrop-blur-sm">
+                <Zap size={15} className="text-[#D9FF5A] shrink-0" />
+                <span className="text-[10px] font-inter-semibold text-zinc-300 uppercase tracking-wider">Liberação imediata</span>
+              </div>
+              <div className="bg-[#04241a]/60 border border-[#22C55E]/10 p-4 rounded-xl flex items-center gap-2.5 backdrop-blur-sm">
+                <ShieldCheck size={15} className="text-[#22C55E] shrink-0" />
+                <span className="text-[10px] font-inter-semibold text-zinc-300 uppercase tracking-wider">Plataforma própria</span>
+              </div>
+              <div className="bg-[#04241a]/60 border border-[#22C55E]/10 p-4 rounded-xl flex items-center gap-2.5 backdrop-blur-sm">
+                <MessageCircle size={15} className="text-[#D9FF5A] shrink-0" />
+                <span className="text-[10px] font-inter-semibold text-zinc-300 uppercase tracking-wider">Suporte especializado</span>
               </div>
             </div>
 
@@ -745,15 +805,15 @@ export default function Checkout() {
                 <MessageCircle size={24} />
               </div>
               <div className="space-y-1 text-left">
-                <h4 className="text-sm font-bold text-white">Precisa de Ajuda com a Compra?</h4>
-                <p className="text-xs text-zinc-400 leading-relaxed">
+                <h4 className="text-sm font-inter-semibold text-white">Precisa de Ajuda com a Compra?</h4>
+                <p className="text-xs text-zinc-400 leading-relaxed font-inter-medium">
                   Fale com nosso suporte para resolver dúvidas sobre faturamento, nota fiscal ou liberação de acesso.
                 </p>
                 <a 
                   href="https://wa.me/5521969014654?text=Olá!%20Gostaria%20de%20ajuda%20com%20o%20checkout%20do%20Bananal%20PRO." 
                   target="_blank" 
                   rel="noreferrer"
-                  className="text-xs font-bold text-[#25D366] hover:underline inline-flex items-center gap-1 pt-1.5 cursor-pointer"
+                  className="text-xs font-inter-semibold text-[#25D366] hover:underline inline-flex items-center gap-1 pt-1.5 cursor-pointer"
                 >
                   Chamar Suporte no WhatsApp (21) 96901-4654
                 </a>
@@ -769,7 +829,7 @@ export default function Checkout() {
       {/* Exit Intent Popup Modal */}
       {showExitPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
-          <div className="relative max-w-sm w-full bg-zinc-900 border border-zinc-800 rounded-[2rem] p-8 text-center space-y-6 shadow-2xl">
+          <div className="relative max-w-sm w-full bg-[#021B13] border border-[#22C55E]/20 rounded-[2rem] p-8 text-center space-y-6 shadow-2xl">
             {/* Close Button */}
             <button 
               onClick={closeExitPopup}
@@ -780,7 +840,7 @@ export default function Checkout() {
             </button>
 
             {/* humanization image with fallback */}
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-500 to-zinc-800 mx-auto overflow-hidden border border-emerald-500/20 shadow-md">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#22C55E] to-zinc-800 mx-auto overflow-hidden border border-[#22C55E]/20 shadow-md">
               <img 
                 src="/images/support-face.png" 
                 alt="Jean Carlos Suporte" 
@@ -792,20 +852,20 @@ export default function Checkout() {
                 }}
               />
               <div 
-                className="face-fallback w-full h-full hidden items-center justify-center text-emerald-400 font-bold uppercase tracking-wider text-2xl"
+                className="face-fallback w-full h-full hidden items-center justify-center text-[#22C55E] font-inter-extrabold uppercase tracking-wider text-2xl"
               >
                 JC
               </div>
             </div>
 
             <div className="space-y-2">
-              <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full">
+              <span className="text-[9px] font-inter-extrabold uppercase tracking-widest text-[#22C55E] bg-[#22C55E]/10 px-3 py-1 rounded-full">
                 Não vá embora com dúvidas!
               </span>
-              <h3 className="text-lg font-black text-white leading-tight uppercase">
+              <h3 className="text-lg font-inter-extrabold text-white leading-tight uppercase">
                 Posso te ajudar a começar?
               </h3>
-              <p className="text-[11px] text-zinc-400 leading-relaxed">
+              <p className="text-[11px] text-zinc-400 leading-relaxed font-inter-medium">
                 Ficou com alguma dúvida sobre as ferramentas, calculadoras ou o processo de pagamento? Me chame no WhatsApp e te ajudo agora mesmo.
               </p>
             </div>
@@ -815,7 +875,7 @@ export default function Checkout() {
               target="_blank"
               rel="noreferrer"
               onClick={closeExitPopup}
-              className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-zinc-950 font-black text-xs uppercase tracking-wider py-4 px-6 rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full bg-[#25D366] hover:bg-[#20ba5a] text-zinc-950 font-inter-extrabold text-xs uppercase tracking-wider py-4 px-6 rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
             >
               <MessageCircle size={18} fill="currentColor" />
               Conversar no WhatsApp
@@ -823,7 +883,7 @@ export default function Checkout() {
 
             <button 
               onClick={closeExitPopup}
-              className="text-xs font-bold text-zinc-505 hover:text-zinc-300 transition-colors underline cursor-pointer"
+              className="text-xs font-inter-semibold text-zinc-500 hover:text-zinc-300 transition-colors underline cursor-pointer"
             >
               Continuar no Checkout
             </button>
