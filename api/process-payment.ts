@@ -36,8 +36,8 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes: formData, plan e user_id.' });
     }
 
-    // Temporário para teste de fluxo (R$ 1.00 para ambos os planos)
-    const finalAmount = 1.00;
+    // Preço oficial de produção (R$ 97 mensal / R$ 497 anual)
+    const finalAmount = plan === 'mensal' ? 97.00 : 497.00;
 
     const { payment_method_id, token, installments, issuer_id, payer } = formData;
 

@@ -85,8 +85,7 @@ export default function Checkout() {
   }, [searchParams]);
 
   // Preço oficial de produção (R$ 97 mensal / R$ 497 anual)
-  // Temporário para teste de fluxo (R$ 1.00 para ambos os planos)
-  const planPrice = 1.00;
+  const planPrice = selectedPlan === 'mensal' ? 97.00 : 497.00;
 
   const handlePlanChange = (plan: 'mensal' | 'anual') => {
     setSelectedPlan(plan);
