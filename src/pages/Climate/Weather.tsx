@@ -28,6 +28,7 @@ export default function Weather() {
   const { profile, refreshProfile } = useAuth();
   const [city, setCity] = useState("Sete Lagoas");
   const [state, setState] = useState("MG");
+  const [cep, setCep] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [areas, setAreas] = useState<any[]>([]);
   const [selectedArea, setSelectedArea] = useState<any | null>(null);
@@ -36,6 +37,7 @@ export default function Weather() {
   const [showLocModal, setShowLocModal] = useState(false);
   const [newCity, setNewCity] = useState("");
   const [newState, setNewState] = useState("");
+  const [newCep, setNewCep] = useState("");
   const [updatingLoc, setUpdatingLoc] = useState(false);
 
   const [currentConditions, setCurrentConditions] = useState({
@@ -96,6 +98,37 @@ export default function Weather() {
     return days[d.getDay()];
   };
 
+  const handleCepChange = async (val: string) => {
+    let formatted = val.replace(/\D/g, "");
+    if (formatted.length > 5) {
+      formatted = `${formatted.slice(0, 5)}-${formatted.slice(5, 8)}`;
+    }
+    setNewCep(formatted);
+
+    const cleanCep = formatted.replace(/\D/g, "");
+    if (cleanCep.length === 8) {
+      const toastId = toast.loading("Buscando CEP...");
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && !data.erro) {
+            setNewCity(data.localidade || "");
+            setNewState(data.uf || "");
+            toast.success("CEP localizado!", { id: toastId });
+          } else {
+            toast.error("CEP não encontrado.", { id: toastId });
+          }
+        } else {
+          toast.error("Erro ao buscar CEP.", { id: toastId });
+        }
+      } catch (err) {
+        console.error("ViaCEP fetch failed:", err);
+        toast.error("Erro na consulta do CEP.", { id: toastId });
+      }
+    }
+  };
+
   const handleSaveLocation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCity.trim()) {
@@ -113,7 +146,8 @@ export default function Weather() {
         .from("user_profiles")
         .update({
           city: newCity.trim(),
-          state: newState.trim().toUpperCase()
+          state: newState.trim().toUpperCase(),
+          cep: newCep.trim() || null
         })
         .eq("id", profile.id);
 
@@ -154,9 +188,11 @@ export default function Weather() {
           setSelectedArea(initialArea);
           setCity(initialArea.city);
           setState(initialArea.state);
+          setCep(initialArea.cep || null);
         } else {
           setCity(profile.city || "Sete Lagoas");
           setState(profile.state || "MG");
+          setCep(profile.cep || null);
         }
       } catch (err) {
         console.error("Error loading areas for weather:", err);
@@ -173,7 +209,7 @@ export default function Weather() {
       if (!city || !state) return;
       setLoading(true);
 
-      const weatherCacheKey = `open_meteo_raw_cache_${city}`;
+      const weatherCacheKey = `open_meteo_raw_cache_${city}_${cep || ""}`;
       const cachedWeather = sessionStorage.getItem(weatherCacheKey);
       
       if (cachedWeather) {
@@ -256,12 +292,32 @@ export default function Weather() {
       let lon = -44.2447;
 
       try {
-        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=pt`);
-        if (geoRes.ok) {
-          const geoData = await geoRes.json();
-          if (geoData.results && geoData.results.length > 0) {
-            lat = geoData.results[0].latitude;
-            lon = geoData.results[0].longitude;
+        let geoSuccess = false;
+        if (cep) {
+          const cleanCep = cep.replace(/\D/g, "");
+          if (cleanCep.length === 8) {
+            const osmRes = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${cleanCep}&country=Brazil&format=json`);
+            if (osmRes.ok) {
+              const osmData = await osmRes.json();
+              if (osmData && osmData.length > 0) {
+                lat = parseFloat(osmData[0].lat);
+                lon = parseFloat(osmData[0].lon);
+                geoSuccess = true;
+                console.log(`Weather: Coordinates solved by CEP ${cep}:`, lat, lon);
+              }
+            }
+          }
+        }
+
+        if (!geoSuccess) {
+          const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=pt`);
+          if (geoRes.ok) {
+            const geoData = await geoRes.json();
+            if (geoData.results && geoData.results.length > 0) {
+              lat = geoData.results[0].latitude;
+              lon = geoData.results[0].longitude;
+              console.log(`Weather: Coordinates solved by City ${city}:`, lat, lon);
+            }
           }
         }
       } catch (err) {
@@ -351,7 +407,7 @@ export default function Weather() {
     };
 
     fetchWeather();
-  }, [city, state]);
+  }, [city, state, cep]);
 
   if (loading || loadingAreas) {
     return (
@@ -425,6 +481,7 @@ export default function Weather() {
                       setSelectedArea(area);
                       setCity(area.city);
                       setState(area.state);
+                      setCep(area.cep || null);
                       localStorage.setItem("selected_area_id", String(area.id));
                     }
                   }}
@@ -447,6 +504,7 @@ export default function Weather() {
                   onClick={() => {
                     setNewCity(city);
                     setNewState(state);
+                    setNewCep(cep || "");
                     setShowLocModal(true);
                   }}
                   className="p-1 rounded-lg hover:bg-white/5 text-zinc-400 hover:text-white transition-colors cursor-pointer ml-1"
@@ -648,6 +706,18 @@ export default function Weather() {
               </p>
 
               <form onSubmit={handleSaveLocation} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-300">CEP</label>
+                  <input
+                    type="text"
+                    value={newCep}
+                    onChange={(e) => handleCepChange(e.target.value)}
+                    placeholder="Ex: 35700-000"
+                    maxLength={9}
+                    className="w-full bg-black/40 border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:outline-none focus:border-primary/50"
+                  />
+                </div>
+
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-300">Cidade</label>
                   <input

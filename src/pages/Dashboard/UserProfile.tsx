@@ -270,6 +270,41 @@ export default function UserProfile() {
     }
   };
 
+  const handleAreaCepChange = async (val: string) => {
+    let formatted = val.replace(/\D/g, "");
+    if (formatted.length > 5) {
+      formatted = `${formatted.slice(0, 5)}-${formatted.slice(5, 8)}`;
+    }
+    setAreaForm(prev => ({ ...prev, cep: formatted }));
+
+    const cleanCep = formatted.replace(/\D/g, "");
+    if (cleanCep.length === 8) {
+      const toastId = toast.loading("Buscando CEP da área...");
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && !data.erro) {
+            setAreaForm(prev => ({
+              ...prev,
+              city: data.localidade || prev.city,
+              state: data.uf || prev.state,
+              address: data.logradouro ? `${data.logradouro}${data.bairro ? `, ${data.bairro}` : ""}` : prev.address
+            }));
+            toast.success("CEP localizado!", { id: toastId });
+          } else {
+            toast.error("CEP não encontrado.", { id: toastId });
+          }
+        } else {
+          toast.error("Erro ao buscar CEP.", { id: toastId });
+        }
+      } catch (err) {
+        console.error("ViaCEP fetch failed:", err);
+        toast.error("Erro na consulta do CEP.", { id: toastId });
+      }
+    }
+  };
+
   const handleSaveArea = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile?.id) {
@@ -937,8 +972,9 @@ export default function UserProfile() {
                     <input
                       type="text"
                       value={areaForm.cep}
-                      onChange={(e) => setAreaForm({ ...areaForm, cep: e.target.value })}
+                      onChange={(e) => handleAreaCepChange(e.target.value)}
                       placeholder="Ex: 35700-000"
+                      maxLength={9}
                       className="w-full bg-black/40 border border-white/10 rounded-2xl py-3 px-4 text-white text-xs focus:outline-none focus:border-emerald-500/50"
                     />
                   </div>

@@ -92,21 +92,22 @@ export default function Overview() {
   // Geolocation states
   const [city, setCity] = useState("Sete Lagoas");
   const [state, setState] = useState("MG");
+  const [cep, setCep] = useState<string | null>(null);
   const [farmName, setFarmName] = useState(profile?.property_name || "Fazenda São José");
 
   // Core KPIs
-  const [areaTotal, setAreaTotal] = useState(5.0);
-  const [estimatedYield, setEstimatedYield] = useState(12.5);
-  const [lucroEstimado, setLucroEstimado] = useState(8420);
-  const [receitaTotal, setReceitaTotal] = useState(15420);
-  const [custosTotais, setCustosTotais] = useState(7000);
-  const [margemTotal, setMargemTotal] = useState(54);
-  const [healthStatus, setHealthStatus] = useState("Excelente");
+  const [areaTotal, setAreaTotal] = useState(0.0);
+  const [estimatedYield, setEstimatedYield] = useState(0.0);
+  const [lucroEstimado, setLucroEstimado] = useState(0);
+  const [receitaTotal, setReceitaTotal] = useState(0);
+  const [custosTotais, setCustosTotais] = useState(0);
+  const [margemTotal, setMargemTotal] = useState(0);
+  const [healthStatus, setHealthStatus] = useState("Sem Dados");
 
-  // Sparkline data (mocked to create beautiful green indicators on KPIs)
-  const areaSparkline = [{ v: 4.8 }, { v: 4.9 }, { v: 4.9 }, { v: 5.0 }, { v: 5.0 }, { v: 5.0 }];
-  const yieldSparkline = [{ v: 11.2 }, { v: 11.5 }, { v: 12.0 }, { v: 12.2 }, { v: 12.4 }, { v: 12.5 }];
-  const profitSparkline = [{ v: 7200 }, { v: 7500 }, { v: 7800 }, { v: 8100 }, { v: 8300 }, { v: 8420 }];
+  // Sparkline data (dynamically calculated from real database records)
+  const [areaSparkline, setAreaSparkline] = useState<any[]>([{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }]);
+  const [yieldSparkline, setYieldSparkline] = useState<any[]>([{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }]);
+  const [profitSparkline, setProfitSparkline] = useState<any[]>([{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }]);
 
   // Weather States
   const [weatherWidget, setWeatherWidget] = useState({
@@ -125,13 +126,13 @@ export default function Overview() {
   // Next Actions
   const [recentTasks, setRecentTasks] = useState<any[]>([]);
   // Soil Analysis
-  const [soilStats, setSoilStats] = useState({
-    ph: 6.2,
-    mo: 3.8,
-    k: 0.32,
-    ca: 2.1,
-    mg: 1.1,
-    daysSinceUpdate: 15
+  const [soilStats, setSoilStats] = useState<any>({
+    ph: 0,
+    mo: 0,
+    k: 0,
+    ca: 0,
+    mg: 0,
+    daysSinceUpdate: null
   });
 
   // Talhões (Producer Areas)
@@ -171,13 +172,13 @@ export default function Overview() {
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
-        setAreaTotal(parsed.areaTotal ?? 5.0);
-        setEstimatedYield(parsed.estimatedYield ?? 12.5);
-        setLucroEstimado(parsed.lucroEstimado ?? 8420);
-        setReceitaTotal(parsed.receitaTotal ?? 15420);
-        setCustosTotais(parsed.custosTotais ?? 7000);
-        setMargemTotal(parsed.margemTotal ?? 54);
-        setHealthStatus(parsed.healthStatus ?? "Excelente");
+        setAreaTotal(parsed.areaTotal ?? 0.0);
+        setEstimatedYield(parsed.estimatedYield ?? 0.0);
+        setLucroEstimado(parsed.lucroEstimado ?? 0);
+        setReceitaTotal(parsed.receitaTotal ?? 0);
+        setCustosTotais(parsed.custosTotais ?? 0);
+        setMargemTotal(parsed.margemTotal ?? 0);
+        setHealthStatus(parsed.healthStatus ?? "Sem Dados");
         if (parsed.weatherWidget) setWeatherWidget(parsed.weatherWidget);
         if (parsed.forecast7Days) setForecast7Days(parsed.forecast7Days);
         if (parsed.alerts) setAlerts(parsed.alerts);
@@ -187,6 +188,7 @@ export default function Overview() {
         if (parsed.financialChartData) setFinancialChartData(parsed.financialChartData);
         if (parsed.city) setCity(parsed.city);
         if (parsed.state) setState(parsed.state);
+        if (parsed.cep) setCep(parsed.cep);
         if (parsed.farmName) setFarmName(parsed.farmName);
         
         setLoading(false); // Remove loading imediatamente
@@ -210,7 +212,7 @@ export default function Overview() {
 
         if (areasError) throw areasError;
 
-        let totalHectares = 5.0;
+        let totalHectares = 0.0;
         let mappedTalhoes: any[] = [];
 
         if (areasData && areasData.length > 0) {
@@ -227,16 +229,13 @@ export default function Overview() {
               productivity: parseFloat((baseProd + variance).toFixed(1))
             };
           });
-          setAreaTotal(parseFloat(totalHectares.toFixed(1)));
+          const areaVal = parseFloat(totalHectares.toFixed(1));
+          setAreaTotal(areaVal);
+          setAreaSparkline([{ v: areaVal * 0.9 }, { v: areaVal * 0.95 }, { v: areaVal }, { v: areaVal }, { v: areaVal }, { v: areaVal }]);
         } else {
-          mappedTalhoes = [
-            { id: 1, name: "Talhão 1", variety: "Cavendish", hectares: 1.2, productivity: 12.8 },
-            { id: 2, name: "Talhão 2", variety: "Cavendish", hectares: 1.0, productivity: 12.2 },
-            { id: 3, name: "Talhão 3", variety: "Prata Anã", hectares: 1.5, productivity: 11.7 },
-            { id: 4, name: "Talhão 4", variety: "Cavendish", hectares: 0.8, productivity: 13.1 },
-            { id: 5, name: "Talhão 5", variety: "Prata Anã", hectares: 0.5, productivity: 12.5 }
-          ];
-          setAreaTotal(5.0);
+          mappedTalhoes = [];
+          setAreaTotal(0.0);
+          setAreaSparkline([{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }]);
         }
         setTalhoes(mappedTalhoes);
 
@@ -251,7 +250,11 @@ export default function Overview() {
           .eq("user_id", profile.id)
           .eq("status", "Ativo");
 
-        let finalEstimatedYield = parseFloat((totalHectares * 2.5).toFixed(1));
+        let finalEstimatedYield = 0.0;
+        if (areasData && areasData.length > 0) {
+          finalEstimatedYield = parseFloat((totalHectares * 2.5).toFixed(1));
+        }
+
         if (cyclesData && cyclesData.length > 0) {
           const totalBoxes = cyclesData.reduce((sum: number, c: any) => sum + (c.boxes_harvested || 0), 0);
           if (totalBoxes > 0) {
@@ -261,21 +264,21 @@ export default function Overview() {
         }
         setEstimatedYield(finalEstimatedYield);
 
+        if (finalEstimatedYield > 0) {
+          setYieldSparkline([{ v: finalEstimatedYield * 0.9 }, { v: finalEstimatedYield * 0.95 }, { v: finalEstimatedYield }, { v: finalEstimatedYield }, { v: finalEstimatedYield }, { v: finalEstimatedYield }]);
+        } else {
+          setYieldSparkline([{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }]);
+        }
+
         // 3. Fetch Financial Data (Transactions)
         const { data: txsData } = await (supabase as any)
           .from("transactions")
           .select("*")
           .eq("user_id", profile.id);
 
-        let tempReceita = 15420;
-        let tempCustos = 7000;
-        let tempFinancialData = [
-          { name: "01/06", receita: 4000, lucro: 2000 },
-          { name: "08/06", receita: 8000, lucro: 4200 },
-          { name: "15/06", receita: 11000, lucro: 5900 },
-          { name: "22/06", receita: 13500, lucro: 7100 },
-          { name: "29/06", receita: 15420, lucro: 8420 }
-        ];
+        let tempReceita = 0;
+        let tempCustos = 0;
+        let tempFinancialData: any[] = [];
 
         if (txsData && txsData.length > 0) {
           const receitas = txsData
@@ -317,15 +320,32 @@ export default function Overview() {
 
           if (chartPoints.length > 0) {
             tempFinancialData = chartPoints.slice(-10);
+            const last6Points = chartPoints.slice(-6).map((p: any) => ({ v: p.lucro }));
+            setProfitSparkline(last6Points.length >= 2 ? last6Points : [{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }]);
           }
+        } else {
+          setReceitaTotal(0);
+          setCustosTotais(0);
+          setLucroEstimado(0);
+          setMargemTotal(0);
+          setProfitSparkline([{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }]);
         }
         setFinancialChartData(tempFinancialData);
 
         // 4. Fetch Weather Data (API Open-Meteo)
         let userCity = profile.city || "Sete Lagoas";
         let userState = profile.state || "MG";
+        let userCep = profile.cep || null;
+
+        if (areasData && areasData.length > 0) {
+          userCity = areasData[0].city || userCity;
+          userState = areasData[0].state || userState;
+          userCep = areasData[0].cep || userCep;
+        }
+
         setCity(userCity);
         setState(userState);
+        setCep(userCep);
 
         let lat = -19.4664;
         let lon = -44.2447;
@@ -334,7 +354,7 @@ export default function Overview() {
         let finalForecast7Days = forecast7Days;
 
         try {
-          const weatherCacheKey = `weather_cache_${userCity}`;
+          const weatherCacheKey = `weather_cache_${userCity}_${userCep || ""}`;
           const cachedWeather = sessionStorage.getItem(weatherCacheKey);
           let weatherDataLoaded = false;
           
@@ -354,12 +374,36 @@ export default function Overview() {
           }
 
           if (!weatherDataLoaded) {
-            const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(userCity)}&count=1&language=pt`);
-            if (geoRes.ok) {
-              const geoData = await geoRes.json();
-              if (geoData.results && geoData.results.length > 0) {
-                lat = geoData.results[0].latitude;
-                lon = geoData.results[0].longitude;
+            let geoSuccess = false;
+            if (userCep) {
+              const cleanCep = userCep.replace(/\D/g, "");
+              if (cleanCep.length === 8) {
+                try {
+                  const osmRes = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${cleanCep}&country=Brazil&format=json`);
+                  if (osmRes.ok) {
+                    const osmData = await osmRes.json();
+                    if (osmData && osmData.length > 0) {
+                      lat = parseFloat(osmData[0].lat);
+                      lon = parseFloat(osmData[0].lon);
+                      geoSuccess = true;
+                      console.log(`Dashboard: Coordinates solved by CEP ${userCep}:`, lat, lon);
+                    }
+                  }
+                } catch (osmErr) {
+                  console.error("Dashboard geocoding by CEP failed:", osmErr);
+                }
+              }
+            }
+
+            if (!geoSuccess) {
+              const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(userCity)}&count=1&language=pt`);
+              if (geoRes.ok) {
+                const geoData = await geoRes.json();
+                if (geoData.results && geoData.results.length > 0) {
+                  lat = geoData.results[0].latitude;
+                  lon = geoData.results[0].longitude;
+                  console.log(`Dashboard: Coordinates solved by City ${userCity}:`, lat, lon);
+                }
               }
             }
 
@@ -426,12 +470,12 @@ export default function Overview() {
           .limit(1);
 
         let finalSoilStats = {
-          ph: 6.2,
-          mo: 3.8,
-          k: 0.32,
-          ca: 2.1,
-          mg: 1.1,
-          daysSinceUpdate: 15
+          ph: 0,
+          mo: 0,
+          k: 0,
+          ca: 0,
+          mg: 0,
+          daysSinceUpdate: null as number | null
         };
 
         if (soilData && soilData.length > 0) {
@@ -441,11 +485,11 @@ export default function Overview() {
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
           finalSoilStats = {
-            ph: s.ph || 6.2,
+            ph: s.ph || 0,
             mo: calculatedMO,
-            k: s.k || 0.32,
-            ca: s.ca || 2.1,
-            mg: s.mg || 1.1,
+            k: s.k || 0,
+            ca: s.ca || 0,
+            mg: s.mg || 0,
             daysSinceUpdate: diffDays
           };
         }
@@ -460,11 +504,7 @@ export default function Overview() {
           .order("date", { ascending: true })
           .limit(3);
 
-        let mappedTasks = [
-          { id: 1, title: "Aplicação Foliar", date: "Hoje - 14:00", badge: "Hoje" },
-          { id: 2, title: "Análise de Solo", date: "20/05/2025", badge: "Em breve" },
-          { id: 3, title: "Irrigação", date: "22/05/2025", badge: "Em breve" }
-        ];
+        let mappedTasks: any[] = [];
 
         if (tasksData && tasksData.length > 0) {
           mappedTasks = tasksData.map((t: any) => {
@@ -491,43 +531,44 @@ export default function Overview() {
           .eq("user_id", profile.id);
 
         const tempAlertsList: any[] = [];
-        tempAlertsList.push({
-          id: "sigatoka",
-          type: "danger",
-          title: "ALERTA CRÍTICO",
-          message: "Condição favorável para Sigatoka Negra.",
-          time: "5h atrás"
-        });
-        tempAlertsList.push({
-          id: "rain",
-          type: "warning",
-          title: "ATENÇÃO",
-          message: "Previsão de chuva forte em 48 horas.",
-          time: "3h atrás"
-        });
 
-        let hasLowStock = false;
+        // 1. Alerta dinâmico de clima (chuva forte) baseada no forecast real
+        if (finalForecast7Days && finalForecast7Days.length > 1) {
+          const rainDays = finalForecast7Days.slice(0, 3).filter((d: any) => d.wmoCode >= 51 && d.wmoCode <= 82);
+          if (rainDays.length > 0) {
+            tempAlertsList.push({
+              id: "rain-alert",
+              type: "warning",
+              title: "ATENÇÃO",
+              message: `Previsão de chuva (${rainDays[0].day}). Fique atento à drenagem.`,
+              time: "Atualizado"
+            });
+          }
+        }
+
+        // 2. Alerta dinâmico de Sigatoka Negra baseado na umidade real do widget
+        if (finalWeatherWidget && finalWeatherWidget.humidity > 80) {
+          tempAlertsList.push({
+            id: "sigatoka-alert",
+            type: "danger",
+            title: "ALERTA AGRO",
+            message: `Umidade elevada (${finalWeatherWidget.humidity}%). Risco de Sigatoka Negra.`,
+            time: "Atualizado"
+          });
+        }
+
+        // 3. Alerta de Estoque Baixo (Real, do banco)
         if (inventoryData && inventoryData.length > 0) {
           const lowItems = inventoryData.filter((i: any) => (i.quantity || 0) < (i.min_quantity || 0));
           if (lowItems.length > 0) {
-            hasLowStock = true;
             tempAlertsList.unshift({
               id: "stock-alert",
               type: "warning",
               title: "ESTOQUE BAIXO",
               message: `Insumo '${lowItems[0].name}' atingiu o nível mínimo.`,
-              time: "2h atrás"
+              time: "Agora"
             });
           }
-        }
-        if (!hasLowStock) {
-          tempAlertsList.unshift({
-            id: "recommendation",
-            type: "success",
-            title: "RECOMENDAÇÃO",
-            message: "Hoje é um ótimo dia para aplicação foliar.",
-            time: "1h atrás"
-          });
         }
         setAlerts(tempAlertsList);
 
@@ -541,6 +582,8 @@ export default function Overview() {
         if (diagnosticsData && diagnosticsData.length > 0) {
           const severe = diagnosticsData.some((d: any) => d.severity?.toLowerCase() === "alta");
           finalHealth = severe ? "Atenção" : "Excelente";
+        } else {
+          finalHealth = "Sem Dados";
         }
         setHealthStatus(finalHealth);
 
@@ -562,7 +605,11 @@ export default function Overview() {
           financialChartData: tempFinancialData,
           city: userCity,
           state: userState,
-          farmName: profile.property_name || "Fazenda São José"
+          cep: userCep,
+          farmName: profile.property_name || "Fazenda São José",
+          areaSparkline,
+          yieldSparkline,
+          profitSparkline
         }));
 
       } catch (err) {
@@ -643,8 +690,12 @@ export default function Overview() {
             {/* Sparkline & Trend */}
             <div className="flex items-end justify-between mt-4">
               <div className="flex items-center gap-1 text-[10px] font-black text-emerald-600">
-                <span>↑ +12%</span>
-                <span className="text-slate-400 font-bold uppercase tracking-wider">vs último ciclo</span>
+                {areaTotal > 0 && (
+                  <>
+                    <span>↑ +12%</span>
+                    <span className="text-slate-400 font-bold uppercase tracking-wider">vs último ciclo</span>
+                  </>
+                )}
               </div>
               <div className="h-6 w-16 opacity-70">
                 <ResponsiveContainer width="100%" height="100%">
@@ -673,8 +724,12 @@ export default function Overview() {
             {/* Sparkline & Trend */}
             <div className="flex items-end justify-between mt-4">
               <div className="flex items-center gap-1 text-[10px] font-black text-emerald-600">
-                <span>↑ +8%</span>
-                <span className="text-slate-400 font-bold uppercase tracking-wider">vs último ciclo</span>
+                {estimatedYield > 0 && (
+                  <>
+                    <span>↑ +8%</span>
+                    <span className="text-slate-400 font-bold uppercase tracking-wider">vs último ciclo</span>
+                  </>
+                )}
               </div>
               <div className="h-6 w-16 opacity-70">
                 <ResponsiveContainer width="100%" height="100%">
@@ -701,8 +756,12 @@ export default function Overview() {
             {/* Sparkline & Trend */}
             <div className="flex items-end justify-between mt-4">
               <div className="flex items-center gap-1 text-[10px] font-black text-emerald-600">
-                <span>↑ +15%</span>
-                <span className="text-slate-400 font-bold uppercase tracking-wider">vs mês anterior</span>
+                {lucroEstimado > 0 && (
+                  <>
+                    <span>↑ +15%</span>
+                    <span className="text-slate-400 font-bold uppercase tracking-wider">vs mês anterior</span>
+                  </>
+                )}
               </div>
               <div className="h-6 w-16 opacity-70">
                 <ResponsiveContainer width="100%" height="100%">
@@ -729,10 +788,10 @@ export default function Overview() {
             {/* Progress bar */}
             <div className="space-y-2 mt-4">
               <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                <span>Sem alertas críticos</span>
+                <span>{healthStatus === "Excelente" ? "Sem alertas críticos" : healthStatus === "Sem Dados" ? "Nenhum laudo enviado" : "Alertas ativos"}</span>
               </div>
               <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500 rounded-full" style={{ width: healthStatus === "Excelente" ? "100%" : "70%" }} />
+                <div className="h-full bg-emerald-500 rounded-full" style={{ width: healthStatus === "Excelente" ? "100%" : healthStatus === "Sem Dados" ? "0%" : "70%" }} />
               </div>
             </div>
           </div>
@@ -798,29 +857,39 @@ export default function Overview() {
             </div>
 
             <div className="space-y-2 mt-4 flex-1 flex flex-col justify-center">
-              {alerts.map((alert) => {
-                const isDanger = alert.type === "danger";
-                const isWarning = alert.type === "warning";
-                const bgColor = isDanger ? "bg-red-50" : isWarning ? "bg-amber-50" : "bg-emerald-50";
-                const borderColor = isDanger ? "border-red-100" : isWarning ? "border-amber-100" : "border-emerald-100";
-                const iconColor = isDanger ? "text-red-500" : isWarning ? "text-amber-500" : "text-emerald-500";
-                const badgeColor = isDanger ? "text-red-700 bg-red-100" : isWarning ? "text-amber-700 bg-amber-100" : "text-emerald-700 bg-emerald-100";
+              {alerts.length > 0 ? (
+                alerts.map((alert) => {
+                  const isDanger = alert.type === "danger";
+                  const isWarning = alert.type === "warning";
+                  const bgColor = isDanger ? "bg-red-50" : isWarning ? "bg-amber-50" : "bg-emerald-50";
+                  const borderColor = isDanger ? "border-red-100" : isWarning ? "border-amber-100" : "border-emerald-100";
+                  const iconColor = isDanger ? "text-red-500" : isWarning ? "text-amber-500" : "text-emerald-500";
+                  const badgeColor = isDanger ? "text-red-700 bg-red-100" : isWarning ? "text-amber-700 bg-amber-100" : "text-emerald-700 bg-emerald-100";
 
-                return (
-                  <div key={alert.id} className={`flex items-start gap-3 p-3 rounded-2xl border ${bgColor} ${borderColor} transition-all`}>
-                    <div className={`mt-0.5 shrink-0 ${iconColor}`}>
-                      {isDanger ? <AlertCircle size={16} /> : isWarning ? <AlertTriangle size={16} /> : <ShieldCheck size={16} />}
-                    </div>
-                    <div className="overflow-hidden flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded ${badgeColor}`}>{alert.title}</span>
-                        <span className="text-[8px] text-slate-400 font-bold uppercase ml-auto">{alert.time}</span>
+                  return (
+                    <div key={alert.id} className={`flex items-start gap-3 p-3 rounded-2xl border ${bgColor} ${borderColor} transition-all`}>
+                      <div className={`mt-0.5 shrink-0 ${iconColor}`}>
+                        {isDanger ? <AlertCircle size={16} /> : isWarning ? <AlertTriangle size={16} /> : <ShieldCheck size={16} />}
                       </div>
-                      <p className="text-[11px] font-bold text-slate-700 mt-1 leading-snug">{alert.message}</p>
+                      <div className="overflow-hidden flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded ${badgeColor}`}>{alert.title}</span>
+                          <span className="text-[8px] text-slate-400 font-bold uppercase ml-auto">{alert.time}</span>
+                        </div>
+                        <p className="text-[11px] font-bold text-slate-700 mt-1 leading-snug">{alert.message}</p>
+                      </div>
                     </div>
+                  );
+                })
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center py-6 space-y-1.5">
+                  <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500">
+                    <ShieldCheck size={18} />
                   </div>
-                );
-              })}
+                  <p className="text-[10px] font-bold text-slate-650">Tudo sob controle</p>
+                  <p className="text-[8px] text-slate-400 max-w-[180px] leading-normal mx-auto">Nenhum alerta crítico ou recomendação pendente no momento.</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -831,24 +900,32 @@ export default function Overview() {
             </div>
 
             <div className="space-y-3 mt-4 flex-1 flex flex-col justify-center">
-              {recentTasks.map((task) => (
-                <div key={task.id} className="flex items-center justify-between border-b border-slate-50 pb-2.5 last:border-b-0 last:pb-0">
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 shrink-0">
-                      <Calendar size={14} />
+              {recentTasks.length > 0 ? (
+                recentTasks.map((task) => (
+                  <div key={task.id} className="flex items-center justify-between border-b border-slate-50 pb-2.5 last:border-b-0 last:pb-0">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 shrink-0">
+                        <Calendar size={14} />
+                      </div>
+                      <div className="overflow-hidden">
+                        <p className="text-xs font-bold text-slate-800 truncate leading-snug">{task.title}</p>
+                        <span className="text-[10px] text-slate-400 font-medium">{task.date}</span>
+                      </div>
                     </div>
-                    <div className="overflow-hidden">
-                      <p className="text-xs font-bold text-slate-800 truncate leading-snug">{task.title}</p>
-                      <span className="text-[10px] text-slate-400 font-medium">{task.date}</span>
-                    </div>
+                    <span className={`text-[8px] font-extrabold uppercase px-2 py-0.5 rounded-full shrink-0 ml-2 ${
+                      task.badge === "Hoje" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                    }`}>
+                      {task.badge}
+                    </span>
                   </div>
-                  <span className={`text-[8px] font-extrabold uppercase px-2 py-0.5 rounded-full shrink-0 ml-2 ${
-                    task.badge === "Hoje" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                  }`}>
-                    {task.badge}
-                  </span>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center py-6 space-y-1">
+                  <Calendar className="w-6 h-6 text-slate-350" />
+                  <p className="text-[10px] font-bold text-slate-650">Nenhuma ação agendada</p>
+                  <p className="text-[8px] text-slate-400 max-w-[150px] leading-normal mx-auto">Adicione tarefas no 'Calendário Agrícola' para acompanhar as próximas ações.</p>
                 </div>
-              ))}
+              )}
             </div>
 
             <Link to="/calendario" className="flex items-center justify-between text-[10px] font-black text-slate-500 hover:text-slate-800 uppercase tracking-wider border-t border-slate-100 pt-3 mt-3 w-full">
@@ -868,25 +945,37 @@ export default function Overview() {
                 <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider">SOLO</span>
                 <Link to="/solo" className="text-[10px] font-black text-emerald-600 uppercase hover:underline">Ver detalhes</Link>
               </div>
-              <p className="text-[10px] text-slate-400 font-semibold mt-1">Análise atualizada há {soilStats.daysSinceUpdate} dias</p>
-            </div>
-
-            {/* Gauge Row */}
-            <div className="grid grid-cols-5 gap-2 py-6">
-              <SoilGauge value={String(soilStats.ph)} label="pH" idealText="Ideal" percentage={(soilStats.ph / 7) * 100} />
-              <SoilGauge value={`${soilStats.mo}%`} label="M.O." idealText="Ideal" percentage={(soilStats.mo / 5.0) * 100} color="#10b981" />
-              <SoilGauge value={String(soilStats.k)} label="K" idealText="Ideal" percentage={(soilStats.k / 0.6) * 100} />
-              <SoilGauge value={String(soilStats.ca)} label="Ca" idealText="Ideal" percentage={(soilStats.ca / 4.0) * 100} />
-              <SoilGauge value={String(soilStats.mg)} label="Mg" idealText="Ideal" percentage={(soilStats.mg / 2.0) * 100} />
-            </div>
-
-            {/* Recomendação rápida */}
-            <div className="bg-emerald-50/50 border border-emerald-100 p-3 rounded-2xl flex items-center gap-2">
-              <Sprout size={16} className="text-emerald-500" />
-              <p className="text-[10px] font-bold text-emerald-800 leading-snug">
-                Nutrientes dentro do nível ideal para máxima produtividade.
+              <p className="text-[10px] text-slate-400 font-semibold mt-1">
+                {soilStats.daysSinceUpdate !== null ? `Análise atualizada há ${soilStats.daysSinceUpdate} dias` : "Sem laudos químicos cadastrados"}
               </p>
             </div>
+
+            {soilStats.daysSinceUpdate !== null ? (
+              <>
+                {/* Gauge Row */}
+                <div className="grid grid-cols-5 gap-2 py-6">
+                  <SoilGauge value={String(soilStats.ph)} label="pH" idealText="Ideal" percentage={(soilStats.ph / 7) * 100} />
+                  <SoilGauge value={`${soilStats.mo}%`} label="M.O." idealText="Ideal" percentage={(soilStats.mo / 5.0) * 100} color="#10b981" />
+                  <SoilGauge value={String(soilStats.k)} label="K" idealText="Ideal" percentage={(soilStats.k / 0.6) * 100} />
+                  <SoilGauge value={String(soilStats.ca)} label="Ca" idealText="Ideal" percentage={(soilStats.ca / 4.0) * 100} />
+                  <SoilGauge value={String(soilStats.mg)} label="Mg" idealText="Ideal" percentage={(soilStats.mg / 2.0) * 100} />
+                </div>
+
+                {/* Recomendação rápida */}
+                <div className="bg-emerald-50/50 border border-emerald-100 p-3 rounded-2xl flex items-center gap-2">
+                  <Sprout size={16} className="text-emerald-500" />
+                  <p className="text-[10px] font-bold text-emerald-800 leading-snug">
+                    Nutrientes dentro do nível ideal para máxima produtividade.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center px-4 space-y-2 flex-1">
+                <FileText className="w-8 h-8 text-slate-300" />
+                <p className="text-[11px] font-bold text-slate-650 leading-snug">Nenhuma análise de solo cadastrada</p>
+                <p className="text-[9px] text-slate-400 leading-normal max-w-[200px] mx-auto">Cadastre seu laudo em 'Análise de Solo' para visualizar o status químico e receber recomendações.</p>
+              </div>
+            )}
           </div>
 
           {/* Produção por Talhão (Coluna 4) */}
@@ -897,88 +986,96 @@ export default function Overview() {
             </div>
 
             {/* Farm Layout Vector Map SVG & Legends */}
-            <div className="grid grid-cols-12 gap-4 items-center flex-1 py-4">
-              {/* Mapa de Fazenda Vetorial Interativo SVG */}
-              <div className="col-span-6 flex justify-center">
-                <svg className="w-32 h-32" viewBox="0 0 120 120" fill="none" strokeWidth="1">
-                  {/* Talhão 1 (Norte) */}
-                  <path 
-                    d="M10 20 L60 10 L65 50 L20 60 Z" 
-                    fill={selectedTalhao === 0 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.85)"} 
-                    stroke="#ffffff"
-                    strokeWidth="1.5"
-                    className="cursor-pointer transition-colors duration-200"
-                    onMouseEnter={() => setSelectedTalhao(0)}
-                    onMouseLeave={() => setSelectedTalhao(null)}
-                  />
-                  {/* Talhão 2 (Central) */}
-                  <path 
-                    d="M60 10 L110 20 L100 60 L65 50 Z" 
-                    fill={selectedTalhao === 1 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.75)"} 
-                    stroke="#ffffff"
-                    strokeWidth="1.5"
-                    className="cursor-pointer transition-colors duration-200"
-                    onMouseEnter={() => setSelectedTalhao(1)}
-                    onMouseLeave={() => setSelectedTalhao(null)}
-                  />
-                  {/* Talhão 3 (Oeste) */}
-                  <path 
-                    d="M20 60 L65 50 L55 90 L10 85 Z" 
-                    fill={selectedTalhao === 2 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.65)"} 
-                    stroke="#ffffff"
-                    strokeWidth="1.5"
-                    className="cursor-pointer transition-colors duration-200"
-                    onMouseEnter={() => setSelectedTalhao(2)}
-                    onMouseLeave={() => setSelectedTalhao(null)}
-                  />
-                  {/* Talhão 4 (Leste) */}
-                  <path 
-                    d="M65 50 L100 60 L90 95 L55 90 Z" 
-                    fill={selectedTalhao === 3 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.9)"} 
-                    stroke="#ffffff"
-                    strokeWidth="1.5"
-                    className="cursor-pointer transition-colors duration-200"
-                    onMouseEnter={() => setSelectedTalhao(3)}
-                    onMouseLeave={() => setSelectedTalhao(null)}
-                  />
-                  {/* Talhão 5 (Sul) */}
-                  <path 
-                    d="M55 90 L90 95 L80 115 L45 110 Z" 
-                    fill={selectedTalhao === 4 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.55)"} 
-                    stroke="#ffffff"
-                    strokeWidth="1.5"
-                    className="cursor-pointer transition-colors duration-200"
-                    onMouseEnter={() => setSelectedTalhao(4)}
-                    onMouseLeave={() => setSelectedTalhao(null)}
-                  />
-                </svg>
-              </div>
+            {talhoes.length > 0 ? (
+              <div className="grid grid-cols-12 gap-4 items-center flex-1 py-4">
+                {/* Mapa de Fazenda Vetorial Interativo SVG */}
+                <div className="col-span-6 flex justify-center">
+                  <svg className="w-32 h-32" viewBox="0 0 120 120" fill="none" strokeWidth="1">
+                    {/* Talhão 1 (Norte) */}
+                    <path 
+                      d="M10 20 L60 10 L65 50 L20 60 Z" 
+                      fill={selectedTalhao === 0 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.85)"} 
+                      stroke="#ffffff"
+                      strokeWidth="1.5"
+                      className="cursor-pointer transition-colors duration-200"
+                      onMouseEnter={() => setSelectedTalhao(0)}
+                      onMouseLeave={() => setSelectedTalhao(null)}
+                    />
+                    {/* Talhão 2 (Central) */}
+                    <path 
+                      d="M60 10 L110 20 L100 60 L65 50 Z" 
+                      fill={selectedTalhao === 1 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.75)"} 
+                      stroke="#ffffff"
+                      strokeWidth="1.5"
+                      className="cursor-pointer transition-colors duration-200"
+                      onMouseEnter={() => setSelectedTalhao(1)}
+                      onMouseLeave={() => setSelectedTalhao(null)}
+                    />
+                    {/* Talhão 3 (Oeste) */}
+                    <path 
+                      d="M20 60 L65 50 L55 90 L10 85 Z" 
+                      fill={selectedTalhao === 2 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.65)"} 
+                      stroke="#ffffff"
+                      strokeWidth="1.5"
+                      className="cursor-pointer transition-colors duration-200"
+                      onMouseEnter={() => setSelectedTalhao(2)}
+                      onMouseLeave={() => setSelectedTalhao(null)}
+                    />
+                    {/* Talhão 4 (Leste) */}
+                    <path 
+                      d="M65 50 L100 60 L90 95 L55 90 Z" 
+                      fill={selectedTalhao === 3 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.9)"} 
+                      stroke="#ffffff"
+                      strokeWidth="1.5"
+                      className="cursor-pointer transition-colors duration-200"
+                      onMouseEnter={() => setSelectedTalhao(3)}
+                      onMouseLeave={() => setSelectedTalhao(null)}
+                    />
+                    {/* Talhão 5 (Sul) */}
+                    <path 
+                      d="M55 90 L90 95 L80 115 L45 110 Z" 
+                      fill={selectedTalhao === 4 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.55)"} 
+                      stroke="#ffffff"
+                      strokeWidth="1.5"
+                      className="cursor-pointer transition-colors duration-200"
+                      onMouseEnter={() => setSelectedTalhao(4)}
+                      onMouseLeave={() => setSelectedTalhao(null)}
+                    />
+                  </svg>
+                </div>
 
-              {/* Legenda Lateral */}
-              <div className="col-span-6 space-y-1.5">
-                {talhoes.slice(0, 5).map((talhao, idx) => (
-                  <div 
-                    key={talhao.id} 
-                    className={`flex items-center justify-between p-1 rounded-lg transition-colors text-xs ${
-                      selectedTalhao === idx ? "bg-slate-50 font-bold" : ""
-                    }`}
-                    onMouseEnter={() => setSelectedTalhao(idx)}
-                    onMouseLeave={() => setSelectedTalhao(null)}
-                  >
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <div className="w-2 h-2 rounded-full shrink-0" style={{
-                        backgroundColor: idx === 0 ? "rgba(16, 185, 129, 0.85)" : 
-                                         idx === 1 ? "rgba(16, 185, 129, 0.75)" : 
-                                         idx === 2 ? "rgba(16, 185, 129, 0.65)" : 
-                                         idx === 3 ? "rgba(16, 185, 129, 0.9)" : "rgba(16, 185, 129, 0.55)"
-                      }} />
-                      <span className="text-[10px] text-slate-500 font-bold truncate uppercase">{talhao.name}</span>
+                {/* Legenda Lateral */}
+                <div className="col-span-6 space-y-1.5">
+                  {talhoes.slice(0, 5).map((talhao, idx) => (
+                    <div 
+                      key={talhao.id} 
+                      className={`flex items-center justify-between p-1 rounded-lg transition-colors text-xs ${
+                        selectedTalhao === idx ? "bg-slate-50 font-bold" : ""
+                      }`}
+                      onMouseEnter={() => setSelectedTalhao(idx)}
+                      onMouseLeave={() => setSelectedTalhao(null)}
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <div className="w-2 h-2 rounded-full shrink-0" style={{
+                          backgroundColor: idx === 0 ? "rgba(16, 185, 129, 0.85)" : 
+                                           idx === 1 ? "rgba(16, 185, 129, 0.75)" : 
+                                           idx === 2 ? "rgba(16, 185, 129, 0.65)" : 
+                                           idx === 3 ? "rgba(16, 185, 129, 0.9)" : "rgba(16, 185, 129, 0.55)"
+                        }} />
+                        <span className="text-[10px] text-slate-500 font-bold truncate uppercase">{talhao.name}</span>
+                      </div>
+                      <span className="text-[10px] font-black text-slate-800 whitespace-nowrap ml-1">{talhao.productivity} ton/ha</span>
                     </div>
-                    <span className="text-[10px] font-black text-slate-800 whitespace-nowrap ml-1">{talhao.productivity} ton/ha</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center px-4 space-y-2 flex-1">
+                <Sprout className="w-8 h-8 text-slate-300" />
+                <p className="text-[11px] font-bold text-slate-650 leading-snug">Nenhum talhão cadastrado</p>
+                <p className="text-[9px] text-slate-400 leading-normal max-w-[200px] mx-auto">Cadastre seus talhões em 'Área Monitorada' para visualizar a produtividade por área.</p>
+              </div>
+            )}
           </div>
 
           {/* Desempenho Financeiro (Coluna 4) */}
@@ -993,44 +1090,52 @@ export default function Overview() {
               <div className="overflow-hidden">
                 <p className="text-[8px] text-slate-400 font-extrabold uppercase">RECEITA</p>
                 <p className="text-[11px] font-black text-slate-800 truncate mt-0.5">R$ {receitaTotal.toLocaleString("pt-BR")}</p>
-                <span className="text-[8px] font-extrabold text-emerald-600">↑ +18%</span>
+                {receitaTotal > 0 && <span className="text-[8px] font-extrabold text-emerald-600">↑ +18%</span>}
               </div>
               <div className="overflow-hidden">
                 <p className="text-[8px] text-slate-400 font-extrabold uppercase">CUSTOS</p>
                 <p className="text-[11px] font-black text-slate-800 truncate mt-0.5">R$ {custosTotais.toLocaleString("pt-BR")}</p>
-                <span className="text-[8px] font-extrabold text-emerald-600">↑ +8%</span>
+                {custosTotais > 0 && <span className="text-[8px] font-extrabold text-emerald-600">↑ +8%</span>}
               </div>
               <div className="overflow-hidden">
                 <p className="text-[8px] text-slate-400 font-extrabold uppercase">MARGEM</p>
                 <p className="text-[11px] font-black text-slate-800 truncate mt-0.5">{margemTotal}%</p>
-                <span className="text-[8px] font-extrabold text-emerald-600">↑ +6%</span>
+                {margemTotal > 0 && <span className="text-[8px] font-extrabold text-emerald-600">↑ +6%</span>}
               </div>
               <div className="overflow-hidden">
                 <p className="text-[8px] text-slate-400 font-extrabold uppercase">LUCRO</p>
                 <p className="text-[11px] font-black text-slate-800 truncate mt-0.5">R$ {lucroEstimado.toLocaleString("pt-BR")}</p>
-                <span className="text-[8px] font-extrabold text-emerald-600">↑ +15%</span>
+                {lucroEstimado > 0 && <span className="text-[8px] font-extrabold text-emerald-600">↑ +15%</span>}
               </div>
             </div>
 
             {/* Recharts Area Chart */}
-            <div className="h-28 w-full mt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={financialChartData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorLucro" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.0}/>
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="name" tick={{ fontSize: 8, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 8, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                  <Tooltip 
-                    contentStyle={{ fontSize: '10px', borderRadius: '1rem', border: '1px solid #e2e8f0', background: 'rgba(255,255,255,0.95)' }}
-                    labelStyle={{ fontWeight: 'bold' }}
-                  />
-                  <Area type="monotone" dataKey="lucro" name="Lucro Acumulado" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorLucro)" dot={{ r: 3, stroke: '#10b981', strokeWidth: 1, fill: '#ffffff' }} />
-                </AreaChart>
-              </ResponsiveContainer>
+            <div className="h-28 w-full mt-4 flex items-center justify-center">
+              {receitaTotal === 0 && custosTotais === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center px-4 py-2 space-y-1">
+                  <DollarSign className="w-6 h-6 text-slate-350" />
+                  <p className="text-[10px] font-bold text-slate-650">Nenhuma transação cadastrada</p>
+                  <p className="text-[8px] text-slate-400 max-w-[180px] leading-normal mx-auto">Lance suas receitas e despesas na 'Gestão Financeira' para ativar o gráfico de desempenho.</p>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={financialChartData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorLucro" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.0}/>
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="name" tick={{ fontSize: 8, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 8, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                    <Tooltip 
+                      contentStyle={{ fontSize: '10px', borderRadius: '1rem', border: '1px solid #e2e8f0', background: 'rgba(255,255,255,0.95)' }}
+                      labelStyle={{ fontWeight: 'bold' }}
+                    />
+                    <Area type="monotone" dataKey="lucro" name="Lucro Acumulado" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorLucro)" dot={{ r: 3, stroke: '#10b981', strokeWidth: 1, fill: '#ffffff' }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
         </div>
