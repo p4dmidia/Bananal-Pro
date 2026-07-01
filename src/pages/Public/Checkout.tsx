@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../contexts/AuthContext";
 import { 
   ShieldCheck, 
   Lock, 
@@ -30,6 +31,7 @@ declare global {
 
 export default function Checkout() {
   const navigate = useNavigate();
+  const { refreshProfile } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -176,6 +178,7 @@ export default function Checkout() {
           });
           sessionStorage.removeItem("pending_pix_data");
           toast.success("Bem-vindo, Administrador!");
+          await refreshProfile();
           navigate("/dashboard");
           return true;
         }
@@ -198,6 +201,7 @@ export default function Checkout() {
         if (profileData.is_active) {
           sessionStorage.removeItem("pending_pix_data");
           toast.success("Sua assinatura já está ativa!");
+          await refreshProfile();
           navigate("/dashboard");
           return true;
         }
@@ -277,6 +281,7 @@ export default function Checkout() {
           clearInterval(interval);
           sessionStorage.removeItem("pending_pix_data");
           toast.success("Pagamento aprovado com sucesso! Redirecionando...");
+          await refreshProfile();
           await fetchProfileAndCheck(user);
           navigate("/dashboard");
         }
@@ -382,6 +387,7 @@ export default function Checkout() {
                       resolve();
                     } else if (data.status === "approved") {
                       toast.success("Assinatura realizada com sucesso!");
+                      await refreshProfile();
                       navigate("/dashboard");
                       resolve();
                     } else {
