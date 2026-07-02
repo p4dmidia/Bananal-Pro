@@ -146,7 +146,7 @@ export default function AdminFinancial() {
             user_profiles:user_profiles!orders_user_id_fkey (
               full_name,
               email,
-              whatsapp
+              phone
             )
           `)
           .order('created_at', { ascending: false });
@@ -166,7 +166,7 @@ export default function AdminFinancial() {
         user_id: o.user_id,
         user_name: o.user_profiles?.full_name || "Produtor Desconhecido",
         user_email: o.user_profiles?.email || "desconhecido@bananalpro.com",
-        user_whatsapp: o.user_profiles?.whatsapp || "",
+        user_whatsapp: o.user_profiles?.phone || "",
         amount: o.total_amount || 97.00,
         status: o.status || "pending",
         payment_method: o.payment_method || "PIX",
