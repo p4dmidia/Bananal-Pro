@@ -373,6 +373,7 @@ export default function Checkout() {
                   .then(async (res) => {
                     const data = await res.json();
                     if (!res.ok) {
+                      console.error("Payment API error response:", data);
                       throw new Error(data.error || "Erro ao processar o pagamento.");
                     }
 

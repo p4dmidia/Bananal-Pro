@@ -247,7 +247,13 @@ export default async function handler(req: any, res: any) {
               break;
           }
         }
-        return res.status(400).json({ error: errorMsg });
+        return res.status(400).json({ 
+          error: errorMsg,
+          debug: {
+            status: paymentRes.status,
+            paymentData: paymentData
+          }
+        });
       }
 
       // 4. Cobrança aprovada! Atualiza o banco de dados.
