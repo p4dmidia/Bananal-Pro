@@ -52,6 +52,7 @@ export default function Checkout() {
   const [copied, setCopied] = useState(false);
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [hasPaymentDecline, setHasPaymentDecline] = useState(false);
 
   // Estados para o popup de intenção de saída (Exit Intent)
   const [showExitPopup, setShowExitPopup] = useState(false);
@@ -170,6 +171,25 @@ export default function Checkout() {
       }
 
       if (profileData) {
+        // Busca se há alguma ordem de cartão de crédito cancelada recente
+        try {
+          const { data: recentOrders } = await supabase
+            .from("orders")
+            .select("*")
+            .eq("user_id", profileData.id)
+            .eq("payment_method", "Cartão de Crédito")
+            .eq("status", "cancelled")
+            .order("created_at", { ascending: false })
+            .limit(1);
+
+          if (recentOrders && recentOrders.length > 0) {
+            setHasPaymentDecline(true);
+          } else {
+            setHasPaymentDecline(false);
+          }
+        } catch (orderErr) {
+          console.error("Erro ao buscar ordens canceladas:", orderErr);
+        }
         if (profileData.role === 'admin') {
           setProfile((prev: any) => {
             if (prev?.id === profileData.id && prev?.role === profileData.role) return prev;
@@ -638,6 +658,35 @@ if (loading) {
                   <label className="text-[10px] font-inter-extrabold text-zinc-500 uppercase tracking-widest block mb-4">
                     Dados do Pagamento:
                   </label>
+
+                  {hasPaymentDecline && (
+                    <div className="bg-amber-500/10 border border-amber-500/20 text-amber-800 p-5 rounded-2xl mb-4 text-xs font-inter-semibold flex flex-col gap-2 shadow-[0_4px_12px_rgba(245,158,11,0.03)]">
+                      <div className="flex items-center gap-2 font-inter-bold text-[13px]">
+                        <AlertCircle size={18} className="shrink-0 text-amber-600" />
+                        Aviso sobre sua assinatura
+                      </div>
+                      <p className="text-zinc-650 leading-relaxed font-inter-medium">
+                        O seu banco recusou a cobrança inicial da sua assinatura no valor de <strong>R$ {selectedPlan === 'mensal' ? '97,00' : '497,00'}</strong> devido a limite insuficiente ou bloqueio temporário do cartão.
+                      </p>
+                      <p className="text-zinc-650 font-inter-medium">
+                        Por favor, <strong>tente com outro cartão de crédito</strong> ou faça o pagamento via <strong>PIX</strong> para ativar sua assinatura agora.
+                      </p>
+                      <div className="mt-2 pt-3 border-t border-amber-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <span className="text-[11px] text-zinc-500 font-inter-medium">
+                          Precisa de ajuda com o seu pagamento?
+                        </span>
+                        <a
+                          href="https://wa.me/5521969014654?text=Ol%C3%A1%2C%20tive%20um%20problema%20com%20o%20pagamento%20da%20minha%20assinatura%20e%20gostaria%20de%20ajuda%20para%20regularizar."
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-[#25D366] hover:bg-[#20ba5a] text-white px-4 py-2.5 rounded-xl font-inter-bold text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm shrink-0"
+                        >
+                          <MessageCircle size={14} />
+                          Falar no WhatsApp
+                        </a>
+                      </div>
+                    </div>
+                  )}
 
                   {paymentError && (
                     <div className="bg-red-500/10 border border-red-500/20 text-red-650 p-4 rounded-2xl mb-4 text-xs font-inter-semibold flex items-center gap-2">

@@ -114,14 +114,25 @@ export default function UserProfile() {
           const orderDate = new Date(latestOrder.created_at);
           const expiryDate = new Date(orderDate.getTime() + daysLimit * 24 * 60 * 60 * 1000);
           
+          // Verifica se o pagamento em cartão de crédito ainda está no período de carência de 1 hora
+          const isProcessingPayment = 
+            latestOrder.payment_method === 'Cartão de Crédito' && 
+            latestOrder.status === 'paid' && 
+            (Date.now() - orderDate.getTime()) < 65 * 60 * 1000;
+
           setSubscription({
             id: latestOrder.id,
             planName: isMonthly ? "Plano Mensal" : "Plano Anual (Membro Fundador)",
             value: isMonthly ? "R$ 97,00/mês" : "R$ 497,00/ano",
-            status: latestOrder.status === 'cancelled' ? 'Cancelamento Solicitado' : 'Ativo',
+            status: latestOrder.status === 'cancelled' 
+              ? 'Cancelamento Solicitado' 
+              : isProcessingPayment 
+                ? 'Processando' 
+                : 'Ativo',
             nextBilling: format(expiryDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
             paymentMethod: latestOrder.payment_method || "PIX",
             isCancelled: latestOrder.status === 'cancelled',
+            isProcessingPayment,
             expiryDate: expiryDate
           });
         } else {
@@ -827,6 +838,13 @@ export default function UserProfile() {
                       {subscription.isCancelled && (
                         <div className="p-4 bg-amber-500/5 rounded-2xl border border-amber-500/15 text-left text-xs text-amber-500 font-semibold leading-relaxed font-sans">
                           ⚠️ Cancelamento solicitado. Seu acesso à plataforma continuará ativo e garantido até {subscription.nextBilling}. Após essa data, o seu acesso às ferramentas completas será revogado.
+                        </div>
+                      )}
+
+                      {subscription.isProcessingPayment && (
+                        <div className="p-4 bg-amber-500/5 rounded-2xl border border-amber-500/15 text-left text-xs text-amber-500 font-semibold leading-relaxed font-sans flex flex-col gap-1">
+                          <p>⏳ <strong>Primeiro pagamento em processamento:</strong></p>
+                          <p className="text-slate-400 font-medium">O seu banco está processando o primeiro pagamento recorrente no valor de {subscription.value}. O seu acesso está liberado e caso ocorra qualquer recusa, você será notificado aqui.</p>
                         </div>
                       )}
 
