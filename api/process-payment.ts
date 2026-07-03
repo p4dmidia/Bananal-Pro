@@ -106,205 +106,43 @@ export default async function handler(req: any, res: any) {
     // ----------------------------------------------------
     // FLUXO DE ASSINATURA NO CARTÃO DE CRÉDITO
     } else {
-      // 1. Busca ou cria o Customer no Mercado Pago utilizando o e-mail do comprador
-      let customerId = '';
-      try {
-        const searchRes = await fetch(`https://api.mercadopago.com/v1/customers/search?email=${encodeURIComponent(payer.email)}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`
-          }
-        });
-        
-        if (searchRes.ok) {
-          const searchData = await searchRes.json();
-          if (searchData.results && searchData.results.length > 0) {
-            customerId = searchData.results[0].id;
-          }
-        }
-
-        if (!customerId) {
-          const customerRes = await fetch('https://api.mercadopago.com/v1/customers', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email: payer.email })
-          });
-          
-          const customerData = await customerRes.json();
-          if (!customerRes.ok || !customerData.id) {
-            console.error('Erro ao criar Customer no Mercado Pago:', customerData);
-            return res.status(400).json({ error: 'Erro ao registrar cliente no Mercado Pago.' });
-          }
-          customerId = customerData.id;
-        }
-      } catch (err: any) {
-        console.error('Erro de rede ao buscar/criar Customer:', err);
-        return res.status(500).json({ error: 'Erro ao processar o perfil do cliente no gateway de pagamentos.' });
-      }
-
-      // 2. Salva o cartão de crédito no perfil do Customer utilizando o token de uso único (com CVV) gerado no front-end
-      // Isso consome o token e nos fornece o card_id definitivo associado ao customer_id correto
-      let cardId = '';
-      try {
-        const cardRes = await fetch(`https://api.mercadopago.com/v1/customers/${customerId}/cards`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ token: token })
-        });
-
-        const cardData = await cardRes.json();
-
-        if (!cardRes.ok || !cardData.id) {
-          console.error('Erro ao associar cartão ao Customer:', cardData);
-          const msg = cardData.message || 'Erro ao validar os dados do cartão de crédito.';
-          return res.status(400).json({ error: msg });
-        }
-        cardId = cardData.id;
-      } catch (err: any) {
-        console.error('Erro de rede ao associar cartão:', err);
-        return res.status(500).json({ error: 'Erro ao associar o cartão ao perfil de cobrança.' });
-      }
-
-      // 3. Cobra o valor do primeiro ciclo imediatamente utilizando a API de pagamentos síncronos
-      // Passamos o cardId salvo e o customerId correto (com type: 'customer')
-      // Isso envia a cobrança real síncrona diretamente para o banco emissor (ex: Nubank)
-      let paymentData: any = {};
-      let paymentStatus = 500;
-      try {
-        const paymentPayload = {
+      // Cria a assinatura recorrente (Preapproval) vinculando o token do cartão
+      const frequency = plan === 'mensal' ? 1 : 12;
+      const preapprovalPayload = {
+        reason: `Assinatura Bananal Pro - Plano ${plan === 'mensal' ? 'Mensal' : 'Anual'}`,
+        auto_recurring: {
+          frequency: frequency,
+          frequency_type: 'months',
           transaction_amount: finalAmount,
-          description: `Assinatura Bananal Pro - Plano ${plan === 'mensal' ? 'Mensal' : 'Anual'}`,
-          payment_method_id: payment_method_id,
-          token: cardId,
-          payer: {
-            type: 'customer',
-            id: customerId,
-            email: payer.email
-          },
-          installments: 1
-        };
+          currency_id: 'BRL'
+        },
+        payer_email: payer.email,
+        card_token_id: token,
+        status: 'authorized',
+        back_url: 'https://bananalpro.com.br/dashboard'
+      };
 
-        const paymentRes = await fetch('https://api.mercadopago.com/v1/payments', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`,
-            'Content-Type': 'application/json',
-            'X-Idempotency-Key': `card-${user_id}-${Date.now()}`
-          },
-          body: JSON.stringify(paymentPayload)
-        });
+      const preRes = await fetch('https://api.mercadopago.com/preapproval', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(preapprovalPayload)
+      });
 
-        paymentStatus = paymentRes.status;
-        paymentData = await paymentRes.json();
-
-        if (!paymentRes.ok || paymentData.status !== 'approved') {
-          console.error('Cobrança inicial recusada no banco do cliente:', paymentData);
-          
-          let errorMsg = 'Pagamento recusado. Verifique os dados do cartão e o limite disponível.';
-          if (paymentData.status_detail) {
-            switch (paymentData.status_detail) {
-              case 'cc_rejected_insufficient_amount':
-                errorMsg = 'Saldo ou limite insuficiente no cartão de crédito.';
-                break;
-              case 'cc_rejected_bad_filled_security_code':
-                errorMsg = 'Código de segurança (CVV) inválido.';
-                break;
-              case 'cc_rejected_bad_filled_date':
-                errorMsg = 'Data de validade do cartão incorreta.';
-                break;
-              case 'cc_rejected_bad_filled_other':
-                errorMsg = 'Dados do cartão incorretos. Verifique o número, nome e validade.';
-                break;
-              case 'cc_rejected_card_disabled':
-                errorMsg = 'O cartão está desabilitado ou bloqueado.';
-                break;
-              case 'cc_rejected_call_for_authorize':
-                errorMsg = 'Pagamento necessita de autorização. Entre em contato com a emissora do seu cartão.';
-                break;
-              default:
-                if (paymentData.message) {
-                  errorMsg = `Recusado: ${paymentData.message}`;
-                }
-                break;
-            }
-          }
-          return res.status(400).json({ 
-            error: errorMsg,
-            debug: {
-              status: paymentStatus,
-              paymentData: paymentData
-            }
-          });
-        }
-      } catch (err: any) {
-        console.error('Erro de rede ao processar cobrança inicial:', err);
-        return res.status(500).json({ error: 'Erro interno ao processar a cobrança no cartão.' });
+      const preData = await preRes.json();
+      
+      if (!preRes.ok || !preData.id) {
+        console.error('Erro ao criar assinatura Preapproval:', preData);
+        const errMsg = preData.error === 'internal_error' || !preData.message
+          ? 'Erro temporário nos servidores de teste do Mercado Pago. Por favor, tente novamente.'
+          : preData.message;
+        return res.status(400).json({ error: errMsg });
       }
 
-      // 4. Cobrança aprovada! Agora criamos a assinatura recorrente (Preapproval) com início agendado para o próximo ciclo
-      // Passamos o cardId do cartão já salvo para que o agendador processe as próximas cobranças sem CVV
-      let subscriptionId = '';
-      try {
-        const frequency = plan === 'mensal' ? 1 : 12;
-        const startDate = new Date();
-        if (plan === 'mensal') {
-          startDate.setMonth(startDate.getMonth() + 1);
-        } else {
-          startDate.setFullYear(startDate.getFullYear() + 1);
-        }
-        const startDateISO = startDate.toISOString();
-
-        const preapprovalPayload = {
-          reason: `Assinatura Bananal Pro - Plano ${plan === 'mensal' ? 'Mensal' : 'Anual'}`,
-          auto_recurring: {
-            frequency: frequency,
-            frequency_type: 'months',
-            transaction_amount: finalAmount,
-            currency_id: 'BRL',
-            start_date: startDateISO
-          },
-          payer_email: payer.email,
-          card_id: cardId,
-          status: 'authorized',
-          back_url: 'https://bananalpro.com.br/dashboard'
-        };
-
-        const preRes = await fetch('https://api.mercadopago.com/preapproval', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(preapprovalPayload)
-        });
-
-        const preData = await preRes.json();
-        
-        if (!preRes.ok || !preData.id) {
-          console.error('Erro ao programar assinatura Preapproval:', preData);
-          // O pagamento síncrono do primeiro ciclo foi aprovado, mas a programação da recorrência falhou
-          // Retornamos um erro orientando o usuário a contatar o suporte para vincular manualmente, para não dar erro duplo de cobrança
-          return res.status(400).json({ 
-            error: 'Pagamento aprovado, mas ocorreu um erro de sistema ao agendar sua recorrência. Entre em contato com o suporte para liberação imediata.',
-            debug: {
-              status: preRes.status,
-              preData: preData
-            }
-          });
-        }
-        subscriptionId = preData.id;
-      } catch (err: any) {
-        console.error('Erro de rede ao criar assinatura recorrente:', err);
-        return res.status(400).json({ error: 'Pagamento aprovado, mas ocorreu um erro ao agendar as próximas cobranças. Contate o suporte.' });
-      }
-
-      // 5. Atualiza o banco de dados Supabase com a ordem ativa vinculando a assinatura
+      // Assinatura criada com sucesso! Atualiza o banco de dados.
+      // 1. Cria o registro de ordem aprovada
       const { error: insertError } = await supabase
         .from('orders')
         .insert({
@@ -312,14 +150,14 @@ export default async function handler(req: any, res: any) {
           total_amount: finalAmount,
           status: 'paid',
           payment_method: 'Cartão de Crédito',
-          tracking_code: subscriptionId.toString(),
+          tracking_code: preData.id.toString(),
         });
 
       if (insertError) {
         console.error('Erro ao criar ordem aprovada no Supabase:', insertError);
       }
 
-      // Ativa o acesso do usuário no perfil
+      // 2. Ativa o acesso do usuário no perfil
       const { error: profileError } = await supabase
         .from('user_profiles')
         .update({
@@ -334,8 +172,7 @@ export default async function handler(req: any, res: any) {
 
       return res.status(200).json({
         payment_method_id: 'credit_card',
-        payment_id: paymentData.id,
-        subscription_id: subscriptionId,
+        subscription_id: preData.id,
         status: 'approved'
       });
     }
