@@ -11,8 +11,29 @@ DROP POLICY IF EXISTS "Admins can update any profile" ON public.user_profiles;
 DROP POLICY IF EXISTS "Admins can delete any profile" ON public.user_profiles;
 DROP POLICY IF EXISTS "Permitir update para o próprio usuário" ON public.user_profiles;
 DROP POLICY IF EXISTS "Permitir delete para admins" ON public.user_profiles;
+DROP POLICY IF EXISTS "Users can select profiles" ON public.user_profiles;
+DROP POLICY IF EXISTS "Users can insert their own profiles" ON public.user_profiles;
 
--- 3. Cria a política para usuários atualizarem seus próprios perfis
+-- 3. Cria a política para visualização (SELECT) de perfis por usuários autenticados
+CREATE POLICY "Users can select profiles"
+    ON public.user_profiles
+    FOR SELECT
+    TO authenticated
+    USING (true);
+
+-- 4. Cria a política para inserção (INSERT) de novos perfis por usuários autenticados
+-- Restringe para que o mocha_user_id seja o do usuário atual, o papel inicial seja 'user' e is_active seja false por padrão
+CREATE POLICY "Users can insert their own profiles"
+    ON public.user_profiles
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (
+        mocha_user_id = auth.uid()::text 
+        AND role = 'user' 
+        AND is_active = false
+    );
+
+-- 5. Cria a política para usuários atualizarem seus próprios perfis
 CREATE POLICY "Users can update their own profiles" 
     ON public.user_profiles 
     FOR UPDATE 
@@ -20,7 +41,7 @@ CREATE POLICY "Users can update their own profiles"
     USING (mocha_user_id = auth.uid()::text)
     WITH CHECK (mocha_user_id = auth.uid()::text);
 
--- 4. Cria a política para administradores atualizarem qualquer perfil
+-- 6. Cria a política para administradores atualizarem qualquer perfil
 CREATE POLICY "Admins can update any profile" 
     ON public.user_profiles 
     FOR UPDATE 
@@ -32,7 +53,7 @@ CREATE POLICY "Admins can update any profile"
         )
     );
 
--- 5. Cria a política para administradores excluírem qualquer perfil
+-- 7. Cria a política para administradores excluírem qualquer perfil
 CREATE POLICY "Admins can delete any profile" 
     ON public.user_profiles 
     FOR DELETE 
@@ -44,5 +65,5 @@ CREATE POLICY "Admins can delete any profile"
         )
     );
 
--- 6. Recarrega as configurações de schema do PostgREST
+-- 8. Recarrega as configurações de schema do PostgREST
 NOTIFY pgrst, 'reload schema';

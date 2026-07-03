@@ -175,7 +175,7 @@ export default async function handler(req: any, res: any) {
         back_url: 'https://bananalpro.com.br/dashboard'
       };
 
-      const preRes = await fetch('https://api.mercadopago.com/v1/preapproval', {
+      const preRes = await fetch('https://api.mercadopago.com/preapproval', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`,
