@@ -105,7 +105,7 @@ export default async function handler(req: any, res: any) {
 
     // ----------------------------------------------------
     // FLUXO DE ASSINATURA NO CARTÃO DE CRÉDITO
-    // ----------------------------------    } else {
+    } else {
       // 1. Busca ou cria o Customer no Mercado Pago utilizando o e-mail do comprador
       let customerId = '';
       try {
