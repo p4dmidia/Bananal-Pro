@@ -186,7 +186,8 @@ export default async function handler(req: any, res: any) {
           },
           payer: {
             type: 'customer',
-            id: customerId
+            id: customerId,
+            email: payer.email
           },
           installments: 1
         };
