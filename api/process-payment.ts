@@ -181,9 +181,7 @@ export default async function handler(req: any, res: any) {
           transaction_amount: finalAmount,
           description: `Assinatura Bananal Pro - Plano ${plan === 'mensal' ? 'Mensal' : 'Anual'}`,
           payment_method_id: payment_method_id,
-          card: {
-            id: cardId
-          },
+          token: cardId,
           payer: {
             type: 'customer',
             id: customerId,
