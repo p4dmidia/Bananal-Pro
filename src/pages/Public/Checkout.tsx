@@ -433,8 +433,28 @@ export default function Checkout() {
       initMercadoPago();
     }, 100);
 
+    const intervalId = setInterval(() => {
+      const container = document.getElementById("paymentBrick_container");
+      if (!container) return;
+
+      if (selectedPlan === "mensal") {
+        const walker = document.createTreeWalker(
+          container,
+          NodeFilter.SHOW_TEXT,
+          null
+        );
+        let node;
+        while ((node = walker.nextNode())) {
+          if (node.nodeValue && node.nodeValue.includes("Parcelamento disponível")) {
+            node.nodeValue = node.nodeValue.replace("Parcelamento disponível", "Cobrança recorrente");
+          }
+        }
+      }
+    }, 500);
+
     return () => {
       clearTimeout(timer);
+      clearInterval(intervalId);
       if (cardBrickController && typeof cardBrickController.unmount === "function") {
         try {
           cardBrickController.unmount();
@@ -694,6 +714,16 @@ if (loading) {
                     style={{ display: pixData ? "none" : "block" }}
                     className={`w-full transition-opacity ${submittingPayment ? "opacity-30 pointer-events-none" : "opacity-100"}`}
                   ></div>
+                  <style>{`
+                    #paymentBrick_container select,
+                    #paymentBrick_container input {
+                      height: 48px !important;
+                      line-height: normal !important;
+                      padding-top: 10px !important;
+                      padding-bottom: 10px !important;
+                      box-sizing: border-box !important;
+                    }
+                  `}</style>
                 </div>
 
               </div>
