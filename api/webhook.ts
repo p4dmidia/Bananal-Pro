@@ -80,13 +80,17 @@ export default async function handler(req: any, res: any) {
     const { status, status_detail } = paymentData;
     console.log(`Status do pagamento ${paymentId}: ${status} (${status_detail})`);
 
-    // Se o pagamento foi aprovado, vamos ativar o pedido e o perfil do usuário
+    // O tracking_code do pedido no banco de dados pode ser o ID do pagamento avulso (como Pix) 
+    // ou o ID da assinatura (como cartão de crédito)
+    const lookupCode = paymentData.preapproval_id || paymentId;
+
+    // Se o pagamento foi aprovado, vamos garantir que o pedido esteja marcado como pago e o usuário ativo
     if (status === 'approved') {
-      // 1. Busca o pedido correspondente no Supabase (usamos tracking_code para guardar o ID do pagamento)
+      // 1. Busca o pedido correspondente no Supabase (tracking_code)
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .select('*')
-        .eq('tracking_code', paymentId)
+        .eq('tracking_code', lookupCode)
         .maybeSingle();
 
       if (orderError) {
@@ -95,7 +99,7 @@ export default async function handler(req: any, res: any) {
       }
 
       if (!order) {
-        console.warn(`Pedido com tracking_code (Payment ID) ${paymentId} não foi encontrado no banco.`);
+        console.warn(`Pedido com tracking_code ${lookupCode} não foi encontrado no banco.`);
         return res.status(200).json({ status: 'ignored', message: 'Order not found.' });
       }
 
@@ -136,6 +140,50 @@ export default async function handler(req: any, res: any) {
         }
 
         console.log(`Perfil de Usuário ID ${order.user_id} ativado (is_active = true).`);
+      }
+    } else if (status === 'rejected' || status === 'cancelled' || status === 'refunded' || status === 'charged_back') {
+      // Se a cobrança foi recusada ou estornada, desativamos o usuário no Supabase
+      console.log(`Pagamento ${paymentId} não foi aprovado (status: ${status}). Processando desativação...`);
+      
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('tracking_code', lookupCode)
+        .maybeSingle();
+
+      if (orderError) {
+        console.error('Erro ao buscar pedido no Supabase via Webhook:', orderError);
+        return res.status(500).json({ error: 'Database error searching order.' });
+      }
+
+      if (order) {
+        // Atualiza a ordem no banco para registrar a falha ou reembolso
+        const newOrderStatus = status === 'refunded' ? 'refunded' : 'cancelled';
+        await supabase
+          .from('orders')
+          .update({
+            status: newOrderStatus,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', order.id);
+
+        if (order.user_id) {
+          // Desativa o perfil do produtor (is_active = false)
+          const { error: updateProfileError } = await supabase
+            .from('user_profiles')
+            .update({
+              is_active: false,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', order.user_id);
+
+          if (updateProfileError) {
+            console.error(`Erro ao desativar acesso do usuário ID ${order.user_id}:`, updateProfileError);
+            return res.status(500).json({ error: 'Database error deactivating profile.' });
+          }
+
+          console.log(`Perfil de Usuário ID ${order.user_id} desativado devido a pagamento ${status}.`);
+        }
       }
     }
 

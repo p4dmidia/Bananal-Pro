@@ -338,7 +338,8 @@ export default function Checkout() {
               paymentMethods: {
                 creditCard: "all",
                 debitCard: "all",
-                bankTransfer: ["pix"]
+                bankTransfer: ["pix"],
+                maxInstallments: selectedPlan === "mensal" ? 1 : 12
               },
               visual: {
                 style: {

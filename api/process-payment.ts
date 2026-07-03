@@ -108,7 +108,7 @@ export default async function handler(req: any, res: any) {
     // ----------------------------------------------------
     } else {
       // 1. Cria a assinatura recorrente (Preapproval) com início de cobrança agendado para o próximo ciclo (1 mês ou 1 ano a partir de hoje)
-      // Isso é necessário porque o Mercado Pago não cobra o valor total da assinatura no momento da adesão imediata
+      // Isso é necessário porque queremos cobrar o valor total do primeiro ciclo agora de forma síncrona
       const frequency = plan === 'mensal' ? 1 : 12;
       const startDate = new Date();
       if (plan === 'mensal') {
@@ -143,7 +143,7 @@ export default async function handler(req: any, res: any) {
       });
 
       const preData = await preRes.json();
-
+      
       if (!preRes.ok || !preData.id) {
         console.error('Erro ao criar assinatura Preapproval:', preData);
         const errMsg = preData.error === 'internal_error' || !preData.message
@@ -171,7 +171,8 @@ export default async function handler(req: any, res: any) {
       }
 
       // 2. Cobra o valor do primeiro ciclo imediatamente utilizando a API de pagamentos normais
-      // Isso garante a validação do saldo/limite real do cartão do cliente antes de liberar o acesso
+      // Passamos type: 'customer' no payer para indicar que é uma cobrança de cartão salvo em carteira (MIT/card-on-file),
+      // o que permite ao Mercado Pago processar a cobrança real síncrona no banco do cliente sem exigir o CVV novamente.
       const paymentPayload = {
         transaction_amount: finalAmount,
         description: `Assinatura Bananal Pro - Plano ${plan === 'mensal' ? 'Mensal' : 'Anual'}`,
@@ -180,9 +181,10 @@ export default async function handler(req: any, res: any) {
           id: cardId
         },
         payer: {
-          id: payerId ? String(payerId) : undefined,
-          email: payer.email
-        }
+          type: 'customer',
+          id: String(payerId)
+        },
+        installments: 1
       };
 
       const paymentRes = await fetch('https://api.mercadopago.com/v1/payments', {
@@ -197,7 +199,7 @@ export default async function handler(req: any, res: any) {
 
       const paymentData = await paymentRes.json();
 
-      // 3. Verifica se a cobrança foi aprovada com sucesso
+      // 3. Verifica se a cobrança imediata foi aprovada com sucesso
       if (!paymentRes.ok || paymentData.status !== 'approved') {
         console.error('Cobrança inicial recusada. Cancelando a assinatura do Mercado Pago...', paymentData);
         
@@ -249,7 +251,7 @@ export default async function handler(req: any, res: any) {
       }
 
       // 4. Cobrança aprovada! Atualiza o banco de dados.
-      // Cria o registro da ordem paga no Supabase, salvando o ID do pagamento real aprovado
+      // Cria o registro da ordem paga no Supabase, salvando o ID da assinatura recorrente como código de rastreio
       const { error: insertError } = await supabase
         .from('orders')
         .insert({
@@ -257,7 +259,7 @@ export default async function handler(req: any, res: any) {
           total_amount: finalAmount,
           status: 'paid',
           payment_method: 'Cartão de Crédito',
-          tracking_code: paymentData.id.toString(),
+          tracking_code: subscriptionId.toString(),
         });
 
       if (insertError) {
