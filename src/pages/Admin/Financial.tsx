@@ -559,6 +559,66 @@ export default function AdminFinancial() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginated = filtered.slice(startIndex, startIndex + itemsPerPage);
 
+  const baseStats = [
+    { 
+      label: "Faturamento Bruto", 
+      value: `R$ ${computedStats.current.faturamento.toLocaleString('pt-BR')}`, 
+      desc: "Receita de Caixa Total", 
+      color: "text-blue-600 dark:text-blue-400", 
+      icon: DollarSign,
+      hasDiff: computedStats.hasComparison,
+      diffValue: computedStats.faturamentoDiff
+    },
+    { 
+      label: "Receita MRR", 
+      value: `R$ ${computedStats.current.mrr.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`, 
+      desc: "Recorrência Mensalizada", 
+      color: "text-emerald-600 dark:text-emerald-400", 
+      icon: TrendingUp,
+      hasDiff: computedStats.hasComparison,
+      diffValue: computedStats.mrrDiff
+    },
+    { 
+      label: "Reserva da Empresa (50%)", 
+      value: `R$ ${(computedStats.current.faturamento * 0.50).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 
+      desc: "Fundo de Reinvestimento", 
+      color: "text-slate-650 dark:text-zinc-400", 
+      icon: ShieldCheck,
+      hasDiff: false,
+      diffValue: 0
+    },
+    { 
+      label: "Rateio Sócios/PJs (50%)", 
+      value: `R$ ${(computedStats.current.faturamento * 0.50).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 
+      desc: "Disponível para divisão de lucros", 
+      color: "text-yellow-600 dark:text-yellow-500", 
+      icon: Users,
+      hasDiff: false,
+      diffValue: 0
+    },
+    { 
+      label: "Assinantes Ativos", 
+      value: computedStats.current.activeCount.toString(), 
+      desc: "Planos vigentes", 
+      color: "text-purple-600 dark:text-purple-400", 
+      icon: CheckCircle2,
+      hasDiff: computedStats.hasComparison,
+      diffValue: computedStats.activeDiff
+    }
+  ];
+
+  if (isPartner) {
+    baseStats.push({
+      label: "Meus Ganhos (Acumulado)",
+      value: `R$ ${myTotalEarnings.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      desc: `Sua participação: ${mySharePercentage}%`,
+      color: "text-amber-500 dark:text-amber-400",
+      icon: Percent,
+      hasDiff: false,
+      diffValue: 0
+    });
+  }
+
   const statsToRender = isPj 
     ? [
         {
@@ -580,53 +640,7 @@ export default function AdminFinancial() {
           diffValue: 0
         }
       ]
-    : [
-        { 
-          label: "Faturamento Bruto", 
-          value: `R$ ${computedStats.current.faturamento.toLocaleString('pt-BR')}`, 
-          desc: "Receita de Caixa Total", 
-          color: "text-blue-600 dark:text-blue-400", 
-          icon: DollarSign,
-          hasDiff: computedStats.hasComparison,
-          diffValue: computedStats.faturamentoDiff
-        },
-        { 
-          label: "Receita MRR", 
-          value: `R$ ${computedStats.current.mrr.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`, 
-          desc: "Recorrência Mensalizada", 
-          color: "text-emerald-600 dark:text-emerald-400", 
-          icon: TrendingUp,
-          hasDiff: computedStats.hasComparison,
-          diffValue: computedStats.mrrDiff
-        },
-        { 
-          label: "Reserva da Empresa (50%)", 
-          value: `R$ ${(computedStats.current.faturamento * 0.50).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 
-          desc: "Fundo de Reinvestimento", 
-          color: "text-slate-650 dark:text-zinc-400", 
-          icon: ShieldCheck,
-          hasDiff: false,
-          diffValue: 0
-        },
-        { 
-          label: "Rateio Sócios/PJs (50%)", 
-          value: `R$ ${(computedStats.current.faturamento * 0.50).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 
-          desc: "Disponível para divisão de lucros", 
-          color: "text-yellow-600 dark:text-yellow-500", 
-          icon: Users,
-          hasDiff: false,
-          diffValue: 0
-        },
-        { 
-          label: "Assinantes Ativos", 
-          value: computedStats.current.activeCount.toString(), 
-          desc: "Planos vigentes", 
-          color: "text-purple-600 dark:text-purple-400", 
-          icon: CheckCircle2,
-          hasDiff: computedStats.hasComparison,
-          diffValue: computedStats.activeDiff
-        }
-      ];
+    : baseStats;
 
   return (
     <LayoutComponent>
