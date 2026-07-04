@@ -53,6 +53,15 @@ export default function Checkout() {
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [hasPaymentDecline, setHasPaymentDecline] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState<'credit_card' | 'pix'>('credit_card');
+  const [cpf, setCpf] = useState("");
+
+  // Sincroniza o CPF caso mude ou venha do banco
+  useEffect(() => {
+    if (profile?.cpf) {
+      setCpf(profile.cpf);
+    }
+  }, [profile?.cpf]);
 
   // Estados para o popup de intenção de saída (Exit Intent)
   const [showExitPopup, setShowExitPopup] = useState(false);
@@ -312,188 +321,57 @@ export default function Checkout() {
     return () => clearInterval(interval);
   }, [pixData, user, profile?.id, profile?.is_active, navigate]);
 
-  // Efeito para renderizar o Mercado Pago Payment Brick
-  useEffect(() => {
-    if (loading || !profile || pixData) return;
+  // Função para processar o pagamento com cartão de crédito (Redirect) ou Pix (Geração on-page)
+  const handleProcessPayment = async () => {
+    setSubmittingPayment(true);
+    setPaymentError(null);
 
-    let cardBrickController: any;
+    try {
+      const payload = {
+        plan: selectedPlan,
+        user_id: profile?.id,
+        payment_method_id: selectedMethod,
+        payer_email: profile?.email || user?.email || "",
+        first_name: profile?.full_name?.split(" ")[0] || "Produtor",
+        last_name: profile?.full_name?.split(" ").slice(1).join(" ") || "Bananal",
+        cpf: selectedMethod === 'pix' ? cpf.replace(/\D/g, '') : undefined
+      };
 
-    const initMercadoPago = async () => {
-      try {
-        if (!window.MercadoPago) {
-          console.error("Mercado Pago SDK script não foi carregado na janela global.");
-          return;
-        }
+      const res = await fetch("/api/process-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
 
-        const publicKey = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY;
-        if (!publicKey) {
-          setPaymentError("Aviso para o Administrador: A chave pública do Mercado Pago (VITE_MERCADO_PAGO_PUBLIC_KEY) não está configurada no ambiente.");
-          return;
-        }
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Erro ao processar pagamento.");
+      }
 
-        const mp = new window.MercadoPago(publicKey, {
-          locale: "pt-BR"
-        });
-
-        const bricksBuilder = mp.bricks();
-
-        const renderPaymentBrick = async () => {
-          const settings = {
-            initialization: {
-              amount: planPrice,
-              payer: {
-                email: profile.email || user?.email || "",
-                firstName: profile.full_name?.split(" ")[0] || "",
-                lastName: profile.full_name?.split(" ").slice(1).join(" ") || "",
-                entityType: "individual",
-                ...(profile.cpf ? {
-                  identification: {
-                    type: "CPF",
-                    number: profile.cpf
-                  }
-                } : {})
-              }
-            },
-            customization: {
-              paymentMethods: {
-                creditCard: "all",
-                debitCard: "all",
-                bankTransfer: ["pix"],
-                maxInstallments: selectedPlan === "mensal" ? 1 : 12
-              },
-              visual: {
-                style: {
-                  theme: "default",
-                  customVariables: {
-                    baseColor: "#22C55E"
-                  }
-                }
-              }
-            },
-            callbacks: {
-              onReady: () => {
-                console.log("Mercado Pago Payment Brick pronto.");
-              },
-              onSubmit: ({ selectedPaymentMethod, formData }: any) => {
-                return new Promise<void>((resolve, reject) => {
-                  setSubmittingPayment(true);
-                  setPaymentError(null);
-
-                  fetch("/api/process-payment", {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                      formData,
-                      plan: selectedPlan,
-                      user_id: profile.id
-                    })
-                  })
-                  .then(async (res) => {
-                    const data = await res.json();
-                    if (!res.ok) {
-                      console.error("Payment API error response:", data);
-                      throw new Error(data.error || "Erro ao processar o pagamento.");
-                    }
-
-                    if (data.payment_method_id === "pix") {
-                      const pixObj = {
-                        qr_code: data.qr_code,
-                        qr_code_base64: data.qr_code_base64,
-                        payment_id: data.payment_id
-                      };
-                      sessionStorage.setItem("pending_pix_data", JSON.stringify(pixObj));
-                      setPixData(pixObj);
-                      resolve();
-                    } else if (data.status === "approved") {
-                      toast.success("Assinatura realizada com sucesso!");
-                      await refreshProfile();
-                      navigate("/dashboard");
-                      resolve();
-                    } else {
-                      throw new Error("O pagamento não pôde ser aprovado. Verifique os dados do cartão.");
-                    }
-                  })
-                  .catch((err) => {
-                    console.error("Payment submission error:", err);
-                    setPaymentError(err.message || "Erro no processamento do pagamento.");
-                    toast.error(err.message || "Erro no processamento do pagamento.");
-                    reject(err);
-                  })
-                  .finally(() => {
-                    setSubmittingPayment(false);
-                  });
-                });
-              },
-              onError: (error: any) => {
-                console.error("Mercado Pago Brick error callback:", error);
-                setPaymentError("Erro ao carregar o formulário de pagamento.");
-              }
-            }
-          };
-
-          const container = document.getElementById("paymentBrick_container");
-          if (container) {
-            container.innerHTML = "";
-            cardBrickController = await bricksBuilder.create(
-              "payment",
-              "paymentBrick_container",
-              settings
-            );
-          }
+      if (selectedMethod === 'pix') {
+        const pixObj = {
+          qr_code: data.qr_code,
+          qr_code_base64: data.qr_code_base64,
+          payment_id: data.payment_id
         };
-
-        await renderPaymentBrick();
-      } catch (err) {
-        console.error("Erro geral na inicialização do Mercado Pago:", err);
+        sessionStorage.setItem("pending_pix_data", JSON.stringify(pixObj));
+        setPixData(pixObj);
+      } else if (selectedMethod === 'credit_card' && data.init_point) {
+        // Redireciona o usuário para o checkout seguro hospedado no Mercado Pago
+        window.location.href = data.init_point;
+      } else {
+        throw new Error("Opção de pagamento inválida ou erro na resposta do servidor.");
       }
-    };
-
-    const timer = setTimeout(() => {
-      initMercadoPago();
-    }, 100);
-
-    const intervalId = setInterval(() => {
-      const container = document.getElementById("paymentBrick_container");
-      if (!container) return;
-
-      if (selectedPlan === "mensal") {
-        const walker = document.createTreeWalker(
-          container,
-          NodeFilter.SHOW_TEXT,
-          null
-        );
-        let node;
-        while ((node = walker.nextNode())) {
-          if (node.nodeValue && node.nodeValue.includes("Parcelamento disponível")) {
-            node.nodeValue = node.nodeValue.replace("Parcelamento disponível", "Cobrança recorrente");
-          }
-        }
-      }
-    }, 500);
-
-    return () => {
-      clearTimeout(timer);
-      clearInterval(intervalId);
-      if (cardBrickController && typeof cardBrickController.unmount === "function") {
-        try {
-          cardBrickController.unmount();
-        } catch (unmountErr) {
-          console.warn("Erro ao desmontar o Mercado Pago Brick:", unmountErr);
-        }
-      }
-    };
-  }, [
-    loading, 
-    profile?.id, 
-    profile?.email, 
-    profile?.full_name, 
-    profile?.cpf, 
-    selectedPlan, 
-    planPrice, 
-    pixData ? true : false
-  ]);
+    } catch (err: any) {
+      console.error("Payment error:", err);
+      setPaymentError(err.message || "Erro no processamento do pagamento.");
+      toast.error(err.message || "Erro no processamento do pagamento.");
+    } finally {
+      setSubmittingPayment(false);
+    }
+  };
 
   const handleCopyPix = () => {
     if (pixData?.qr_code) {
@@ -758,22 +636,112 @@ if (loading) {
                     )}
                   </div>
 
-                  {/* Mercado Pago Payment Brick Container */}
-                  <div 
-                    id="paymentBrick_container" 
-                    style={{ display: pixData ? "none" : "block" }}
-                    className={`w-full transition-opacity ${submittingPayment ? "opacity-30 pointer-events-none" : "opacity-100"}`}
-                  ></div>
-                  <style>{`
-                    #paymentBrick_container select,
-                    #paymentBrick_container input {
-                      height: 48px !important;
-                      line-height: normal !important;
-                      padding-top: 10px !important;
-                      padding-bottom: 10px !important;
-                      box-sizing: border-box !important;
-                    }
-                  `}</style>
+                  {/* Custom Payment Selector */}
+                  <div style={{ display: pixData ? "none" : "block" }} className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Cartão de Crédito Button */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMethod('credit_card')}
+                        className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col items-center justify-center gap-2 font-inter-semibold text-xs ${
+                          selectedMethod === 'credit_card'
+                            ? 'bg-[#f0fdf4] border-[#22C55E] text-[#021B13] ring-1 ring-[#22C55E]'
+                            : 'bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-800'
+                        }`}
+                      >
+                        <CreditCard size={20} className={selectedMethod === 'credit_card' ? 'text-[#22C55E]' : 'text-zinc-400'} />
+                        Cartão de Crédito
+                      </button>
+
+                      {/* Pix Button */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMethod('pix')}
+                        className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col items-center justify-center gap-2 font-inter-semibold text-xs ${
+                          selectedMethod === 'pix'
+                            ? 'bg-[#f0fdf4] border-[#22C55E] text-[#021B13] ring-1 ring-[#22C55E]'
+                            : 'bg-white border-zinc-200 text-zinc-650 hover:border-zinc-300 hover:text-zinc-800'
+                        }`}
+                      >
+                        <QrCode size={20} className={selectedMethod === 'pix' ? 'text-[#22C55E]' : 'text-zinc-400'} />
+                        Pix
+                      </button>
+                    </div>
+
+                    {selectedMethod === 'credit_card' ? (
+                      /* Cartão de Crédito Section */
+                      <div className="bg-zinc-50 border border-zinc-200 rounded-3xl p-6 space-y-4">
+                        <div className="flex gap-3 text-xs text-zinc-600 leading-relaxed font-inter-medium">
+                          <ShieldCheck size={18} className="text-[#22C55E] shrink-0 mt-0.5" />
+                          <p>
+                            Você será redirecionado com segurança para o ambiente oficial do <strong>Mercado Pago</strong> para preencher os dados do seu cartão. Sua assinatura é processada em um ambiente blindado contra fraudes.
+                          </p>
+                        </div>
+                        
+                        <button
+                          type="button"
+                          disabled={submittingPayment}
+                          onClick={handleProcessPayment}
+                          className="w-full bg-[#22C55E] hover:bg-[#16a34a] disabled:bg-zinc-300 disabled:cursor-not-allowed text-white font-inter-extrabold text-xs uppercase tracking-widest py-4 px-6 rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          {submittingPayment ? (
+                            <>
+                              <Loader2 size={16} className="animate-spin" />
+                              Processando...
+                            </>
+                          ) : (
+                            <>
+                              <Lock size={14} />
+                              Ir para o Pagamento Seguro
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      /* Pix Section */
+                      <div className="bg-zinc-50 border border-zinc-200 rounded-3xl p-6 space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-inter-extrabold text-zinc-500 uppercase tracking-widest block">
+                            CPF do Titular (obrigatório para gerar Pix):
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="000.000.000-00"
+                            value={cpf}
+                            onChange={(e) => {
+                              // Aplica máscara simples de CPF
+                              const raw = e.target.value.replace(/\D/g, "");
+                              let masked = raw;
+                              if (raw.length > 3) masked = raw.substring(0, 3) + "." + raw.substring(3);
+                              if (raw.length > 6) masked = masked.substring(0, 7) + "." + masked.substring(7);
+                              if (raw.length > 9) masked = masked.substring(0, 11) + "-" + masked.substring(11, 13);
+                              setCpf(masked.substring(0, 14));
+                            }}
+                            className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-xs font-inter-medium focus:outline-none focus:ring-1 focus:ring-[#22C55E] focus:border-[#22C55E]"
+                          />
+                        </div>
+
+                        <button
+                          type="button"
+                          disabled={submittingPayment || cpf.replace(/\D/g, '').length !== 11}
+                          onClick={handleProcessPayment}
+                          className="w-full bg-[#22C55E] hover:bg-[#16a34a] disabled:bg-zinc-300 disabled:text-zinc-500 disabled:cursor-not-allowed text-white font-inter-extrabold text-xs uppercase tracking-widest py-4 px-6 rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          {submittingPayment ? (
+                            <>
+                              <Loader2 size={16} className="animate-spin" />
+                              Gerando Pix...
+                            </>
+                          ) : (
+                            <>
+                              <QrCode size={14} />
+                              Gerar Código Pix
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
               </div>

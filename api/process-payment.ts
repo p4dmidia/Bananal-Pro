@@ -30,32 +30,44 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { formData, plan, user_id } = req.body;
+    const { plan, user_id, payment_method_id, payer_email, cpf, first_name, last_name, formData } = req.body;
     
-    if (!formData || !plan || !user_id) {
-      return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes: formData, plan e user_id.' });
+    if (!plan || !user_id || !payment_method_id) {
+      return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes: plan, user_id e payment_method_id.' });
     }
 
     // Preço oficial de produção (R$ 97 mensal / R$ 497 anual)
     const finalAmount = plan === 'mensal' ? 97.00 : 497.00;
 
-    const { payment_method_id, token, installments, issuer_id, payer } = formData;
+    // Normaliza informações do pagador para suportar tanto o formulário simplificado quanto o antigo Payment Brick
+    const email = payer_email || formData?.payer?.email;
+    const clientCpf = cpf || formData?.payer?.identification?.number;
+    const clientFirstName = first_name || formData?.payer?.first_name || 'Produtor';
+    const clientLastName = last_name || formData?.payer?.last_name || 'Bananal';
+
+    if (!email) {
+      return res.status(400).json({ error: 'O e-mail do pagador é obrigatório.' });
+    }
 
     // ----------------------------------------------------
     // FLUXO DE PAGAMENTO COM PIX
     // ----------------------------------------------------
     if (payment_method_id === 'pix') {
+      if (!clientCpf) {
+        return res.status(400).json({ error: 'O CPF do pagador é obrigatório para pagamento via PIX.' });
+      }
+
       const payload = {
         transaction_amount: finalAmount,
         description: `Assinatura Bananal Pro - Plano ${plan === 'mensal' ? 'Mensal' : 'Anual'}`,
         payment_method_id: 'pix',
         payer: {
-          email: payer.email,
-          first_name: payer.first_name || 'Produtor',
-          last_name: payer.last_name || 'Bananal',
+          email: email,
+          first_name: clientFirstName,
+          last_name: clientLastName,
           identification: {
-            type: payer.identification?.type || 'CPF',
-            number: payer.identification?.number?.replace(/\D/g, '') || ''
+            type: 'CPF',
+            number: clientCpf.replace(/\D/g, '')
           }
         }
       };
@@ -104,9 +116,9 @@ export default async function handler(req: any, res: any) {
       });
 
     // ----------------------------------------------------
-    // FLUXO DE ASSINATURA NO CARTÃO DE CRÉDITO
+    // FLUXO DE ASSINATURA NO CARTÃO DE CRÉDITO (CHECKOUT PRO REDIRECT)
+    // ----------------------------------------------------
     } else {
-      // Cria a assinatura recorrente (Preapproval) vinculando o token do cartão
       const frequency = plan === 'mensal' ? 1 : 12;
       const preapprovalPayload = {
         reason: `Assinatura Bananal Pro - Plano ${plan === 'mensal' ? 'Mensal' : 'Anual'}`,
@@ -116,9 +128,8 @@ export default async function handler(req: any, res: any) {
           transaction_amount: finalAmount,
           currency_id: 'BRL'
         },
-        payer_email: payer.email,
-        card_token_id: token,
-        status: 'authorized',
+        payer_email: email,
+        status: 'pending',
         back_url: 'https://bananalpro.com.br/dashboard'
       };
 
@@ -141,39 +152,30 @@ export default async function handler(req: any, res: any) {
         return res.status(400).json({ error: errMsg });
       }
 
-      // Assinatura criada com sucesso! Atualiza o banco de dados.
-      // 1. Cria o registro de ordem aprovada
+      // Assinatura pendente criada com sucesso! Atualiza o banco de dados.
+      // 1. Cria o registro de ordem pendente
       const { error: insertError } = await supabase
         .from('orders')
         .insert({
           user_id: user_id,
           total_amount: finalAmount,
-          status: 'paid',
+          status: 'pending',
           payment_method: 'Cartão de Crédito',
           tracking_code: preData.id.toString(),
         });
 
       if (insertError) {
-        console.error('Erro ao criar ordem aprovada no Supabase:', insertError);
+        console.error('Erro ao criar ordem pendente no Supabase:', insertError);
       }
 
-      // 2. Ativa o acesso do usuário no perfil
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .update({
-          is_active: true,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user_id);
-
-      if (profileError) {
-        console.error('Erro ao ativar usuário no Supabase:', profileError);
-      }
+      // NOTA: O perfil do usuário NÃO é ativado aqui. O Webhook fará isso de forma segura
+      // assim que receber a notificação do pagamento aprovado (primeiro ciclo da assinatura).
 
       return res.status(200).json({
         payment_method_id: 'credit_card',
         subscription_id: preData.id,
-        status: 'approved'
+        init_point: preData.init_point,
+        status: 'pending'
       });
     }
 
