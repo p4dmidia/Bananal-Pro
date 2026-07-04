@@ -82,7 +82,10 @@ export default async function handler(req: any, res: any) {
 
     // O tracking_code do pedido no banco de dados pode ser o ID do pagamento avulso (como Pix) 
     // ou o ID da assinatura (como cartão de crédito)
-    const lookupCode = paymentData.preapproval_id || paymentId;
+    const lookupCode = paymentData.metadata?.preapproval_id || 
+                       paymentData.point_of_interaction?.transaction_data?.subscription_id || 
+                       paymentData.preapproval_id || 
+                       paymentId;
 
     // Se o pagamento foi aprovado, vamos garantir que o pedido esteja marcado como pago e o usuário ativo
     if (status === 'approved') {

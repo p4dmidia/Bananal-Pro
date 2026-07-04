@@ -67,3 +67,39 @@ CREATE POLICY "Admins can delete any profile"
 
 -- 8. Recarrega as configurações de schema do PostgREST
 NOTIFY pgrst, 'reload schema';
+
+-- 9. Criação da função de segurança para proteger campos sensíveis do perfil
+CREATE OR REPLACE FUNCTION public.protect_user_profile_fields()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  caller_id text;
+  caller_role text;
+BEGIN
+  -- Obtém o ID do usuário autenticado no Supabase
+  caller_id := auth.uid()::text;
+  
+  -- Se a chamada foi iniciada por um usuário logado no front-end (não por chave de serviço)
+  IF caller_id IS NOT NULL THEN
+    -- Busca o papel do usuário atual
+    SELECT role INTO caller_role FROM public.user_profiles WHERE mocha_user_id = caller_id;
+    
+    -- Se não for administrador, restaura os valores originais das colunas sensíveis
+    IF caller_role IS DISTINCT FROM 'admin' THEN
+      NEW.role := OLD.role;
+      NEW.is_active := OLD.is_active;
+    END IF;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$;
+
+-- 10. Criação do trigger BEFORE UPDATE na tabela user_profiles
+DROP TRIGGER IF EXISTS before_user_profile_update ON public.user_profiles;
+CREATE TRIGGER before_user_profile_update
+  BEFORE UPDATE ON public.user_profiles
+  FOR EACH ROW EXECUTE PROCEDURE public.protect_user_profile_fields();
+
