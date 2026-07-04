@@ -90,7 +90,7 @@ export default async function handler(req: any, res: any) {
     // Se o pagamento foi aprovado, vamos garantir que o pedido esteja marcado como pago e o usuário ativo
     if (status === 'approved') {
       // 1. Busca o pedido correspondente no Supabase (tracking_code)
-      const { data: order, error: orderError } = await supabase
+      let { data: order, error: orderError } = await supabase
         .from('orders')
         .select('*')
         .eq('tracking_code', lookupCode)
@@ -102,30 +102,62 @@ export default async function handler(req: any, res: any) {
       }
 
       if (!order) {
-        console.warn(`Pedido com tracking_code ${lookupCode} não foi encontrado no banco.`);
-        return res.status(200).json({ status: 'ignored', message: 'Order not found.' });
+        console.warn(`Pedido com tracking_code ${lookupCode} não foi encontrado no banco. Tentando criar pedido retroativo pelo e-mail.`);
+        const payerEmail = paymentData.payer?.email;
+        if (payerEmail) {
+          const { data: userProfile } = await supabase
+            .from('user_profiles')
+            .select('id, full_name')
+            .eq('email', payerEmail)
+            .maybeSingle();
+
+          if (userProfile) {
+            const { data: newOrder, error: newOrderError } = await supabase
+              .from('orders')
+              .insert({
+                user_id: userProfile.id,
+                total_amount: Number(paymentData.transaction_amount || 497.00),
+                status: 'paid',
+                payment_method: paymentData.payment_method_id === 'pix' ? 'PIX' : 'Cartão de Crédito',
+                tracking_code: lookupCode,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              })
+              .select('*')
+              .maybeSingle();
+
+            if (!newOrderError && newOrder) {
+              console.log(`Pedido #${newOrder.id} criado retroativamente para ${userProfile.full_name}.`);
+              order = newOrder;
+            } else {
+              console.error('Erro ao criar pedido retroativo:', newOrderError);
+            }
+          }
+        }
       }
 
-      if (order.status === 'paid') {
-        console.log(`O pedido #${order.id} já estava marcado como pago.`);
-        return res.status(200).json({ status: 'success', message: 'Order already paid.' });
+      if (!order) {
+        console.warn(`Pedido com tracking_code ${lookupCode} não pôde ser encontrado nem criado.`);
+        return res.status(200).json({ status: 'ignored', message: 'Order not found and could not be created.' });
       }
 
-      // 2. Atualiza o status do pedido para 'paid'
-      const { error: updateOrderError } = await supabase
-        .from('orders')
-        .update({
-          status: 'paid',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', order.id);
+      if (order.status !== 'paid') {
+        // 2. Atualiza o status do pedido para 'paid'
+        const { error: updateOrderError } = await supabase
+          .from('orders')
+          .update({
+            status: 'paid',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', order.id);
 
-      if (updateOrderError) {
-        console.error(`Erro ao atualizar pedido #${order.id} para pago:`, updateOrderError);
-        return res.status(500).json({ error: 'Database error updating order.' });
+        if (updateOrderError) {
+          console.error(`Erro ao atualizar pedido #${order.id} para pago:`, updateOrderError);
+          return res.status(500).json({ error: 'Database error updating order.' });
+        }
+
+        console.log(`Pedido #${order.id} atualizado para 'paid'.`);
       }
-
-      console.log(`Pedido #${order.id} atualizado para 'paid'.`);
 
       // 3. Ativa o perfil do produtor (is_active = true) para liberar o acesso dele
       if (order.user_id) {
