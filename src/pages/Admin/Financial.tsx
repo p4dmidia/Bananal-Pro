@@ -607,11 +607,14 @@ export default function AdminFinancial() {
     }
   ];
 
-  if (isPartner) {
+  // Se o usuário tiver participação configurada e for sócio/admin, mostramos seu valor a receber no período
+  const hasShare = mySharePercentage > 0;
+  if (isPartner || (isAdmin && hasShare)) {
+    const myEstimatedEarnings = computedStats.current.faturamento * 0.50 * (mySharePercentage / 100);
     baseStats.push({
-      label: "Meus Ganhos (Acumulado)",
-      value: `R$ ${myTotalEarnings.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      desc: `Sua participação: ${mySharePercentage}%`,
+      label: "Meu Valor a Receber",
+      value: `R$ ${myEstimatedEarnings.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      desc: `Sua cota: ${mySharePercentage}% do rateio`,
       color: "text-amber-500 dark:text-amber-400",
       icon: Percent,
       hasDiff: false,
@@ -638,9 +641,24 @@ export default function AdminFinancial() {
           icon: Percent,
           hasDiff: false,
           diffValue: 0
+        },
+        {
+          label: "Meu Valor a Receber",
+          value: `R$ ${(computedStats.current.faturamento * 0.50 * (mySharePercentage / 100)).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          desc: `Sua cota de ${mySharePercentage}% do rateio`,
+          color: "text-yellow-600 dark:text-yellow-500",
+          icon: Percent,
+          hasDiff: false,
+          diffValue: 0
         }
       ]
     : baseStats;
+
+  const gridColsClass = isPj 
+    ? 'lg:grid-cols-3' 
+    : (isPartner || (isAdmin && hasShare)) 
+    ? 'lg:grid-cols-6' 
+    : 'lg:grid-cols-5';
 
   return (
     <LayoutComponent>
@@ -653,7 +671,9 @@ export default function AdminFinancial() {
               <DollarSign className="text-[#589c1c] dark:text-[#6ee7b7] w-8 h-8" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Financeiro</h1>
+              <h1 className="text-3xl font-bold text-slate-800 dark:text-white">
+                {isPj ? "Minhas Comissões" : "Financeiro"}
+              </h1>
               <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">
                 {isPj 
                   ? "Acompanhe seus rendimentos e histórico de comissões no Bananal PRO." 
@@ -697,7 +717,7 @@ export default function AdminFinancial() {
         </div>
 
         {/* Stats Grid */}
-        <div className={`grid grid-cols-1 sm:grid-cols-2 ${isPj ? 'lg:grid-cols-2' : 'lg:grid-cols-5'} gap-4`}>
+        <div className={`grid grid-cols-1 sm:grid-cols-2 ${gridColsClass} gap-4`}>
           {statsToRender.map((stat, i) => (
             <div key={i} className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 p-6 rounded-[2rem] shadow-sm relative overflow-hidden group flex flex-col justify-between">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
@@ -841,7 +861,7 @@ export default function AdminFinancial() {
                 >
                   Rateio / Distribuição
                 </button>
-                {isAdmin && (
+                {(isAdmin || isPartner) && (
                   <button
                     onClick={() => { setActiveTab('config'); setCurrentPage(1); }}
                     className={`px-4 py-2 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
@@ -1217,8 +1237,8 @@ export default function AdminFinancial() {
           </div>
         )}
 
-        {/* Tab 3: Configuration (Only Admins) */}
-        {activeTab === 'config' && isAdmin && (
+        {/* Tab 3: Configuration (Admins & Partners) */}
+        {activeTab === 'config' && (isAdmin || isPartner) && (
           <div className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 rounded-[2rem] shadow-sm p-6 space-y-6">
             <div className="flex items-center justify-between">
               <div>
