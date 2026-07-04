@@ -59,5 +59,28 @@ CREATE POLICY "PJs can read their own partner_earnings" ON public.partner_earnin
         )
     );
 
--- 7. Recarrega as configurações de schema do PostgREST
+-- 7. Trigger para sincronizar cargos (roles) automaticamente ao inserir/editar/deletar regras de rateio
+CREATE OR REPLACE FUNCTION public.sync_user_role_from_profit_sharing()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+    UPDATE public.user_profiles
+    SET role = NEW.role_type
+    WHERE id = NEW.user_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE public.user_profiles
+    SET role = 'user'
+    WHERE id = OLD.user_id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_sync_user_role_from_profit_sharing ON public.profit_sharing_config;
+CREATE TRIGGER trigger_sync_user_role_from_profit_sharing
+AFTER INSERT OR UPDATE OR DELETE ON public.profit_sharing_config
+FOR EACH ROW EXECUTE FUNCTION public.sync_user_role_from_profit_sharing();
+
+-- 8. Recarrega as configurações de schema do PostgREST
 NOTIFY pgrst, 'reload schema';
+
