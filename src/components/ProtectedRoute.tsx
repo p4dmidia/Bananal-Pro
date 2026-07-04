@@ -5,10 +5,12 @@ import { Loader2 } from 'lucide-react';
 
 export function ProtectedRoute({ 
   children, 
-  adminOnly = false 
+  adminOnly = false,
+  allowedRoles
 }: { 
   children: React.ReactNode;
   adminOnly?: boolean;
+  allowedRoles?: string[];
 }) {
   const { user, profile, loading, profileLoading } = useAuth();
   const location = useLocation();
@@ -32,13 +34,17 @@ export function ProtectedRoute({
   }
 
   // 3. Verificações de permissão e assinatura ativa
-  if (adminOnly) {
+  if (allowedRoles) {
+    if (!profile?.role || !allowedRoles.includes(profile.role)) {
+      return <Navigate to="/dashboard" replace />;
+    }
+  } else if (adminOnly) {
     if (profile?.role !== 'admin') {
       return <Navigate to="/dashboard" replace />;
     }
   } else {
     // Usuários comuns precisam ter assinatura ativa (is_active === true)
-    if (profile?.role !== 'admin' && profile?.is_active !== true) {
+    if (profile?.role !== 'admin' && profile?.role !== 'partner' && profile?.role !== 'pj' && profile?.is_active !== true) {
       return <Navigate to="/checkout" replace />;
     }
   }

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logoTransparentImg from "../../assets/logo-transparent.png";
+import { useAuth } from "../../contexts/AuthContext";
 
 const adminMenuItems = [
   { icon: LayoutDashboard, label: "Visão Geral", path: "/admin" },
@@ -33,6 +34,27 @@ const adminMenuItems = [
 const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { profile } = useAuth();
+
+  const filteredMenuItems = adminMenuItems.filter(item => {
+    if (profile?.role === 'admin') return true;
+    if (profile?.role === 'partner' || profile?.role === 'pj') {
+      return item.path === '/admin/financeiro' || item.path === '/comunidade';
+    }
+    return false;
+  });
+
+  const userDisplayName = profile?.full_name || "Membro da Equipe";
+  const userRoleLabel = profile?.role === 'admin' 
+    ? 'Acesso Total' 
+    : profile?.role === 'partner' 
+    ? 'Sócio' 
+    : 'Parceiro PJ';
+  const userTitle = profile?.role === 'admin' 
+    ? 'Administrador Master' 
+    : profile?.role === 'partner' 
+    ? 'Sócio Bananal PRO' 
+    : 'Prestador PJ';
 
   return (
     <>
@@ -54,7 +76,7 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
             <Link to="/admin" className="flex items-center justify-center w-44 h-12 group hover:scale-[1.02] transition-transform">
               <img src={logoTransparentImg} alt="Bananal PRO" className="h-full w-full object-contain" />
             </Link>
-            <span className="absolute -top-2 -right-4 bg-emerald-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-md">Admin</span>
+            <span className="absolute -top-2 -right-4 bg-emerald-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-md">Painel</span>
           </div>
           <button onClick={onClose} className="lg:hidden text-white/80 hover:text-white cursor-pointer p-1">
             <LogOut className="w-5 h-5 rotate-180" />
@@ -62,7 +84,7 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto min-h-0 scrollbar-thin">
-          {adminMenuItems.map((item) => {
+          {filteredMenuItems.map((item) => {
             const isActive = location.pathname === item.path || 
               (item.path !== "/admin" && location.pathname.startsWith(item.path));
             return (
@@ -91,15 +113,15 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
             <div className="flex items-center gap-3 overflow-hidden">
               <div className="w-10 h-10 rounded-full border border-emerald-500/20 p-[2px] bg-emerald-900/10 overflow-hidden shrink-0">
                 <img 
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" 
+                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userDisplayName}`}
                   alt="Admin Avatar" 
                   className="w-full h-full object-cover rounded-full"
                 />
               </div>
               <div className="overflow-hidden">
-                <p className="text-xs font-bold text-white/70 group-hover/profile:text-white transition-colors truncate leading-snug">Administrador Master</p>
-                <p className="text-[9px] text-emerald-400 uppercase tracking-wider font-extrabold mt-0.5">Acesso Total</p>
-                <p className="text-[9px] text-white/50 truncate mt-0.5">Painel Administrativo</p>
+                <p className="text-xs font-bold text-white/70 group-hover/profile:text-white transition-colors truncate leading-snug">{userDisplayName}</p>
+                <p className="text-[9px] text-emerald-400 uppercase tracking-wider font-extrabold mt-0.5">{userRoleLabel}</p>
+                <p className="text-[9px] text-white/50 truncate mt-0.5">{userTitle}</p>
               </div>
             </div>
           </div>

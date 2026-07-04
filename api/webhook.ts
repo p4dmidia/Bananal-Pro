@@ -143,6 +143,11 @@ export default async function handler(req: any, res: any) {
         }
 
         console.log(`Perfil de Usuário ID ${order.user_id} ativado (is_active = true).`);
+
+        // Processa a divisão de lucros e a notificação do Telegram de forma assíncrona
+        processProfitSharingAndNotifications(order, paymentData).catch(err => {
+          console.error('Erro assíncrono em processProfitSharingAndNotifications:', err);
+        });
       }
     } else if (status === 'rejected' || status === 'cancelled' || status === 'refunded' || status === 'charged_back') {
       // Se a cobrança foi recusada ou estornada, desativamos o usuário no Supabase
@@ -194,5 +199,78 @@ export default async function handler(req: any, res: any) {
   } catch (error: any) {
     console.error('Erro inesperado ao processar Webhook do Mercado Pago:', error);
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
+}
+
+async function processProfitSharingAndNotifications(order: any, paymentData: any) {
+  try {
+    const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+    const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+    // 1. Busca os dados de perfil do comprador
+    const { data: buyerProfile } = await supabase
+      .from('user_profiles')
+      .select('full_name, email')
+      .eq('id', order.user_id)
+      .maybeSingle();
+
+    const buyerName = buyerProfile?.full_name || 'Produtor Bananal';
+
+    // 2. Notificação do Telegram
+    if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
+      const planName = Number(order.total_amount) > 150 ? 'Anual' : 'Mensal';
+      const paymentMethodName = paymentData.payment_method_id === 'pix' ? 'Pix' : 'Cartão de Crédito';
+      const formattedAmount = Number(order.total_amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+      const messageText = `🔔 Nova Venda Aprovada!\n📦 Plano: ${planName}\n💰 Valor Bruto: ${formattedAmount}\n💳 Método de Pagamento: ${paymentMethodName}\nCliente ${buyerName}`;
+
+      fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHAT_ID,
+          text: messageText
+        })
+      }).catch(err => console.error('Erro ao enviar mensagem para o Telegram:', err));
+    }
+
+    // 3. Processamento de Divisão de Lucros (Profit Split)
+    // Calcula taxas do gateway
+    const gatewayFee = paymentData.fee_details?.reduce((sum: number, fee: any) => sum + (Number(fee.amount) || 0), 0) || 0;
+    const netAmount = Number(order.total_amount) - gatewayFee;
+    const distributableAmount = netAmount * 0.50; // 50% para divisão
+
+    // Busca configurações de divisão
+    const { data: shares, error: sharesError } = await supabase
+      .from('profit_sharing_config')
+      .select('*');
+
+    if (sharesError) {
+      console.error('Erro ao carregar regras de divisão de lucros:', sharesError);
+      return;
+    }
+
+    if (shares && shares.length > 0) {
+      const earningsToInsert = shares.map(share => {
+        const partnerAmount = distributableAmount * (Number(share.share_percentage) / 100);
+        return {
+          order_id: order.id,
+          user_id: share.user_id,
+          amount: Number(partnerAmount.toFixed(2))
+        };
+      });
+
+      const { error: insertErr } = await supabase
+        .from('partner_earnings')
+        .insert(earningsToInsert);
+
+      if (insertErr) {
+        console.error('Erro ao registrar ganhos dos sócios/PJs:', insertErr);
+      } else {
+        console.log(`Registrados ${earningsToInsert.length} lançamentos de comissões/dividendos.`);
+      }
+    }
+  } catch (err) {
+    console.error('Erro no processamento de divisão de lucros/notificação:', err);
   }
 }
