@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import AdminLayout from "../../components/Layout/AdminLayout";
+import Layout from "../../components/Layout/Layout";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   DollarSign, 
@@ -125,6 +126,7 @@ const getWhatsAppLink = (fullName: string, whatsapp: string, status: string = 'c
 export default function AdminFinancial() {
   const { profile } = useAuth();
   const supabaseAny = supabase as any;
+  const LayoutComponent = profile?.role === 'admin' ? AdminLayout : Layout;
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -627,7 +629,7 @@ export default function AdminFinancial() {
       ];
 
   return (
-    <AdminLayout>
+    <LayoutComponent>
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Header */}
@@ -1355,6 +1357,6 @@ export default function AdminFinancial() {
         )}
       </AnimatePresence>
 
-    </AdminLayout>
+    </LayoutComponent>
   );
 }

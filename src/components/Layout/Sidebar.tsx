@@ -16,7 +16,8 @@ import {
   Tv,
   BookOpen,
   MessageCircle,
-  Headphones
+  Headphones,
+  ShieldCheck
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
@@ -70,7 +71,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   };
 
   const userDisplayName = getUserDisplayName(profile, user) || user?.user_metadata?.login || "Usuário";
-  const userRole = profile?.role === 'admin' ? "ADMINISTRADOR" : "PRODUTOR";
+  const userRole = profile?.role === 'admin' 
+    ? "ADMINISTRADOR" 
+    : profile?.role === 'partner' 
+    ? "SÓCIO" 
+    : profile?.role === 'pj' 
+    ? "PARCEIRO PJ" 
+    : "PRODUTOR";
   const farmName = profile?.property_name || "Fazenda São José";
 
   return (
@@ -102,40 +109,67 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           onScroll={handleScroll}
           className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto min-h-0 scrollbar-thin"
         >
-          {MENU_ITEMS.map((item) => {
-            const isActive = location.pathname === item.path || 
-              (item.path !== "/" && item.path !== "/dashboard" && location.pathname.startsWith(item.path));
-            const isExternal = item.path.startsWith("http");
+          {(() => {
+            const menuItems = [...MENU_ITEMS];
             
-            const linkProps = isExternal 
-              ? { href: item.path, target: "_blank", rel: "noopener noreferrer" } 
-              : { to: item.path };
-              
-            const Tag = isExternal ? "a" : Link;
+            // Adiciona itens de Sócio/PJ dinamicamente
+            if (profile?.role === 'admin' || profile?.role === 'partner' || profile?.role === 'pj') {
+              const finIndex = menuItems.findIndex(i => i.path === '/financeiro');
+              if (finIndex !== -1) {
+                menuItems.splice(finIndex + 1, 0, {
+                  icon: Wallet,
+                  labelKey: "nav.sharing",
+                  defaultLabel: "Rateio / Comissões",
+                  path: "/admin/financeiro"
+                });
+              }
 
-            return (
-              <Tag
-                key={item.path}
-                {...linkProps}
-                onClick={onClose}
-                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all group border border-transparent ${
-                  !isExternal && isActive 
-                    ? "sidebar-item-active font-semibold" 
-                    : "text-white/70 hover:bg-white/5 hover:text-white"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <item.icon size={18} className={!isExternal && isActive ? "text-emerald-400" : "text-white/60 group-hover:text-white transition-colors"} />
-                  <span className="text-sm font-medium tracking-wide">{t(item.labelKey, item.defaultLabel)}</span>
-                </div>
-              </Tag>
-            );
-          })}
+              const commIndex = menuItems.findIndex(i => i.path === '/comunidade');
+              if (commIndex !== -1) {
+                menuItems.splice(commIndex + 1, 0, {
+                  icon: ShieldCheck,
+                  labelKey: "nav.moderation",
+                  defaultLabel: "Moderação",
+                  path: "/admin/moderacao"
+                });
+              }
+            }
+
+            return menuItems.map((item) => {
+              const isActive = location.pathname === item.path || 
+                (item.path !== "/" && item.path !== "/dashboard" && location.pathname.startsWith(item.path));
+              const isExternal = item.path.startsWith("http");
+              
+              const linkProps = isExternal 
+                ? { href: item.path, target: "_blank", rel: "noopener noreferrer" } 
+                : { to: item.path };
+                
+              const Tag = isExternal ? "a" : Link;
+
+              return (
+                <Tag
+                  key={item.path}
+                  {...linkProps}
+                  onClick={onClose}
+                  className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all group border border-transparent ${
+                    !isExternal && isActive 
+                      ? "sidebar-item-active font-semibold" 
+                      : "text-white/70 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <item.icon size={18} className={!isExternal && isActive ? "text-emerald-400" : "text-white/60 group-hover:text-white transition-colors"} />
+                    <span className="text-sm font-medium tracking-wide">{t(item.labelKey, item.defaultLabel)}</span>
+                  </div>
+                </Tag>
+              );
+            });
+          })()}
         </nav>
 
         {/* Rodapé Reestilizado Fiel ao Layout */}
         <div className="p-4 border-t border-emerald-950/30 space-y-3">
-          
+
           {/* Card do Usuário */}
           <Link 
             to="/perfil" 

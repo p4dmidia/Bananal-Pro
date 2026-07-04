@@ -16,9 +16,11 @@ import { supabase as supabaseClient } from "../../lib/supabase";
 const supabase = supabaseClient as any;
 import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "sonner";
+import Layout from "../../components/Layout/Layout";
 
 export default function AdminModeration() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const LayoutComponent = profile?.role === 'admin' ? AdminLayout : Layout;
   const [comments, setComments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState("");
@@ -104,7 +106,7 @@ export default function AdminModeration() {
   }, [user]);
 
   return (
-    <AdminLayout>
+    <LayoutComponent>
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -254,6 +256,6 @@ export default function AdminModeration() {
           </div>
         )}
       </div>
-    </AdminLayout>
+    </LayoutComponent>
   );
 }
