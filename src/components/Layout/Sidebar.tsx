@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { 
   LayoutDashboard, 
   Users, 
@@ -17,10 +17,11 @@ import {
   BookOpen,
   MessageCircle,
   Headphones,
-  ShieldCheck
+  ShieldCheck,
+  X
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../../contexts/AuthContext";
 import { getUserDisplayName } from "../../lib/utils";
 import { useTranslation } from "react-i18next";
@@ -51,6 +52,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const { t } = useTranslation();
+  const [showSupportModal, setShowSupportModal] = useState(false);
 
   const navRef = useRef<HTMLElement>(null);
 
@@ -193,21 +195,19 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <ChevronDown size={14} className="text-white/40 group-hover/profile:text-white transition-colors shrink-0 ml-2" />
           </Link>
 
-          <a 
-            href="https://wa.me/5521969014654" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="flex items-center justify-between px-4 py-3 rounded-xl bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/10 hover:border-emerald-500/20 text-white/80 hover:text-white transition-all text-xs group cursor-pointer"
+          <button 
+            onClick={() => setShowSupportModal(true)}
+            className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-400/30 hover:border-emerald-400/50 text-white transition-all text-xs group cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <Headphones size={15} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+              <Headphones size={15} className="text-emerald-350 group-hover:scale-110 transition-transform" />
               <div className="text-left">
-                <p className="font-bold text-[10px] text-white">Precisa de ajuda?</p>
-                <p className="text-[9px] text-white/50">Fale com nosso suporte</p>
+                <p className="font-extrabold text-[10px] text-emerald-300 uppercase tracking-wider">Precisa de ajuda?</p>
+                <p className="text-[9px] text-zinc-100 font-medium">Fale com nosso suporte</p>
               </div>
             </div>
-            <ChevronRight size={12} className="text-white/40 group-hover:translate-x-0.5 transition-transform" />
-          </a>
+            <ChevronRight size={12} className="text-zinc-200 group-hover:translate-x-0.5 transition-transform" />
+          </button>
 
           {/* Sair da Conta */}
           <button 
@@ -219,6 +219,202 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </button>
         </div>
       </aside>
+
+      {/* SUPPORT OPTIONS MODAL */}
+      <AnimatePresence>
+        {showSupportModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSupportModal(false)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-md"
+            />
+
+            {/* Modal Content */}
+            <motion.div
+              initial={{ scale: 0.95, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 20, opacity: 0 }}
+              className="bg-zinc-950 border border-emerald-500/20 rounded-[2.5rem] w-full max-w-4xl p-6 md:p-8 relative z-10 overflow-hidden shadow-2xl space-y-6 font-sans text-white max-h-[90vh] overflow-y-auto"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setShowSupportModal(false)}
+                className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/5 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+
+              {/* Title Header */}
+              <div className="text-center space-y-2">
+                <div className="mx-auto w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shadow-md">
+                  <Headphones size={24} />
+                </div>
+                <h3 className="text-2xl font-black font-headline tracking-tight text-white uppercase">
+                  Central de Ajuda & Suporte
+                </h3>
+                <p className="text-sm text-zinc-400 max-w-xl mx-auto font-medium">
+                  Selecione o especialista ideal para o seu tipo de dúvida e fale diretamente pelo WhatsApp.
+                </p>
+              </div>
+
+              {/* Grid of Support Options */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 1. Francisco */}
+                <div className="bg-emerald-950/20 border border-emerald-950/40 rounded-3xl p-5 flex flex-col justify-between hover:border-emerald-500/30 transition-all hover:bg-emerald-950/30 relative overflow-hidden group">
+                  <div className="flex gap-4">
+                    <div className="w-14 h-14 rounded-2xl border border-emerald-500/25 p-[2px] bg-emerald-900/10 overflow-hidden shrink-0">
+                      <img 
+                        src="/images/francisco.jpeg" 
+                        alt="Francisco" 
+                        className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=Francisco`;
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-white text-base">Francisco</h4>
+                        <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                          Biológicos
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-wider">Especialista de Biológicos</p>
+                      <p className="text-xs text-zinc-300 leading-normal">
+                        Dúvidas sobre adubação orgânica, bioinsumos e manejo biológico? Fale com o Francisco para potencializar sua lavoura.
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href="https://wa.me/557599168766"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer"
+                  >
+                    <MessageCircle size={15} />
+                    <span>Dúvidas sobre Biológico? Chame aqui</span>
+                  </a>
+                </div>
+
+                {/* 2. Jhonatan */}
+                <div className="bg-emerald-950/20 border border-emerald-950/40 rounded-3xl p-5 flex flex-col justify-between hover:border-emerald-500/30 transition-all hover:bg-emerald-950/30 relative overflow-hidden group">
+                  <div className="flex gap-4">
+                    <div className="w-14 h-14 rounded-2xl border border-emerald-500/25 p-[2px] bg-emerald-900/10 overflow-hidden shrink-0">
+                      <img 
+                        src="/images/jhonatan.jpeg" 
+                        alt="Jhonatan" 
+                        className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=Jhonatan`;
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-white text-base">Jhonatan</h4>
+                        <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                          Agrônomo
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-wider">Engenheiro Agrônomo</p>
+                      <p className="text-xs text-zinc-300 leading-normal">
+                        Problemas no plantio, sintomas de doenças, pragas ou adubação no campo? Fale direto com o nosso Agrônomo Jhonatan.
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href="https://wa.me/5527995759957"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer"
+                  >
+                    <MessageCircle size={15} />
+                    <span>Dúvidas técnicas do campo! Fale aqui</span>
+                  </a>
+                </div>
+
+                {/* 3. Jean Carlos */}
+                <div className="bg-emerald-950/20 border border-emerald-950/40 rounded-3xl p-5 flex flex-col justify-between hover:border-emerald-500/30 transition-all hover:bg-emerald-950/30 relative overflow-hidden group">
+                  <div className="flex gap-4">
+                    <div className="w-14 h-14 rounded-2xl border border-emerald-500/25 p-[2px] bg-emerald-900/10 overflow-hidden shrink-0">
+                      <img 
+                        src="/images/jean.png" 
+                        alt="Jean Carlos" 
+                        className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=Jean`;
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-white text-base">Jean Carlos</h4>
+                        <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                          Bananicultor
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-wider">Produtor & Especialista</p>
+                      <p className="text-xs text-zinc-300 leading-normal">
+                        Dúvidas relacionadas ao conteúdo do curso, técnicas de manejo ou dúvidas práticas da banana? Fale com o Jean.
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href="https://wa.me/5521969014654"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer"
+                  >
+                    <MessageCircle size={15} />
+                    <span>Dúvidas do curso e manejo? Fale aqui</span>
+                  </a>
+                </div>
+
+                {/* 4. Weider */}
+                <div className="bg-emerald-950/20 border border-emerald-950/40 rounded-3xl p-5 flex flex-col justify-between hover:border-emerald-500/30 transition-all hover:bg-emerald-950/30 relative overflow-hidden group">
+                  <div className="flex gap-4">
+                    <div className="w-14 h-14 rounded-2xl border border-emerald-500/25 p-[2px] bg-emerald-900/10 overflow-hidden shrink-0">
+                      <img 
+                        src="/images/weider.png" 
+                        alt="Weider" 
+                        className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/avataaars/svg?seed=Weider`;
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-white text-base">Weider</h4>
+                        <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                          Plataforma
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-wider">Suporte Técnico</p>
+                      <p className="text-xs text-zinc-300 leading-normal">
+                        Dúvidas sobre o funcionamento da plataforma Bananal Pro, problemas de acesso, erros ou faturamento? Fale com Weider.
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href="https://wa.me/5531995006891"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-2xl text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer"
+                  >
+                    <MessageCircle size={15} />
+                    <span>Dúvidas sobre a plataforma? Chame aqui</span>
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
