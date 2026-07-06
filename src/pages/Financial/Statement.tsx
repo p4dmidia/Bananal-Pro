@@ -22,7 +22,8 @@ import {
   Calendar,
   Package,
   Sprout,
-  Map
+  Map,
+  Zap
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../lib/supabase";
@@ -61,6 +62,7 @@ interface FarmTransaction {
   amount: number;
   date: string;
   description: string;
+  area_id?: number | null;
 }
 
 function CostGaugeCard({ title, value, sublabel, changeText, percentage }: {
@@ -179,6 +181,7 @@ export default function Statement() {
   const [txDate, setTxDate] = useState("");
   const [txDescription, setTxDescription] = useState("");
   const [txCostClassification, setTxCostClassification] = useState("Variável");
+  const [txAreaId, setTxAreaId] = useState<string>("all");
 
   // Edit states
   const [editingTransaction, setEditingTransaction] = useState<FarmTransaction | null>(null);
@@ -189,6 +192,23 @@ export default function Statement() {
   const [editTxDate, setEditTxDate] = useState("");
   const [editTxDescription, setEditTxDescription] = useState("");
   const [editTxCostClassification, setEditTxCostClassification] = useState("Variável");
+  const [editTxAreaId, setEditTxAreaId] = useState<string>("all");
+  const [areas, setAreas] = useState<any[]>([]);
+
+  const fetchAreas = async () => {
+    if (!profile?.id) return;
+    try {
+      const { data, error } = await supabase
+        .from('producer_areas')
+        .select('*')
+        .order('created_at', { ascending: true });
+      if (!error && data) {
+        setAreas(data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching areas in Statement:', err);
+    }
+  };
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("Todos");
@@ -309,7 +329,8 @@ export default function Statement() {
           costClassification,
           amount: t.amount,
           date: t.created_at ? t.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
-          description
+          description,
+          area_id: t.area_id
         };
       });
       setTransactions(mapped);
@@ -858,6 +879,7 @@ export default function Statement() {
   useEffect(() => {
     fetchTransactions();
     fetchCycles();
+    fetchAreas();
   }, [profile]);
 
   // Calculations
@@ -881,14 +903,17 @@ export default function Statement() {
 
   const lucroEstimado = totalReceitas - totalDespesas;
 
-  // Indicators
-  const custoPorHectare = hectares > 0 ? totalDespesas / hectares : 0;
-  const custoPorPlanta = plantsCount > 0 ? totalDespesas / plantsCount : 0;
+  // Indicators using database values if available, otherwise fallback
+  const dbHectares = areas.length > 0 ? areas.reduce((sum, a) => sum + (a.size_hectares || 0), 0) : hectares;
+  const dbPlantsCount = areas.length > 0 ? areas.reduce((sum, a) => sum + (a.plants_count || 0), 0) : plantsCount;
+
+  const custoPorHectare = dbHectares > 0 ? totalDespesas / dbHectares : 0;
+  const custoPorPlanta = dbPlantsCount > 0 ? totalDespesas / dbPlantsCount : 0;
 
   // Break-even: totalDespesas / targetBoxPrice (how many boxes to sell to cover total farm expenses)
   const breakEvenBoxes = targetBoxPrice > 0 ? Math.ceil(totalDespesas / targetBoxPrice) : 0;
 
-  const volumeCaixas = totalReceitas > 0 ? (totalReceitas / targetBoxPrice) : (plantsCount > 0 ? (plantsCount * 0.15) : 100);
+  const volumeCaixas = totalReceitas > 0 ? (totalReceitas / targetBoxPrice) : (dbPlantsCount > 0 ? (dbPlantsCount * 0.15) : 100);
   const custoPorCaixa = totalDespesas / volumeCaixas;
   const margemSeguranca = targetBoxPrice - custoPorCaixa;
 
@@ -945,7 +970,8 @@ export default function Statement() {
             type: txType,
             description: categoryAndDesc,
             status: 'completed',
-            created_at: new Date(txDate + "T12:00:00").toISOString()
+            created_at: new Date(txDate + "T12:00:00").toISOString(),
+            area_id: txAreaId === "all" ? null : Number(txAreaId)
           }
         ]);
 
@@ -955,6 +981,7 @@ export default function Statement() {
       setShowAddModal(false);
       setTxAmount("");
       setTxDescription("");
+      setTxAreaId("all");
       fetchTransactions();
     } catch (err) {
       console.error('Error adding transaction:', err);
@@ -972,6 +999,7 @@ export default function Statement() {
     setEditTxDate(tx.date);
     setEditTxDescription(tx.description);
     setEditTxCostClassification(tx.costClassification || "Variável");
+    setEditTxAreaId(tx.area_id ? String(tx.area_id) : "all");
     setShowEditModal(true);
   };
 
@@ -994,7 +1022,8 @@ export default function Statement() {
           amount: parseFloat(editTxAmount),
           type: editTxType,
           description: categoryAndDesc,
-          created_at: new Date(editTxDate + "T12:00:00").toISOString()
+          created_at: new Date(editTxDate + "T12:00:00").toISOString(),
+          area_id: editTxAreaId === "all" ? null : Number(editTxAreaId)
         })
         .eq('id', Number(editingTransaction.id));
 
@@ -1739,6 +1768,11 @@ export default function Statement() {
                         <td className="px-8 py-6">
                           <div className="flex items-center gap-2">
                             <span className="text-slate-300 font-semibold">{tx.category}</span>
+                            {tx.area_id && (
+                              <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                                {areas.find(a => String(a.id) === String(tx.area_id))?.name || "Talhão"}
+                              </span>
+                            )}
                             {tx.type === "Despesa" && (
                               <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded ${
                                 tx.costClassification === "Fixo" 
@@ -1922,6 +1956,20 @@ export default function Statement() {
                 </div>
 
                 <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-300">Gleba / Talhão</label>
+                  <select
+                    value={txAreaId}
+                    onChange={(e) => setTxAreaId(e.target.value)}
+                    className="w-full bg-zinc-900 border border-white/10 rounded-2xl py-3 px-4 text-white text-xs focus:outline-none h-[42px] cursor-pointer"
+                  >
+                    <option value="all">Geral (Sem Talhão Específico)</option>
+                    {areas.map((a) => (
+                      <option key={a.id} value={a.id}>{a.name} ({a.banana_variety})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
                   <label className="text-xs font-semibold text-slate-300">Valor (R$)</label>
                   <input
                     type="number"
@@ -2097,6 +2145,20 @@ export default function Statement() {
                       className="w-full bg-black/40 border border-white/10 rounded-2xl py-2 px-4 text-white text-xs focus:outline-none h-[42px]"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-300">Gleba / Talhão</label>
+                  <select
+                    value={editTxAreaId}
+                    onChange={(e) => setEditTxAreaId(e.target.value)}
+                    className="w-full bg-zinc-900 border border-white/10 rounded-2xl py-3 px-4 text-white text-xs focus:outline-none h-[42px] cursor-pointer"
+                  >
+                    <option value="all">Geral (Sem Talhão Específico)</option>
+                    {areas.map((a) => (
+                      <option key={a.id} value={a.id}>{a.name} ({a.banana_variety})</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="space-y-2">

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Layout from "../../components/Layout/Layout";
 import { motion } from "motion/react";
@@ -32,6 +32,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { getUserFirstName } from "../../lib/utils";
 import { toast } from "react-hot-toast";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, LineChart, Line } from "recharts";
+import { bananaPriceService } from "../../lib/bananaPriceService";
 import bannerImg from "../../assets/banana_plantation_sunset.png";
 
 // Componente para Anel de Solo (Gauge)
@@ -140,8 +141,381 @@ export default function Overview() {
   const [talhoes, setTalhoes] = useState<any[]>([]);
   const [selectedTalhao, setSelectedTalhao] = useState<number | null>(null);
 
-  // Financial Chart Data
-  const [financialChartData, setFinancialChartData] = useState<any[]>([]);
+  // Dynamic dashboard states
+  const [selectedAreaId, setSelectedAreaId] = useState<string>("all");
+  const [rawAreas, setRawAreas] = useState<any[]>([]);
+  const [rawTransactions, setRawTransactions] = useState<any[]>([]);
+  const [rawCycles, setRawCycles] = useState<any[]>([]);
+  const [rawDiagnostics, setRawDiagnostics] = useState<any[]>([]);
+  const [rawSoilAnalyses, setRawSoilAnalyses] = useState<any[]>([]);
+  const [varieties, setVarieties] = useState<any[]>([]);
+  const [priceIndicators, setPriceIndicators] = useState<any>(null);
+  const [loadingPrice, setLoadingPrice] = useState(false);
+
+  // Dynamic calculations
+  const activeAreas = useMemo(() => {
+    if (selectedAreaId === "all") return rawAreas;
+    return rawAreas.filter(a => String(a.id) === selectedAreaId);
+  }, [selectedAreaId, rawAreas]);
+
+  const calculatedAreaTotal = useMemo(() => {
+    return parseFloat(activeAreas.reduce((sum, a) => sum + (a.size_hectares || 0), 0).toFixed(1));
+  }, [activeAreas]);
+
+  const calculatedEstimatedYield = useMemo(() => {
+    const yieldVal = activeAreas.reduce((sum, a) => {
+      let count = a.plants_count;
+      if (!count || count <= 0) {
+        if (a.spacing_row_m && a.spacing_plant_m) {
+          count = Math.round((a.size_hectares * 10000) / (a.spacing_row_m * a.spacing_plant_m));
+        } else {
+          const varInfo = varieties.find(v => v.variety_name === a.banana_variety || v.variety_name.toLowerCase() === a.banana_variety?.toLowerCase());
+          count = Math.round(a.size_hectares * (varInfo?.plants_per_hectare || 1666));
+        }
+      }
+      
+      const varInfo = varieties.find(v => v.variety_name === a.banana_variety || v.variety_name.toLowerCase() === a.banana_variety?.toLowerCase());
+      const bunchWeight = varInfo?.average_bunch_weight_kg || 18.5;
+      const yieldTons = ((count || 0) * 0.98 * bunchWeight) / 1000;
+      return sum + yieldTons;
+    }, 0);
+    return parseFloat(yieldVal.toFixed(1));
+  }, [activeAreas, varieties]);
+
+  const filteredTransactions = useMemo(() => {
+    if (selectedAreaId === "all") return rawTransactions;
+    return rawTransactions.filter(t => String(t.area_id) === selectedAreaId);
+  }, [selectedAreaId, rawTransactions]);
+
+  const calculatedReceitaTotal = useMemo(() => {
+    if (selectedAreaId !== "all" && priceIndicators) {
+      const yieldKg = calculatedEstimatedYield * 1000;
+      return Math.round(yieldKg * priceIndicators.currentPrice);
+    }
+    
+    let totalRev = 0;
+    activeAreas.forEach(a => {
+      let count = a.plants_count;
+      if (!count || count <= 0) {
+        if (a.spacing_row_m && a.spacing_plant_m) {
+          count = Math.round((a.size_hectares * 10000) / (a.spacing_row_m * a.spacing_plant_m));
+        } else {
+          const varInfo = varieties.find(v => v.variety_name === a.banana_variety || v.variety_name.toLowerCase() === a.banana_variety?.toLowerCase());
+          count = Math.round(a.size_hectares * (varInfo?.plants_per_hectare || 1666));
+        }
+      }
+      const varInfo = varieties.find(v => v.variety_name === a.banana_variety || v.variety_name.toLowerCase() === a.banana_variety?.toLowerCase());
+      const bunchWeight = varInfo?.average_bunch_weight_kg || 18.5;
+      const yieldKg = (count || 0) * 0.98 * bunchWeight;
+      
+      let basePrice = 2.20;
+      if (varInfo) {
+        const grp = varInfo.group_name;
+        if (grp === "Prata") basePrice = 2.60;
+        else if (grp === "Cavendish") basePrice = 1.85;
+        else if (grp === "Terra") basePrice = 3.40;
+        else if (grp === "Maçã") basePrice = 4.80;
+        else if (grp === "Ouro") basePrice = 3.20;
+      }
+      totalRev += yieldKg * basePrice;
+    });
+    
+    if (activeAreas.length === 0) {
+      return filteredTransactions.filter(t => t.type === "Receita").reduce((sum, t) => sum + (t.amount || 0), 0);
+    }
+    return Math.round(totalRev);
+  }, [selectedAreaId, activeAreas, varieties, priceIndicators, calculatedEstimatedYield, filteredTransactions]);
+
+  const calculatedCustosTotais = useMemo(() => {
+    return filteredTransactions
+      .filter((t: any) => t.type === "Despesa" || t.type === "Custo Fixo" || t.type === "Custo Variável")
+      .reduce((sum: number, t: any) => sum + (t.amount || 0), 0);
+  }, [filteredTransactions]);
+
+  const calculatedLucroEstimado = useMemo(() => {
+    return calculatedReceitaTotal - calculatedCustosTotais;
+  }, [calculatedReceitaTotal, calculatedCustosTotais]);
+
+  const calculatedMargemTotal = useMemo(() => {
+    return calculatedReceitaTotal > 0 ? Math.round(((calculatedReceitaTotal - calculatedCustosTotais) / calculatedReceitaTotal) * 100) : 0;
+  }, [calculatedReceitaTotal, calculatedCustosTotais]);
+
+  const calculatedFinancialChartData = useMemo(() => {
+    const sortedTxs = [...filteredTransactions].sort((a, b) => new Date(a.created_at || a.date).getTime() - new Date(b.created_at || b.date).getTime());
+    let accReceita = 0;
+    let accLucro = 0;
+    
+    const chartPoints = sortedTxs.map((tx: any) => {
+      const amt = tx.amount || 0;
+      if (tx.type === "Receita") {
+        accReceita += amt;
+        accLucro += amt;
+      } else {
+        accLucro -= amt;
+      }
+      const d = new Date(tx.created_at || tx.date);
+      const formattedDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+      return {
+        name: formattedDate,
+        receita: accReceita,
+        lucro: accLucro
+      };
+    });
+    return chartPoints.slice(-10);
+  }, [filteredTransactions]);
+
+  const custosMonthComparison = useMemo(() => {
+    const now = new Date();
+    const thisMonth = now.getMonth();
+    const thisYear = now.getFullYear();
+    
+    const prevMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+    const prevYear = thisMonth === 0 ? thisYear - 1 : thisYear;
+
+    const thisMonthCustos = filteredTransactions
+      .filter((t: any) => {
+        return t.type === "Despesa" && new Date(t.created_at || t.date).getMonth() === thisMonth && new Date(t.created_at || t.date).getFullYear() === thisYear;
+      })
+      .reduce((sum: number, t: any) => sum + (t.amount || 0), 0);
+
+    const prevMonthCustos = filteredTransactions
+      .filter((t: any) => {
+        return t.type === "Despesa" && new Date(t.created_at || t.date).getMonth() === prevMonth && new Date(t.created_at || t.date).getFullYear() === prevYear;
+      })
+      .reduce((sum: number, t: any) => sum + (t.amount || 0), 0);
+
+    let variation = 0;
+    if (prevMonthCustos > 0) {
+      variation = parseFloat((((thisMonthCustos - prevMonthCustos) / prevMonthCustos) * 100).toFixed(1));
+    }
+    return {
+      thisMonthCustos,
+      prevMonthCustos,
+      variation
+    };
+  }, [filteredTransactions]);
+
+  const calculatedPotentialProductivity = useMemo(() => {
+    let varietyScore = 85;
+    if (activeAreas.length > 0) {
+      let sumVar = 0;
+      activeAreas.forEach(a => {
+        const vName = (a.banana_variety || "").toLowerCase();
+        let score = 85;
+        if (vName.includes("platina") || vName.includes("graúda") || vName.includes("naine") || vName.includes("ken") || vName.includes("njk") || vName.includes("williams") || vName.includes("fhia-21")) {
+          score = 100;
+        } else if (vName.includes("anã") || vName.includes("catarina") || vName.includes("princesa") || vName.includes("fhia-18")) {
+          score = 90;
+        } else if (vName.includes("maçã") || vName.includes("ouro")) {
+          score = 75;
+        }
+        sumVar += score;
+      });
+      varietyScore = Math.round(sumVar / activeAreas.length);
+    }
+
+    let soilScore = 70;
+    if (rawSoilAnalyses.length > 0) {
+      const latestSoil = rawSoilAnalyses[0];
+      let score = 70;
+      if (latestSoil.ph >= 5.5 && latestSoil.ph <= 6.5) {
+        score += 20;
+      }
+      if (latestSoil.ph >= 5.8 && latestSoil.ph <= 6.2) {
+        score += 5;
+      }
+      const mo = latestSoil.h_al || 0;
+      if (mo > 2.5) {
+        score += 5;
+      }
+      soilScore = Math.min(100, score);
+    }
+
+    let climateScore = 85;
+    const temp = weatherWidget.temp;
+    if (temp >= 20 && temp <= 30) {
+      climateScore = 95;
+    } else if (temp > 35 || temp < 15) {
+      climateScore = 70;
+    }
+    
+    const hasIrrigation = activeAreas.some(a => a.irrigation_type && a.irrigation_type !== "Sequeiro");
+    if (weatherWidget.rainChance > 40 || hasIrrigation) {
+      climateScore = Math.min(100, climateScore + 5);
+    } else if (weatherWidget.rainChance === 0 && !hasIrrigation) {
+      climateScore = Math.max(60, climateScore - 15);
+    }
+
+    let healthScore = 95;
+    if (rawDiagnostics.length > 0) {
+      const hasSevere = rawDiagnostics.some(d => d.severity?.toLowerCase() === "alta");
+      const hasModerate = rawDiagnostics.some(d => d.severity?.toLowerCase() === "média" || d.severity?.toLowerCase() === "media");
+      if (hasSevere) healthScore = 60;
+      else if (hasModerate) healthScore = 80;
+      else healthScore = 95;
+    }
+
+    const overall = Math.round(
+      varietyScore * 0.40 +
+      soilScore * 0.20 +
+      climateScore * 0.15 +
+      healthScore * 0.25
+    );
+
+    return {
+      variety: varietyScore,
+      soil: soilScore,
+      climate: climateScore,
+      health: healthScore,
+      overall
+    };
+  }, [activeAreas, rawSoilAnalyses, weatherWidget, rawDiagnostics]);
+
+  const computedTalhoes = useMemo(() => {
+    return rawAreas.map((item, index) => {
+      let count = item.plants_count;
+      if (!count || count <= 0) {
+        if (item.spacing_row_m && item.spacing_plant_m) {
+          count = Math.round((item.size_hectares * 10000) / (item.spacing_row_m * item.spacing_plant_m));
+        } else {
+          const varInfo = varieties.find(v => v.variety_name === item.banana_variety || v.variety_name.toLowerCase() === item.banana_variety?.toLowerCase());
+          count = Math.round(item.size_hectares * (varInfo?.plants_per_hectare || 1666));
+        }
+      }
+      
+      const varInfo = varieties.find(v => v.variety_name === item.banana_variety || v.variety_name.toLowerCase() === item.banana_variety?.toLowerCase());
+      const bunchWeight = varInfo?.average_bunch_weight_kg || 18.5;
+      const yieldTons = ((count || 0) * 0.98 * bunchWeight) / 1000;
+      
+      const productivity = item.size_hectares > 0 ? parseFloat((yieldTons / item.size_hectares).toFixed(1)) : 0;
+
+      return {
+        id: item.id,
+        name: item.name || `Talhão ${index + 1}`,
+        variety: item.banana_variety || "Cavendish",
+        hectares: item.size_hectares || 1.0,
+        productivity
+      };
+    });
+  }, [rawAreas, varieties]);
+
+  const dynamicAreaSparkline = useMemo(() => {
+    return [
+      { v: calculatedAreaTotal * 0.9 },
+      { v: calculatedAreaTotal * 0.95 },
+      { v: calculatedAreaTotal },
+      { v: calculatedAreaTotal },
+      { v: calculatedAreaTotal }
+    ];
+  }, [calculatedAreaTotal]);
+
+  const dynamicYieldSparkline = useMemo(() => {
+    return [
+      { v: calculatedEstimatedYield * 0.9 },
+      { v: calculatedEstimatedYield * 0.95 },
+      { v: calculatedEstimatedYield },
+      { v: calculatedEstimatedYield },
+      { v: calculatedEstimatedYield }
+    ];
+  }, [calculatedEstimatedYield]);
+
+  const dynamicProfitSparkline = useMemo(() => {
+    return [
+      { v: calculatedLucroEstimado * 0.9 },
+      { v: calculatedLucroEstimado * 0.95 },
+      { v: calculatedLucroEstimado },
+      { v: calculatedLucroEstimado },
+      { v: calculatedLucroEstimado }
+    ];
+  }, [calculatedLucroEstimado]);
+
+  const dynamicCustosSparkline = useMemo(() => {
+    return [
+      { v: calculatedCustosTotais * 0.9 },
+      { v: calculatedCustosTotais * 0.95 },
+      { v: calculatedCustosTotais },
+      { v: calculatedCustosTotais },
+      { v: calculatedCustosTotais }
+    ];
+  }, [calculatedCustosTotais]);
+
+  // Sync market price when variety changes
+  useEffect(() => {
+    const fetchMarketPrice = async () => {
+      let varietyName = "Prata Anã";
+      if (selectedAreaId !== "all" && rawAreas.length > 0) {
+        const activeArea = rawAreas.find(a => String(a.id) === selectedAreaId);
+        if (activeArea?.banana_variety) {
+          varietyName = activeArea.banana_variety;
+        }
+      } else if (rawAreas.length > 0) {
+        varietyName = rawAreas[0].banana_variety || "Prata Anã";
+      }
+
+      let normalized = varietyName;
+      if (varietyName === "prata-ana") normalized = "Prata Anã";
+      else if (varietyName === "nanica") normalized = "Nanica Tradicional";
+      else if (varietyName === "maca") normalized = "Maçã Tradicional";
+      else if (varietyName === "terra") normalized = "Banana Terra";
+      else if (varietyName === "ouro") normalized = "Ouro";
+
+      setLoadingPrice(true);
+      try {
+        const indicators = await bananaPriceService.getPriceIndicators(supabase, normalized);
+        setPriceIndicators(indicators);
+      } catch (err) {
+        console.error("Error fetching price indicators:", err);
+      } finally {
+        setLoadingPrice(false);
+      }
+    };
+
+    if (profile?.id) {
+      fetchMarketPrice();
+    }
+  }, [selectedAreaId, rawAreas, profile]);
+
+  // Update localStorage cache on dynamic calculations change
+  useEffect(() => {
+    if (!profile?.id || rawAreas.length === 0) return;
+    const cacheKey = `dashboard_cache_${profile.id}`;
+    localStorage.setItem(cacheKey, JSON.stringify({
+      areaTotal: calculatedAreaTotal,
+      estimatedYield: calculatedEstimatedYield,
+      lucroEstimado: calculatedLucroEstimado,
+      receitaTotal: calculatedReceitaTotal,
+      custosTotais: calculatedCustosTotais,
+      margemTotal: calculatedMargemTotal,
+      healthStatus,
+      weatherWidget,
+      forecast7Days,
+      alerts,
+      recentTasks,
+      soilStats,
+      city,
+      state,
+      cep,
+      farmName
+    }));
+  }, [
+    profile,
+    calculatedAreaTotal,
+    calculatedEstimatedYield,
+    calculatedLucroEstimado,
+    calculatedReceitaTotal,
+    calculatedCustosTotais,
+    calculatedMargemTotal,
+    healthStatus,
+    weatherWidget,
+    forecast7Days,
+    alerts,
+    recentTasks,
+    soilStats,
+    city,
+    state,
+    cep,
+    farmName
+  ]);
 
   // Map WMO Weather Codes to Lucide Icons
   const getWeatherIcon = (code: number, size = 20, className = "") => {
@@ -165,453 +539,47 @@ export default function Overview() {
       return;
     }
 
-    // Tentar carregar do cache para resposta instantânea (Stale-While-Revalidate)
-    const cacheKey = `dashboard_cache_${profile.id}`;
-    const cached = localStorage.getItem(cacheKey);
-    let hasCache = false;
-    
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached);
-        setAreaTotal(parsed.areaTotal ?? 0.0);
-        setEstimatedYield(parsed.estimatedYield ?? 0.0);
-        setLucroEstimado(parsed.lucroEstimado ?? 0);
-        setReceitaTotal(parsed.receitaTotal ?? 0);
-        setCustosTotais(parsed.custosTotais ?? 0);
-        setMargemTotal(parsed.margemTotal ?? 0);
-        setHealthStatus(parsed.healthStatus ?? "Sem Dados");
-        if (parsed.weatherWidget) setWeatherWidget(parsed.weatherWidget);
-        if (parsed.forecast7Days) setForecast7Days(parsed.forecast7Days);
-        if (parsed.alerts) setAlerts(parsed.alerts);
-        if (parsed.recentTasks) setRecentTasks(parsed.recentTasks);
-        if (parsed.soilStats) setSoilStats(parsed.soilStats);
-        if (parsed.talhoes) setTalhoes(parsed.talhoes);
-        if (parsed.financialChartData) setFinancialChartData(parsed.financialChartData);
-        if (parsed.city) setCity(parsed.city);
-        if (parsed.state) setState(parsed.state);
-        if (parsed.cep) setCep(parsed.cep);
-        if (parsed.farmName) setFarmName(parsed.farmName);
-        
-        setLoading(false); // Remove loading imediatamente
-        hasCache = true;
-      } catch (e) {
-        console.error("Erro ao ler cache do dashboard:", e);
-      }
-    }
-
     const loadDashboardData = async () => {
-      // Se não houver cache, exibe o loader na primeira vez
-      if (!hasCache) {
-        setLoading(true);
-      }
+      setLoading(true);
       try {
-        // 1. Fetch Registered Areas (Talhões)
-        const { data: areasData, error: areasError } = await (supabase as any)
-          .from("producer_areas")
-          .select("*")
-          .order("created_at", { ascending: true });
+        const { data: areasData } = await supabase.from("producer_areas").select("*");
+        setRawAreas(areasData || []);
 
-        if (areasError) throw areasError;
+        const { data: varietiesData } = await supabase.from("banana_varieties").select("*");
+        setVarieties(varietiesData || []);
 
-        let totalHectares = 0.0;
-        let mappedTalhoes: any[] = [];
+        const { data: cyclesData } = await supabase.from("production_cycles").select("*").eq("user_id", profile.id).eq("status", "Ativo");
+        setRawCycles(cyclesData || []);
 
-        if (areasData && areasData.length > 0) {
-          totalHectares = areasData.reduce((sum: number, item: any) => sum + (item.size_hectares || 0), 0);
-          
-          mappedTalhoes = areasData.map((item: any, index: number) => {
-            const baseProd = item.banana_variety?.toLowerCase().includes("prata") ? 12.2 : 12.8;
-            const variance = (index % 3 === 0 ? 0.3 : index % 2 === 0 ? -0.2 : 0.1);
-            return {
-              id: item.id,
-              name: item.name || `Talhão ${index + 1}`,
-              variety: item.banana_variety || "Cavendish",
-              hectares: item.size_hectares || 1.0,
-              productivity: parseFloat((baseProd + variance).toFixed(1))
-            };
-          });
-          const areaVal = parseFloat(totalHectares.toFixed(1));
-          setAreaTotal(areaVal);
-          setAreaSparkline([{ v: areaVal * 0.9 }, { v: areaVal * 0.95 }, { v: areaVal }, { v: areaVal }, { v: areaVal }, { v: areaVal }]);
-        } else {
-          mappedTalhoes = [];
-          setAreaTotal(0.0);
-          setAreaSparkline([{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }]);
-        }
-        setTalhoes(mappedTalhoes);
+        const { data: txsData } = await supabase.from("transactions").select("*").eq("user_id", profile.id);
+        setRawTransactions(txsData || []);
 
-        if (profile.property_name) {
-          setFarmName(profile.property_name);
-        }
+        const { data: soilData } = await supabase.from("soil_analyses").select("*").order("created_at", { ascending: false });
+        setRawSoilAnalyses(soilData || []);
 
-        // 2. Fetch Production Cycles to estimate production
-        const { data: cyclesData } = await (supabase as any)
-          .from("production_cycles")
-          .select("*")
-          .eq("user_id", profile.id)
-          .eq("status", "Ativo");
+        const { data: tasksData } = await supabase.from("farm_tasks").select("*").eq("user_id", profile.id).eq("status", "Pendente").order("date", { ascending: true });
+        setRecentTasks(tasksData || []);
 
-        let finalEstimatedYield = 0.0;
-        if (areasData && areasData.length > 0) {
-          finalEstimatedYield = parseFloat((totalHectares * 2.5).toFixed(1));
-        }
+        const { data: inventoryData } = await supabase.from("farm_inventory").select("*").eq("user_id", profile.id);
 
-        if (cyclesData && cyclesData.length > 0) {
-          const totalBoxes = cyclesData.reduce((sum: number, c: any) => sum + (c.boxes_harvested || 0), 0);
-          if (totalBoxes > 0) {
-            const tons = parseFloat((totalBoxes * 0.02).toFixed(1));
-            finalEstimatedYield = tons > 0 ? tons : finalEstimatedYield;
-          }
-        }
-        setEstimatedYield(finalEstimatedYield);
+        const { data: diagnosticsData } = await supabase.from("visual_diagnostics").select("*").eq("user_id", profile.id);
+        setRawDiagnostics(diagnosticsData || []);
 
-        if (finalEstimatedYield > 0) {
-          setYieldSparkline([{ v: finalEstimatedYield * 0.9 }, { v: finalEstimatedYield * 0.95 }, { v: finalEstimatedYield }, { v: finalEstimatedYield }, { v: finalEstimatedYield }, { v: finalEstimatedYield }]);
-        } else {
-          setYieldSparkline([{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }]);
-        }
-
-        // 3. Fetch Financial Data (Transactions)
-        const { data: txsData } = await (supabase as any)
-          .from("transactions")
-          .select("*")
-          .eq("user_id", profile.id);
-
-        let tempReceita = 0;
-        let tempCustos = 0;
-        let tempFinancialData: any[] = [];
-
-        if (txsData && txsData.length > 0) {
-          const receitas = txsData
-            .filter((t: any) => t.type === "Receita")
-            .reduce((sum: number, t: any) => sum + (t.amount || 0), 0);
-          const despesas = txsData
-            .filter((t: any) => t.type === "Despesa" || t.type === "Custo Fixo" || t.type === "Custo Variável")
-            .reduce((sum: number, t: any) => sum + (t.amount || 0), 0);
-
-          tempReceita = receitas;
-          tempCustos = despesas;
-          setReceitaTotal(receitas);
-          setCustosTotais(despesas);
-          setLucroEstimado(receitas - despesas);
-          setMargemTotal(receitas > 0 ? Math.round(((receitas - despesas) / receitas) * 100) : 0);
-
-          const sortedTxs = [...txsData].sort((a, b) => new Date(a.created_at || a.date).getTime() - new Date(b.created_at || b.date).getTime());
-          let accReceita = 0;
-          let accLucro = 0;
-          let accCustos = 0;
-          
-          const chartPoints = sortedTxs.map((tx: any) => {
-            const amt = tx.amount || 0;
-            if (tx.type === "Receita") {
-              accReceita += amt;
-              accLucro += amt;
-            } else {
-              accCustos += amt;
-              accLucro -= amt;
-            }
-            const d = new Date(tx.created_at || tx.date);
-            const formattedDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
-            return {
-              name: formattedDate,
-              receita: accReceita,
-              lucro: accLucro
-            };
-          });
-
-          if (chartPoints.length > 0) {
-            tempFinancialData = chartPoints.slice(-10);
-            const last6Points = chartPoints.slice(-6).map((p: any) => ({ v: p.lucro }));
-            setProfitSparkline(last6Points.length >= 2 ? last6Points : [{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }]);
-          }
-        } else {
-          setReceitaTotal(0);
-          setCustosTotais(0);
-          setLucroEstimado(0);
-          setMargemTotal(0);
-          setProfitSparkline([{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }]);
-        }
-        setFinancialChartData(tempFinancialData);
-
-        // 4. Fetch Weather Data (API Open-Meteo)
-        let userCity = profile.city || "Sete Lagoas";
-        let userState = profile.state || "MG";
-        let userCep = profile.cep || null;
-
-        if (areasData && areasData.length > 0) {
-          userCity = areasData[0].city || userCity;
-          userState = areasData[0].state || userState;
-          userCep = areasData[0].cep || userCep;
-        }
-
-        setCity(userCity);
-        setState(userState);
-        setCep(userCep);
-
-        let lat = -19.4664;
-        let lon = -44.2447;
-
-        let finalWeatherWidget = weatherWidget;
-        let finalForecast7Days = forecast7Days;
-
-        try {
-          const weatherCacheKey = `weather_cache_${userCity}_${userCep || ""}`;
-          const cachedWeather = sessionStorage.getItem(weatherCacheKey);
-          let weatherDataLoaded = false;
-          
-          if (cachedWeather) {
-            try {
-              const parsed = JSON.parse(cachedWeather);
-              if (Date.now() - parsed.timestamp < 1800000) {
-                finalWeatherWidget = parsed.data.weatherWidget;
-                finalForecast7Days = parsed.data.forecast7Days;
-                setWeatherWidget(finalWeatherWidget);
-                setForecast7Days(finalForecast7Days);
-                weatherDataLoaded = true;
-              }
-            } catch (e) {
-              console.error(e);
-            }
-          }
-
-          if (!weatherDataLoaded) {
-            let geoSuccess = false;
-            if (userCep) {
-              const cleanCep = userCep.replace(/\D/g, "");
-              if (cleanCep.length === 8) {
-                try {
-                  const osmRes = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${cleanCep}&country=Brazil&format=json`);
-                  if (osmRes.ok) {
-                    const osmData = await osmRes.json();
-                    if (osmData && osmData.length > 0) {
-                      lat = parseFloat(osmData[0].lat);
-                      lon = parseFloat(osmData[0].lon);
-                      geoSuccess = true;
-                      console.log(`Dashboard: Coordinates solved by CEP ${userCep}:`, lat, lon);
-                    }
-                  }
-                } catch (osmErr) {
-                  console.error("Dashboard geocoding by CEP failed:", osmErr);
-                }
-              }
-            }
-
-            if (!geoSuccess) {
-              const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(userCity)}&count=1&language=pt`);
-              if (geoRes.ok) {
-                const geoData = await geoRes.json();
-                if (geoData.results && geoData.results.length > 0) {
-                  lat = geoData.results[0].latitude;
-                  lon = geoData.results[0].longitude;
-                  console.log(`Dashboard: Coordinates solved by City ${userCity}:`, lat, lon);
-                }
-              }
-            }
-
-            const weatherRes = await fetch(
-              `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,weather_code&daily=precipitation_probability_max,temperature_2m_max,temperature_2m_min,weather_code&timezone=auto`
-            );
-
-            if (weatherRes.ok) {
-              const wData = await weatherRes.json();
-              const cur = wData.current;
-              
-              finalWeatherWidget = {
-                temp: parseFloat(cur.temperature_2m.toFixed(1)),
-                humidity: Math.round(cur.relative_humidity_2m),
-                wind: Math.round(cur.wind_speed_10m),
-                rainChance: wData.daily.precipitation_probability_max ? wData.daily.precipitation_probability_max[0] : 0,
-                condition: cur.weather_code === 0 ? "Ensolarado" : cur.weather_code <= 3 ? "Parcialmente Nublado" : "Chuvoso",
-                thermalSensation: Math.round(cur.temperature_2m + (cur.relative_humidity_2m > 70 ? 1.2 : -0.8)),
-                wmoCode: cur.weather_code
-              };
-              setWeatherWidget(finalWeatherWidget);
-
-              if (wData.daily && wData.daily.time) {
-                finalForecast7Days = wData.daily.time.map((timeStr: string, idx: number) => {
-                  const isHoje = idx === 0;
-                  return {
-                    day: isHoje ? "Hoje" : getDayOfWeekName(timeStr),
-                    maxTemp: Math.round(wData.daily.temperature_2m_max[idx]),
-                    minTemp: Math.round(wData.daily.temperature_2m_min[idx]),
-                    wmoCode: wData.daily.weather_code[idx]
-                  };
-                });
-                setForecast7Days(finalForecast7Days);
-              }
-
-              sessionStorage.setItem(weatherCacheKey, JSON.stringify({
-                timestamp: Date.now(),
-                data: {
-                  weatherWidget: finalWeatherWidget,
-                  forecast7Days: finalForecast7Days
-                }
-              }));
-            }
-          }
-        } catch (err) {
-          console.error("Dashboard weather fetch failed:", err);
-          finalForecast7Days = [
-            { day: "Hoje", maxTemp: 24, minTemp: 16, wmoCode: 2 },
-            { day: "Qui", maxTemp: 26, minTemp: 19, wmoCode: 1 },
-            { day: "Sex", maxTemp: 27, minTemp: 20, wmoCode: 0 },
-            { day: "Sáb", maxTemp: 25, minTemp: 19, wmoCode: 3 },
-            { day: "Dom", maxTemp: 24, minTemp: 18, wmoCode: 51 },
-            { day: "Seg", maxTemp: 25, minTemp: 18, wmoCode: 2 },
-            { day: "Ter", maxTemp: 26, minTemp: 19, wmoCode: 0 }
-          ];
-          setForecast7Days(finalForecast7Days);
-        }
-
-        // 5. Fetch Soil Analysis
-        const { data: soilData } = await (supabase as any)
-          .from("soil_analyses")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(1);
-
-        let finalSoilStats = {
-          ph: 0,
-          mo: 0,
-          k: 0,
-          ca: 0,
-          mg: 0,
-          daysSinceUpdate: null as number | null
-        };
-
-        if (soilData && soilData.length > 0) {
-          const s = soilData[0];
-          const calculatedMO = parseFloat((3.2 + (s.ph > 5.5 ? 0.6 : s.ph > 5.0 ? 0.3 : 0)).toFixed(1));
-          const diffTime = Math.abs(new Date().getTime() - new Date(s.created_at).getTime());
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-          finalSoilStats = {
-            ph: s.ph || 0,
-            mo: calculatedMO,
-            k: s.k || 0,
-            ca: s.ca || 0,
-            mg: s.mg || 0,
-            daysSinceUpdate: diffDays
-          };
-        }
-        setSoilStats(finalSoilStats);
-
-        // 6. Fetch Tasks (Calendário)
-        const { data: tasksData } = await (supabase as any)
-          .from("farm_tasks")
-          .select("*")
-          .eq("user_id", profile.id)
-          .eq("status", "Pendente")
-          .order("date", { ascending: true })
-          .limit(3);
-
-        let mappedTasks: any[] = [];
-
-        if (tasksData && tasksData.length > 0) {
-          mappedTasks = tasksData.map((t: any) => {
-            const diff = new Date(t.date + "T12:00:00").getTime() - new Date().setHours(12, 0, 0, 0);
-            const diffDays = Math.ceil(diff / (1000 * 60 * 60 * 24));
-            let label = "Em breve";
-            if (diffDays <= 0) label = "Hoje";
-            else if (diffDays === 1) label = "Amanhã";
-            
-            return {
-              id: t.id,
-              title: t.title,
-              date: label === "Hoje" ? "Hoje - 14:00" : new Date(t.date + "T00:00:00").toLocaleDateString('pt-BR'),
-              badge: label
-            };
-          });
-        }
-        setRecentTasks(mappedTasks);
-
-        // 7. Load Inventory for Alerts (Farm Inventory)
-        const { data: inventoryData } = await (supabase as any)
-          .from("farm_inventory")
-          .select("*")
-          .eq("user_id", profile.id);
-
+        // Logic for Alerts
         const tempAlertsList: any[] = [];
-
-        // 1. Alerta dinâmico de clima (chuva forte) baseada no forecast real
-        if (finalForecast7Days && finalForecast7Days.length > 1) {
-          const rainDays = finalForecast7Days.slice(0, 3).filter((d: any) => d.wmoCode >= 51 && d.wmoCode <= 82);
-          if (rainDays.length > 0) {
-            tempAlertsList.push({
-              id: "rain-alert",
-              type: "warning",
-              title: "ATENÇÃO",
-              message: `Previsão de chuva (${rainDays[0].day}). Fique atento à drenagem.`,
-              time: "Atualizado"
-            });
-          }
+        if (weatherWidget.humidity > 80) {
+          tempAlertsList.push({ id: "sigatoka-alert", type: "danger", title: "ALERTA AGRO", message: `Umidade elevada (${weatherWidget.humidity}%). Risco de Sigatoka Negra.`, time: "Atualizado" });
         }
-
-        // 2. Alerta dinâmico de Sigatoka Negra baseado na umidade real do widget
-        if (finalWeatherWidget && finalWeatherWidget.humidity > 80) {
-          tempAlertsList.push({
-            id: "sigatoka-alert",
-            type: "danger",
-            title: "ALERTA AGRO",
-            message: `Umidade elevada (${finalWeatherWidget.humidity}%). Risco de Sigatoka Negra.`,
-            time: "Atualizado"
-          });
-        }
-
-        // 3. Alerta de Estoque Baixo (Real, do banco)
         if (inventoryData && inventoryData.length > 0) {
           const lowItems = inventoryData.filter((i: any) => (i.quantity || 0) < (i.min_quantity || 0));
           if (lowItems.length > 0) {
-            tempAlertsList.unshift({
-              id: "stock-alert",
-              type: "warning",
-              title: "ESTOQUE BAIXO",
-              message: `Insumo '${lowItems[0].name}' atingiu o nível mínimo.`,
-              time: "Agora"
-            });
+            tempAlertsList.unshift({ id: "stock-alert", type: "warning", title: "ESTOQUE BAIXO", message: `Insumo '${lowItems[0].name}' atingiu o nível mínimo.`, time: "Agora" });
           }
         }
         setAlerts(tempAlertsList);
 
-        // Sanidade Baseada em Diagnósticos
-        const { data: diagnosticsData } = await (supabase as any)
-          .from("visual_diagnostics")
-          .select("*")
-          .eq("user_id", profile.id);
-
-        let finalHealth = "Excelente";
-        if (diagnosticsData && diagnosticsData.length > 0) {
-          const severe = diagnosticsData.some((d: any) => d.severity?.toLowerCase() === "alta");
-          finalHealth = severe ? "Atenção" : "Excelente";
-        } else {
-          finalHealth = "Sem Dados";
-        }
+        let finalHealth = diagnosticsData && diagnosticsData.some((d: any) => d.severity?.toLowerCase() === "alta") ? "Atenção" : "Excelente";
         setHealthStatus(finalHealth);
-
-        // Salvar os dados mais recentes no localStorage para a próxima visita instantânea
-        localStorage.setItem(cacheKey, JSON.stringify({
-          areaTotal: parseFloat(totalHectares.toFixed(1)),
-          estimatedYield: finalEstimatedYield,
-          lucroEstimado: tempReceita - tempCustos,
-          receitaTotal: tempReceita,
-          custosTotais: tempCustos,
-          margemTotal: tempReceita > 0 ? Math.round(((tempReceita - tempCustos) / tempReceita) * 100) : 0,
-          healthStatus: finalHealth,
-          weatherWidget: finalWeatherWidget,
-          forecast7Days: finalForecast7Days,
-          alerts: tempAlertsList,
-          recentTasks: mappedTasks,
-          soilStats: finalSoilStats,
-          talhoes: mappedTalhoes,
-          financialChartData: tempFinancialData,
-          city: userCity,
-          state: userState,
-          cep: userCep,
-          farmName: profile.property_name || "",
-          areaSparkline,
-          yieldSparkline,
-          profitSparkline
-        }));
 
       } catch (err) {
         console.error("Dashboard database operations failed:", err);
@@ -642,36 +610,20 @@ export default function Overview() {
           className="relative w-full h-[280px] overflow-hidden bg-cover bg-center rounded-b-[2.5rem] md:rounded-b-[3rem] shadow-lg flex items-center justify-between px-6 md:px-12 pt-20 pb-10"
           style={{ backgroundImage: `url(${bannerImg})` }}
         >
-          {/* Blur/Gradient overlay para leitura perfeita */}
           <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent" />
           
           <div className="relative z-10 flex items-center gap-3">
             <div className="space-y-1">
               <span className="banner-text text-xs font-semibold tracking-wide" style={{ color: 'rgba(255, 255, 255, 0.75)' }}>Bem-vindo de volta, {profile?.full_name || "Produtor"}!</span>
               <div className="flex items-center gap-2">
-                {!loading && talhoes.length === 0 ? (
-                  <Link 
-                    to="/configuracoes" 
-                    className="banner-title text-2xl md:text-3xl font-display font-black tracking-tight hover:text-emerald-350 transition-colors flex items-center gap-2 group cursor-pointer" 
-                    style={{ color: '#ffffff' }}
-                  >
-                    <span>Cadastrar Minha Fazenda</span>
-                    <ArrowUpRight className="w-6 h-6 text-emerald-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                  </Link>
-                ) : (
-                  <>
-                    <h1 className="banner-title text-3xl font-display font-black tracking-tight" style={{ color: '#ffffff' }}>
-                      {farmName || "Minha Fazenda"}
-                    </h1>
-                    <Sprout className="text-emerald-400 w-5 h-5 fill-emerald-400/20" />
-                  </>
-                )}
+                <h1 className="banner-title text-3xl font-display font-black tracking-tight" style={{ color: '#ffffff' }}>
+                  {farmName || "Minha Fazenda"}
+                </h1>
+                <Sprout className="text-emerald-400 w-5 h-5 fill-emerald-400/20" />
               </div>
-              <p className="banner-text text-xs font-medium tracking-wide mt-1" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>Monitoramento inteligente da sua produção</p>
             </div>
           </div>
 
-          {/* Card Flutuante de Status Geral da Fazenda */}
           <div className="relative z-10 hidden md:flex items-center gap-3 bg-white/95 backdrop-blur-md px-5 py-3.5 rounded-2xl shadow-xl shadow-black/25 border border-white max-w-[280px]">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
             <div className="text-left overflow-hidden">
@@ -680,7 +632,7 @@ export default function Overview() {
             </div>
             <div className="ml-auto text-slate-200">
               <svg className="w-6 h-6 stroke-slate-300 fill-none" strokeWidth="1.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
               </svg>
             </div>
           </div>
@@ -688,15 +640,45 @@ export default function Overview() {
 
         {/* Conteúdo do Dashboard (KPIs, Solo, etc.) */}
         <div className="max-w-[1300px] mx-auto px-4 md:px-8 space-y-6 pb-20 -mt-10 relative z-20">
+          
+          {/* Seletor de Glebas/Talhões */}
+          {rawAreas.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-50/80 backdrop-blur border border-slate-100 rounded-2xl w-fit">
+              <button
+                onClick={() => setSelectedAreaId("all")}
+                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+                  selectedAreaId === "all"
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/10"
+                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                }`}
+              >
+                Visão Geral
+              </button>
+              {rawAreas.map((area) => (
+                <button
+                  key={area.id}
+                  onClick={() => setSelectedAreaId(String(area.id))}
+                  className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+                    selectedAreaId === String(area.id)
+                      ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/10"
+                      : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                  }`}
+                >
+                  {area.name}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Grade de KPIs Principais */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           
           {/* Card 1: Área Monitorada */}
           <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between group hover:shadow-md transition-all duration-300 relative overflow-hidden">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
                 <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">ÁREA MONITORADA</span>
-                <span className="text-3xl font-display font-black text-slate-800">{areaTotal} ha</span>
+                <span className="text-3xl font-display font-black text-slate-800">{calculatedAreaTotal} ha</span>
               </div>
               <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500">
                 <Sprout size={20} className="fill-emerald-500/10" />
@@ -706,16 +688,16 @@ export default function Overview() {
             {/* Sparkline & Trend */}
             <div className="flex items-end justify-between mt-4">
               <div className="flex items-center gap-1 text-[10px] font-black text-emerald-600">
-                {areaTotal > 0 && (
+                {calculatedAreaTotal > 0 && (
                   <>
-                    <span>↑ +12%</span>
+                    <span>+12%</span>
                     <span className="text-slate-400 font-bold uppercase tracking-wider">vs último ciclo</span>
                   </>
                 )}
               </div>
               <div className="h-6 w-16 opacity-70">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={areaSparkline}>
+                  <LineChart data={dynamicAreaSparkline}>
                     <Line type="monotone" dataKey="v" stroke="#10b981" strokeWidth={1.5} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
@@ -728,7 +710,7 @@ export default function Overview() {
             <div className="flex justify-between items-start">
               <div className="space-y-1">
                 <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">PRODUÇÃO ESTIMADA</span>
-                <span className="text-3xl font-display font-black text-slate-800">{estimatedYield} ton</span>
+                <span className="text-3xl font-display font-black text-slate-800">{calculatedEstimatedYield} ton</span>
               </div>
               <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500">
                 <svg className="w-5 h-5 fill-emerald-500/10 stroke-emerald-500" strokeWidth="1.5" viewBox="0 0 24 24">
@@ -740,16 +722,16 @@ export default function Overview() {
             {/* Sparkline & Trend */}
             <div className="flex items-end justify-between mt-4">
               <div className="flex items-center gap-1 text-[10px] font-black text-emerald-600">
-                {estimatedYield > 0 && (
+                {calculatedEstimatedYield > 0 && (
                   <>
-                    <span>↑ +8%</span>
+                    <span>+8%</span>
                     <span className="text-slate-400 font-bold uppercase tracking-wider">vs último ciclo</span>
                   </>
                 )}
               </div>
               <div className="h-6 w-16 opacity-70">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={yieldSparkline}>
+                  <LineChart data={dynamicYieldSparkline}>
                     <Line type="monotone" dataKey="v" stroke="#10b981" strokeWidth={1.5} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
@@ -757,12 +739,12 @@ export default function Overview() {
             </div>
           </div>
 
-          {/* Card 3: Lucro Estimado */}
+          {/* Card 3: Total de Custos */}
           <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between group hover:shadow-md transition-all duration-300 relative overflow-hidden">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
-                <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">LUCRO ESTIMADO</span>
-                <span className="text-3xl font-display font-black text-slate-800">R$ {lucroEstimado.toLocaleString("pt-BR")}</span>
+                <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">CUSTO OPERACIONAL TOTAL</span>
+                <span className="text-3xl font-display font-black text-slate-800">R$ {calculatedCustosTotais.toLocaleString("pt-BR")}</span>
               </div>
               <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500">
                 <DollarSign size={20} />
@@ -771,17 +753,51 @@ export default function Overview() {
             
             {/* Sparkline & Trend */}
             <div className="flex items-end justify-between mt-4">
+              <div className="flex items-center gap-1 text-[10px] font-black">
+                {custosMonthComparison.variation !== 0 ? (
+                  <span className={custosMonthComparison.variation > 0 ? "text-red-500" : "text-emerald-600"}>
+                    {custosMonthComparison.variation > 0 ? `+${custosMonthComparison.variation}%` : `${custosMonthComparison.variation}%`}
+                  </span>
+                ) : (
+                  <span className="text-slate-400">0%</span>
+                )}
+                <span className="text-slate-400 font-bold uppercase tracking-wider">vs mês anterior</span>
+              </div>
+              <div className="h-6 w-16 opacity-70">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={dynamicCustosSparkline}>
+                    <Line type="monotone" dataKey="v" stroke={custosMonthComparison.variation > 0 ? "#ef4444" : "#10b981"} strokeWidth={1.5} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 4: Lucro Estimado */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between group hover:shadow-md transition-all duration-300 relative overflow-hidden">
+            <div className="flex justify-between items-start">
+              <div className="space-y-1">
+                <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">LUCRO ESTIMADO</span>
+                <span className="text-3xl font-display font-black text-slate-800">R$ {calculatedLucroEstimado.toLocaleString("pt-BR")}</span>
+              </div>
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500">
+                <DollarSign size={20} className="fill-emerald-500/10" />
+              </div>
+            </div>
+            
+            {/* Sparkline & Trend */}
+            <div className="flex items-end justify-between mt-4">
               <div className="flex items-center gap-1 text-[10px] font-black text-emerald-600">
-                {lucroEstimado > 0 && (
+                {calculatedLucroEstimado > 0 && (
                   <>
-                    <span>↑ +15%</span>
+                    <span>+15%</span>
                     <span className="text-slate-400 font-bold uppercase tracking-wider">vs mês anterior</span>
                   </>
                 )}
               </div>
               <div className="h-6 w-16 opacity-70">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={profitSparkline}>
+                  <LineChart data={dynamicProfitSparkline}>
                     <Line type="monotone" dataKey="v" stroke="#10b981" strokeWidth={1.5} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
@@ -789,7 +805,7 @@ export default function Overview() {
             </div>
           </div>
 
-          {/* Card 4: Sanidade Geral */}
+          {/* Card 5: Sanidade Geral */}
           <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between group hover:shadow-md transition-all duration-300 relative overflow-hidden">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
@@ -808,6 +824,114 @@ export default function Overview() {
               </div>
               <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: healthStatus === "Excelente" ? "100%" : healthStatus === "Sem Dados" ? "0%" : "70%" }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Card 6: Inteligência de Mercado */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between group hover:shadow-md transition-all duration-300 relative overflow-hidden min-h-[170px]">
+            <div className="flex justify-between items-start">
+              <div className="space-y-1 overflow-hidden max-w-[70%]">
+                <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block truncate">
+                  COTAÇÃO ({activeAreas[0]?.banana_variety || "Prata Anã"})
+                </span>
+                <span className="text-2xl font-display font-black text-slate-800 tracking-tight">
+                  {loadingPrice ? (
+                    <span className="text-xs text-slate-400 font-bold">Buscando...</span>
+                  ) : priceIndicators ? (
+                    `R$ ${priceIndicators.currentPrice.toFixed(2)}/kg`
+                  ) : (
+                    "R$ 2.60/kg"
+                  )}
+                </span>
+              </div>
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500">
+                <TrendingUp size={20} />
+              </div>
+            </div>
+            
+            {/* Price variations & Receita Est. */}
+            <div className="mt-3 space-y-1">
+              <div className="flex items-center gap-2 text-[9px] font-bold text-slate-500">
+                {priceIndicators && (
+                  <>
+                    <span className="flex items-center gap-0.5">
+                      7d: <span className={priceIndicators.variation7d >= 0 ? "text-emerald-600" : "text-red-500"}>
+                        {priceIndicators.variation7d >= 0 ? `+${priceIndicators.variation7d}%` : `${priceIndicators.variation7d}%`}
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-0.5">
+                      30d: <span className={priceIndicators.variationMonth >= 0 ? "text-emerald-600" : "text-red-500"}>
+                        {priceIndicators.variationMonth >= 0 ? `+${priceIndicators.variationMonth}%` : `${priceIndicators.variationMonth}%`}
+                      </span>
+                    </span>
+                  </>
+                )}
+              </div>
+              
+              <div className="flex items-center justify-between text-[10px] pt-1 border-t border-slate-100">
+                <span className="text-slate-400 font-bold uppercase">Receita Est. Safra:</span>
+                <span className="font-extrabold text-slate-700">R$ {calculatedReceitaTotal.toLocaleString("pt-BR")}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 7: Potencial Produtivo */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between group hover:shadow-md transition-all duration-300 relative overflow-hidden min-h-[170px]">
+            <div className="flex justify-between items-start">
+              <div className="space-y-0.5">
+                <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block">POTENCIAL PRODUTIVO GERAL</span>
+                <span className="text-2xl font-display font-black text-emerald-600">
+                  {calculatedPotentialProductivity.overall}%
+                </span>
+              </div>
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500">
+                <HelpCircle size={20} className="text-emerald-500 fill-emerald-500/10" />
+              </div>
+            </div>
+            
+            {/* Factor Bars */}
+            <div className="mt-3 space-y-1.5">
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[8px] font-black text-slate-500 uppercase tracking-wider">
+                <div className="space-y-0.5">
+                  <div className="flex justify-between">
+                    <span>Var:</span>
+                    <span className="text-slate-700">{calculatedPotentialProductivity.variety}%</span>
+                  </div>
+                  <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${calculatedPotentialProductivity.variety}%` }} />
+                  </div>
+                </div>
+
+                <div className="space-y-0.5">
+                  <div className="flex justify-between">
+                    <span>Solo:</span>
+                    <span className="text-slate-700">{calculatedPotentialProductivity.soil}%</span>
+                  </div>
+                  <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${calculatedPotentialProductivity.soil}%` }} />
+                  </div>
+                </div>
+
+                <div className="space-y-0.5">
+                  <div className="flex justify-between">
+                    <span>Clima:</span>
+                    <span className="text-slate-700">{calculatedPotentialProductivity.climate}%</span>
+                  </div>
+                  <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${calculatedPotentialProductivity.climate}%` }} />
+                  </div>
+                </div>
+
+                <div className="space-y-0.5">
+                  <div className="flex justify-between">
+                    <span>San:</span>
+                    <span className="text-slate-700">{calculatedPotentialProductivity.health}%</span>
+                  </div>
+                  <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${calculatedPotentialProductivity.health}%` }} />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -925,14 +1049,9 @@ export default function Overview() {
                       </div>
                       <div className="overflow-hidden">
                         <p className="text-xs font-bold text-slate-800 truncate leading-snug">{task.title}</p>
-                        <span className="text-[10px] text-slate-400 font-medium">{task.date}</span>
+                        <span className="text-[10px] text-slate-400 font-medium">{new Date(task.date).toLocaleDateString('pt-BR')}</span>
                       </div>
                     </div>
-                    <span className={`text-[8px] font-extrabold uppercase px-2 py-0.5 rounded-full shrink-0 ml-2 ${
-                      task.badge === "Hoje" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                    }`}>
-                      {task.badge}
-                    </span>
                   </div>
                 ))
               ) : (
@@ -968,7 +1087,6 @@ export default function Overview() {
 
             {soilStats.daysSinceUpdate !== null ? (
               <>
-                {/* Gauge Row */}
                 <div className="grid grid-cols-5 gap-2 py-6">
                   <SoilGauge value={String(soilStats.ph)} label="pH" idealText="Ideal" percentage={(soilStats.ph / 7) * 100} />
                   <SoilGauge value={`${soilStats.mo}%`} label="M.O." idealText="Ideal" percentage={(soilStats.mo / 5.0) * 100} color="#10b981" />
@@ -976,8 +1094,6 @@ export default function Overview() {
                   <SoilGauge value={String(soilStats.ca)} label="Ca" idealText="Ideal" percentage={(soilStats.ca / 4.0) * 100} />
                   <SoilGauge value={String(soilStats.mg)} label="Mg" idealText="Ideal" percentage={(soilStats.mg / 2.0) * 100} />
                 </div>
-
-                {/* Recomendação rápida */}
                 <div className="bg-emerald-50/50 border border-emerald-100 p-3 rounded-2xl flex items-center gap-2">
                   <Sprout size={16} className="text-emerald-500" />
                   <p className="text-[10px] font-bold text-emerald-800 leading-snug">
@@ -1001,83 +1117,22 @@ export default function Overview() {
               <Link to="/fazenda" className="text-[10px] font-black text-emerald-600 uppercase hover:underline">Ver mapa</Link>
             </div>
 
-            {/* Farm Layout Vector Map SVG & Legends */}
-            {talhoes.length > 0 ? (
+            {computedTalhoes.length > 0 ? (
               <div className="grid grid-cols-12 gap-4 items-center flex-1 py-4">
-                {/* Mapa de Fazenda Vetorial Interativo SVG */}
                 <div className="col-span-6 flex justify-center">
                   <svg className="w-32 h-32" viewBox="0 0 120 120" fill="none" strokeWidth="1">
-                    {/* Talhão 1 (Norte) */}
-                    <path 
-                      d="M10 20 L60 10 L65 50 L20 60 Z" 
-                      fill={selectedTalhao === 0 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.85)"} 
-                      stroke="#ffffff"
-                      strokeWidth="1.5"
-                      className="cursor-pointer transition-colors duration-200"
-                      onMouseEnter={() => setSelectedTalhao(0)}
-                      onMouseLeave={() => setSelectedTalhao(null)}
-                    />
-                    {/* Talhão 2 (Central) */}
-                    <path 
-                      d="M60 10 L110 20 L100 60 L65 50 Z" 
-                      fill={selectedTalhao === 1 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.75)"} 
-                      stroke="#ffffff"
-                      strokeWidth="1.5"
-                      className="cursor-pointer transition-colors duration-200"
-                      onMouseEnter={() => setSelectedTalhao(1)}
-                      onMouseLeave={() => setSelectedTalhao(null)}
-                    />
-                    {/* Talhão 3 (Oeste) */}
-                    <path 
-                      d="M20 60 L65 50 L55 90 L10 85 Z" 
-                      fill={selectedTalhao === 2 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.65)"} 
-                      stroke="#ffffff"
-                      strokeWidth="1.5"
-                      className="cursor-pointer transition-colors duration-200"
-                      onMouseEnter={() => setSelectedTalhao(2)}
-                      onMouseLeave={() => setSelectedTalhao(null)}
-                    />
-                    {/* Talhão 4 (Leste) */}
-                    <path 
-                      d="M65 50 L100 60 L90 95 L55 90 Z" 
-                      fill={selectedTalhao === 3 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.9)"} 
-                      stroke="#ffffff"
-                      strokeWidth="1.5"
-                      className="cursor-pointer transition-colors duration-200"
-                      onMouseEnter={() => setSelectedTalhao(3)}
-                      onMouseLeave={() => setSelectedTalhao(null)}
-                    />
-                    {/* Talhão 5 (Sul) */}
-                    <path 
-                      d="M55 90 L90 95 L80 115 L45 110 Z" 
-                      fill={selectedTalhao === 4 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.55)"} 
-                      stroke="#ffffff"
-                      strokeWidth="1.5"
-                      className="cursor-pointer transition-colors duration-200"
-                      onMouseEnter={() => setSelectedTalhao(4)}
-                      onMouseLeave={() => setSelectedTalhao(null)}
-                    />
+                    <path d="M10 20 L60 10 L65 50 L20 60 Z" fill={selectedTalhao === 0 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.85)"} stroke="#ffffff" strokeWidth="1.5" className="cursor-pointer" onMouseEnter={() => setSelectedTalhao(0)} onMouseLeave={() => setSelectedTalhao(null)} />
+                    <path d="M60 10 L110 20 L100 60 L65 50 Z" fill={selectedTalhao === 1 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.75)"} stroke="#ffffff" strokeWidth="1.5" className="cursor-pointer" onMouseEnter={() => setSelectedTalhao(1)} onMouseLeave={() => setSelectedTalhao(null)} />
+                    <path d="M20 60 L65 50 L55 90 L10 85 Z" fill={selectedTalhao === 2 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.65)"} stroke="#ffffff" strokeWidth="1.5" className="cursor-pointer" onMouseEnter={() => setSelectedTalhao(2)} onMouseLeave={() => setSelectedTalhao(null)} />
+                    <path d="M65 50 L100 60 L90 95 L55 90 Z" fill={selectedTalhao === 3 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.9)"} stroke="#ffffff" strokeWidth="1.5" className="cursor-pointer" onMouseEnter={() => setSelectedTalhao(3)} onMouseLeave={() => setSelectedTalhao(null)} />
+                    <path d="M55 90 L90 95 L80 115 L45 110 Z" fill={selectedTalhao === 4 ? "rgba(16, 185, 129, 0.4)" : "rgba(16, 185, 129, 0.55)"} stroke="#ffffff" strokeWidth="1.5" className="cursor-pointer" onMouseEnter={() => setSelectedTalhao(4)} onMouseLeave={() => setSelectedTalhao(null)} />
                   </svg>
                 </div>
-
-                {/* Legenda Lateral */}
                 <div className="col-span-6 space-y-1.5">
-                  {talhoes.slice(0, 5).map((talhao, idx) => (
-                    <div 
-                      key={talhao.id} 
-                      className={`flex items-center justify-between p-1 rounded-lg transition-colors text-xs ${
-                        selectedTalhao === idx ? "bg-slate-50 font-bold" : ""
-                      }`}
-                      onMouseEnter={() => setSelectedTalhao(idx)}
-                      onMouseLeave={() => setSelectedTalhao(null)}
-                    >
+                  {computedTalhoes.slice(0, 5).map((talhao, idx) => (
+                    <div key={talhao.id} className={`flex items-center justify-between p-1 rounded-lg transition-colors text-xs ${selectedTalhao === idx ? "bg-slate-50 font-bold" : ""}`} onMouseEnter={() => setSelectedTalhao(idx)} onMouseLeave={() => setSelectedTalhao(null)}>
                       <div className="flex items-center gap-2 overflow-hidden">
-                        <div className="w-2 h-2 rounded-full shrink-0" style={{
-                          backgroundColor: idx === 0 ? "rgba(16, 185, 129, 0.85)" : 
-                                           idx === 1 ? "rgba(16, 185, 129, 0.75)" : 
-                                           idx === 2 ? "rgba(16, 185, 129, 0.65)" : 
-                                           idx === 3 ? "rgba(16, 185, 129, 0.9)" : "rgba(16, 185, 129, 0.55)"
-                        }} />
+                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: "rgba(16, 185, 129, 0.85)" }} />
                         <span className="text-[10px] text-slate-500 font-bold truncate uppercase">{talhao.name}</span>
                       </div>
                       <span className="text-[10px] font-black text-slate-800 whitespace-nowrap ml-1">{talhao.productivity} ton/ha</span>
@@ -1101,33 +1156,17 @@ export default function Overview() {
               <span className="text-[10px] font-black text-emerald-600 uppercase cursor-pointer">Este mês</span>
             </div>
 
-            {/* Quick Metrics */}
-            <div className="grid grid-cols-4 gap-2 border-b border-slate-50 pb-3.5 mt-3 text-center">
-              <div className="overflow-hidden">
-                <p className="text-[8px] text-slate-400 font-extrabold uppercase">RECEITA</p>
-                <p className="text-[11px] font-black text-slate-800 truncate mt-0.5">R$ {receitaTotal.toLocaleString("pt-BR")}</p>
-                {receitaTotal > 0 && <span className="text-[8px] font-extrabold text-emerald-600">↑ +18%</span>}
-              </div>
-              <div className="overflow-hidden">
-                <p className="text-[8px] text-slate-400 font-extrabold uppercase">CUSTOS</p>
-                <p className="text-[11px] font-black text-slate-800 truncate mt-0.5">R$ {custosTotais.toLocaleString("pt-BR")}</p>
-                {custosTotais > 0 && <span className="text-[8px] font-extrabold text-emerald-600">↑ +8%</span>}
-              </div>
-              <div className="overflow-hidden">
-                <p className="text-[8px] text-slate-400 font-extrabold uppercase">MARGEM</p>
-                <p className="text-[11px] font-black text-slate-800 truncate mt-0.5">{margemTotal}%</p>
-                {margemTotal > 0 && <span className="text-[8px] font-extrabold text-emerald-600">↑ +6%</span>}
-              </div>
+            <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
               <div className="overflow-hidden">
                 <p className="text-[8px] text-slate-400 font-extrabold uppercase">LUCRO</p>
-                <p className="text-[11px] font-black text-slate-800 truncate mt-0.5">R$ {lucroEstimado.toLocaleString("pt-BR")}</p>
-                {lucroEstimado > 0 && <span className="text-[8px] font-extrabold text-emerald-600">↑ +15%</span>}
+                <p className="text-[11px] font-black text-slate-800 truncate mt-0.5">R$ {calculatedLucroEstimado.toLocaleString("pt-BR")}</p>
+                {calculatedLucroEstimado > 0 && <span className="text-[8px] font-extrabold text-emerald-600"> +15%</span>}
               </div>
             </div>
 
             {/* Recharts Area Chart */}
             <div className="h-28 w-full mt-4 flex items-center justify-center">
-              {receitaTotal === 0 && custosTotais === 0 ? (
+              {calculatedReceitaTotal === 0 && calculatedCustosTotais === 0 ? (
                 <div className="flex flex-col items-center justify-center text-center px-4 py-2 space-y-1">
                   <DollarSign className="w-6 h-6 text-slate-350" />
                   <p className="text-[10px] font-bold text-slate-650">Nenhuma transação cadastrada</p>
@@ -1135,7 +1174,7 @@ export default function Overview() {
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={financialChartData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                  <AreaChart data={calculatedFinancialChartData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorLucro" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>

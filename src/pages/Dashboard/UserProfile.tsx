@@ -62,10 +62,33 @@ export default function UserProfile() {
     sizeHectares: "",
     city: "",
     state: "",
-    bananaVariety: "prata-ana",
+    bananaVariety: "Prata Anã",
     cep: "",
-    address: ""
+    address: "",
+    spacingRowM: "",
+    spacingPlantM: "",
+    plantsCount: "",
+    plantingDate: "",
+    irrigationType: "Gotejamento",
+    soilType: "Franco"
   });
+
+  const [varieties, setVarieties] = useState<any[]>([]);
+
+  const fetchVarieties = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("banana_varieties")
+        .select("*")
+        .order("variety_name", { ascending: true });
+      if (!error && data) {
+        setVarieties(data || []);
+      }
+    } catch (err) {
+      console.error("Error fetching varieties:", err);
+    }
+  };
+
 
   const [subscription, setSubscription] = useState<any>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(false);
@@ -151,6 +174,7 @@ export default function UserProfile() {
   useEffect(() => {
     if (activeTab === "farm" && profile?.id) {
       fetchAreas();
+      fetchVarieties();
     }
     if (activeTab === "billing" && profile?.id) {
       fetchSubscriptionInfo();
@@ -338,7 +362,13 @@ export default function UserProfile() {
         state: areaForm.state.trim().toUpperCase(),
         banana_variety: areaForm.bananaVariety,
         cep: areaForm.cep.trim() || null,
-        address: areaForm.address.trim() || null
+        address: areaForm.address.trim() || null,
+        spacing_row_m: areaForm.spacingRowM ? parseFloat(areaForm.spacingRowM) : null,
+        spacing_plant_m: areaForm.spacingPlantM ? parseFloat(areaForm.spacingPlantM) : null,
+        plants_count: areaForm.plantsCount ? parseInt(areaForm.plantsCount, 10) : null,
+        planting_date: areaForm.plantingDate || null,
+        irrigation_type: areaForm.irrigationType || null,
+        soil_type: areaForm.soilType || null
       };
 
       if (editingArea) {
@@ -347,7 +377,7 @@ export default function UserProfile() {
           .update(payload)
           .eq("id", editingArea.id);
         if (error) throw error;
-        toast.success("Área updated com sucesso!", {
+        toast.success("Área atualizada com sucesso!", {
           style: {
             borderRadius: "1rem",
             background: "#05160f",
@@ -382,9 +412,15 @@ export default function UserProfile() {
         sizeHectares: "",
         city: "",
         state: "",
-        bananaVariety: "prata-ana",
+        bananaVariety: "Prata Anã",
         cep: "",
-        address: ""
+        address: "",
+        spacingRowM: "",
+        spacingPlantM: "",
+        plantsCount: "",
+        plantingDate: "",
+        irrigationType: "Gotejamento",
+        soilType: "Franco"
       });
       fetchAreas();
     } catch (err) {
@@ -428,9 +464,15 @@ export default function UserProfile() {
       sizeHectares: "",
       city: "",
       state: "",
-      bananaVariety: "prata-ana",
+      bananaVariety: varieties[0]?.variety_name || "Prata Anã",
       cep: "",
-      address: ""
+      address: "",
+      spacingRowM: "",
+      spacingPlantM: "",
+      plantsCount: "",
+      plantingDate: "",
+      irrigationType: "Gotejamento",
+      soilType: "Franco"
     });
     setShowAreaModal(true);
   };
@@ -445,12 +487,21 @@ export default function UserProfile() {
       state: area.state,
       bananaVariety: area.banana_variety,
       cep: area.cep || "",
-      address: area.address || ""
+      address: area.address || "",
+      spacingRowM: area.spacing_row_m ? String(area.spacing_row_m) : "",
+      spacingPlantM: area.spacing_plant_m ? String(area.spacing_plant_m) : "",
+      plantsCount: area.plants_count ? String(area.plants_count) : "",
+      plantingDate: area.planting_date || "",
+      irrigationType: area.irrigation_type || "Gotejamento",
+      soilType: area.soil_type || "Franco"
     });
     setShowAreaModal(true);
   };
 
   const getVarietyLabel = (variety: string) => {
+    const found = varieties.find(v => v.variety_name.toLowerCase() === variety.toLowerCase() || v.variety_name === variety);
+    if (found) return found.variety_name;
+    
     switch (variety) {
       case "prata-ana": return "Banana Prata Anã";
       case "nanica": return "Banana Nanica (Cavendish)";
@@ -1016,12 +1067,99 @@ export default function UserProfile() {
                     onChange={(e) => setAreaForm({ ...areaForm, bananaVariety: e.target.value })}
                     className="w-full bg-black/40 border border-white/10 rounded-2xl py-3 px-4 text-white text-xs focus:outline-none focus:border-emerald-500/50"
                   >
-                    <option value="prata-ana">Banana Prata Anã</option>
-                    <option value="nanica">Banana Nanica (Cavendish)</option>
-                    <option value="maca">Banana Maçã</option>
-                    <option value="terra">Banana da Terra</option>
-                    <option value="ouro">Banana Ouro</option>
+                    {varieties.length > 0 ? (
+                      varieties.map((v) => (
+                        <option key={v.id} value={v.variety_name}>{v.variety_name} ({v.group_name})</option>
+                      ))
+                    ) : (
+                      <>
+                        <option value="Prata Anã">Banana Prata Anã</option>
+                        <option value="Grande Naine">Banana Grande Naine</option>
+                        <option value="Banana Terra">Banana da Terra</option>
+                        <option value="Maçã Tradicional">Banana Maçã</option>
+                        <option value="Ouro">Banana Ouro</option>
+                      </>
+                    )}
                   </select>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-white uppercase tracking-wider block">Espaçamento Linhas (m)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={areaForm.spacingRowM}
+                      onChange={(e) => setAreaForm({ ...areaForm, spacingRowM: e.target.value })}
+                      placeholder="Ex: 3.0"
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl py-3 px-4 text-white text-xs focus:outline-none focus:border-emerald-500/50"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-white uppercase tracking-wider block">Espaçamento Plantas (m)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={areaForm.spacingPlantM}
+                      onChange={(e) => setAreaForm({ ...areaForm, spacingPlantM: e.target.value })}
+                      placeholder="Ex: 2.0"
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl py-3 px-4 text-white text-xs focus:outline-none focus:border-emerald-500/50"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-white uppercase tracking-wider block">Quantidade de Pés (Plantas)</label>
+                    <input
+                      type="number"
+                      value={areaForm.plantsCount}
+                      onChange={(e) => setAreaForm({ ...areaForm, plantsCount: e.target.value })}
+                      placeholder="Ex: 1666"
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl py-3 px-4 text-white text-xs focus:outline-none focus:border-emerald-500/50"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-white uppercase tracking-wider block">Data de Plantio</label>
+                    <input
+                      type="date"
+                      value={areaForm.plantingDate}
+                      onChange={(e) => setAreaForm({ ...areaForm, plantingDate: e.target.value })}
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl py-3 px-4 text-white text-xs focus:outline-none focus:border-emerald-500/50"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-white uppercase tracking-wider block">Tipo de Irrigação</label>
+                    <select
+                      value={areaForm.irrigationType}
+                      onChange={(e) => setAreaForm({ ...areaForm, irrigationType: e.target.value })}
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl py-3 px-4 text-white text-xs focus:outline-none focus:border-emerald-500/50"
+                    >
+                      <option value="Gotejamento">Gotejamento</option>
+                      <option value="Microaspersão">Microaspersão</option>
+                      <option value="Aspersão">Aspersão</option>
+                      <option value="Inundação">Inundação</option>
+                      <option value="Sequeiro">Sequeiro</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-white uppercase tracking-wider block">Tipo de Solo</label>
+                    <select
+                      value={areaForm.soilType}
+                      onChange={(e) => setAreaForm({ ...areaForm, soilType: e.target.value })}
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl py-3 px-4 text-white text-xs focus:outline-none focus:border-emerald-500/50"
+                    >
+                      <option value="Franco">Franco (Ideal)</option>
+                      <option value="Arenoso">Arenoso</option>
+                      <option value="Argiloso">Argiloso</option>
+                      <option value="Franco-argiloso">Franco-argiloso</option>
+                      <option value="Misto">Misto</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="flex gap-3 pt-4">

@@ -1621,6 +1621,7 @@ export type Database = {
           type: string
           updated_at: string | null
           user_id: number | null
+          area_id: number | null
         }
         Insert: {
           amount: number
@@ -1631,6 +1632,7 @@ export type Database = {
           type: string
           updated_at?: string | null
           user_id?: number | null
+          area_id?: number | null
         }
         Update: {
           amount?: number
@@ -1641,6 +1643,7 @@ export type Database = {
           type?: string
           updated_at?: string | null
           user_id?: number | null
+          area_id?: number | null
         }
         Relationships: [
           {
@@ -1751,6 +1754,12 @@ export type Database = {
           created_at: string | null
           cep: string | null
           address: string | null
+          spacing_row_m: number | null
+          spacing_plant_m: number | null
+          plants_count: number | null
+          planting_date: string | null
+          irrigation_type: string | null
+          soil_type: string | null
         }
         Insert: {
           id?: number
@@ -1764,6 +1773,12 @@ export type Database = {
           created_at?: string | null
           cep?: string | null
           address?: string | null
+          spacing_row_m?: number | null
+          spacing_plant_m?: number | null
+          plants_count?: number | null
+          planting_date?: string | null
+          irrigation_type?: string | null
+          soil_type?: string | null
         }
         Update: {
           id?: number
@@ -1777,6 +1792,12 @@ export type Database = {
           created_at?: string | null
           cep?: string | null
           address?: string | null
+          spacing_row_m?: number | null
+          spacing_plant_m?: number | null
+          plants_count?: number | null
+          planting_date?: string | null
+          irrigation_type?: string | null
+          soil_type?: string | null
         }
         Relationships: [
           {
@@ -1788,6 +1809,409 @@ export type Database = {
           }
         ]
       }
+      banana_varieties: {
+        Row: {
+          id: string
+          group_name: string
+          variety_name: string
+          average_bunch_weight_kg: number
+          potential_productivity_t_ha: number
+          recommended_spacing: string
+          plants_per_hectare: number
+          cycle_months: number
+          sigatoka_resistance: string
+          panama_resistance: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          group_name: string
+          variety_name: string
+          average_bunch_weight_kg: number
+          potential_productivity_t_ha: number
+          recommended_spacing?: string
+          plants_per_hectare?: number
+          cycle_months?: number
+          sigatoka_resistance?: string
+          panama_resistance?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          group_name?: string
+          variety_name?: string
+          average_bunch_weight_kg?: number
+          potential_productivity_t_ha?: number
+          recommended_spacing?: string
+          plants_per_hectare?: number
+          cycle_months?: number
+          sigatoka_resistance?: string
+          panama_resistance?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      banana_market_prices: {
+        Row: {
+          id: number
+          variety_id: string
+          price_per_kg: number
+          region: string
+          source: string
+          price_date: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          variety_id: string
+          price_per_kg: number
+          region: string
+          source: string
+          price_date?: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          variety_id?: string
+          price_per_kg?: number
+          region?: string
+          source?: string
+          price_date?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "banana_market_prices_variety_id_fkey"
+            columns: ["variety_id"]
+            isOneToOne: false
+            referencedRelation: "banana_varieties"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      soil_analyses: {
+        Row: {
+          id: number
+          user_id: number
+          description: string
+          ph: number
+          p: number
+          k: number
+          ca: number
+          mg: number
+          h_al: number
+          v_percent: number
+          liming_need: number
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: number
+          description: string
+          ph: number
+          p: number
+          k: number
+          ca: number
+          mg: number
+          h_al: number
+          v_percent: number
+          liming_need: number
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: number
+          description?: string
+          ph?: number
+          p?: number
+          k?: number
+          ca?: number
+          mg?: number
+          h_al?: number
+          v_percent?: number
+          liming_need?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "soil_analyses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      farm_inventory: {
+        Row: {
+          id: number
+          user_id: number
+          name: string
+          category: string
+          quantity: number
+          unit: string
+          min_quantity: number
+          expiry_date: string | null
+          supplier: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: number
+          name: string
+          category: string
+          quantity?: number
+          unit: string
+          min_quantity?: number
+          expiry_date?: string | null
+          supplier?: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: number
+          name?: string
+          category?: string
+          quantity?: number
+          unit?: string
+          min_quantity?: number
+          expiry_date?: string | null
+          supplier?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_inventory_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      farm_tasks: {
+        Row: {
+          id: number
+          user_id: number
+          title: string
+          date: string
+          category: string
+          status: string
+          description: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: number
+          title: string
+          date: string
+          category: string
+          status?: string
+          description?: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: number
+          title?: string
+          date?: string
+          category?: string
+          status?: string
+          description?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_tasks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      visual_diagnostics: {
+        Row: {
+          id: number
+          user_id: number
+          disease_name: string
+          scientific_name: string
+          severity: string
+          description: string
+          image_url: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: number
+          disease_name: string
+          scientific_name: string
+          severity: string
+          description: string
+          image_url?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: number
+          disease_name?: string
+          scientific_name?: string
+          severity?: string
+          description?: string
+          image_url?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visual_diagnostics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      production_cycles: {
+        Row: {
+          id: number
+          user_id: number
+          name: string
+          plants_count: number
+          banana_variety: string
+          start_date: string
+          end_date: string | null
+          status: string
+          boxes_harvested: number | null
+          price_per_box: number | null
+          expenses: any
+          notes: string | null
+          ai_diagnosis: string | null
+          area_id: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: number
+          name: string
+          plants_count?: number
+          banana_variety: string
+          start_date: string
+          end_date?: string | null
+          status?: string
+          boxes_harvested?: number | null
+          price_per_box?: number | null
+          expenses?: any
+          notes?: string | null
+          ai_diagnosis?: string | null
+          area_id?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: number
+          name?: string
+          plants_count?: number
+          banana_variety?: string
+          start_date?: string
+          end_date?: string | null
+          status?: string
+          boxes_harvested?: number | null
+          price_per_box?: number | null
+          expenses?: any
+          notes?: string | null
+          ai_diagnosis?: string | null
+          area_id?: number | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_cycles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_cycles_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "producer_areas"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      profit_sharing_config: {
+        Row: {
+          id: number
+          user_id: number
+          role_type: string
+          share_percentage: number
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: number
+          role_type: string
+          share_percentage: number
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: number
+          role_type?: string
+          share_percentage?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profit_sharing_config_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      partner_earnings: {
+        Row: {
+          id: number
+          order_id: number
+          user_id: number
+          amount: number
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          order_id: number
+          user_id: number
+          amount: number
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          order_id?: number
+          user_id?: number
+          amount?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_earnings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_earnings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+
       user_course_progress: {
         Row: {
           id: number
