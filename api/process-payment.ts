@@ -36,8 +36,8 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes: plan, user_id e payment_method_id.' });
     }
 
-    // Preço oficial de produção (R$ 97 mensal / R$ 497 anual)
-    const finalAmount = plan === 'mensal' ? 97.00 : 497.00;
+    // Preço de teste: R$ 1,00 para ambos os planos
+    const finalAmount = 1.00;
 
     // Normaliza informações do pagador para suportar tanto o formulário simplificado quanto o antigo Payment Brick
     const email = payer_email || formData?.payer?.email;
@@ -120,6 +120,10 @@ export default async function handler(req: any, res: any) {
     // ----------------------------------------------------
     } else {
       const frequency = plan === 'mensal' ? 1 : 12;
+      const origin = req.headers.origin || req.headers.referer || 'https://bananalpro.com.br';
+      const cleanOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+      const backUrl = `${cleanOrigin}/dashboard`;
+
       const preapprovalPayload = {
         reason: `Assinatura Bananal Pro - Plano ${plan === 'mensal' ? 'Mensal' : 'Anual'}`,
         auto_recurring: {
@@ -130,7 +134,7 @@ export default async function handler(req: any, res: any) {
         },
         payer_email: email,
         status: 'pending',
-        back_url: 'https://bananalpro.com.br/dashboard'
+        back_url: backUrl
       };
 
       const preRes = await fetch('https://api.mercadopago.com/preapproval', {

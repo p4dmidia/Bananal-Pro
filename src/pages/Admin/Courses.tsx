@@ -82,6 +82,12 @@ export default function AdminCourses() {
   const [deletedLessonIds, setDeletedLessonIds] = useState<number[]>([]);
   const [deletedModuleIds, setDeletedModuleIds] = useState<number[]>([]);
 
+  // Drag and Drop States and Refs
+  const [draggingModuleIdx, setDraggingModuleIdx] = useState<number | null>(null);
+  const [draggingLessonIdx, setDraggingLessonIdx] = useState<{ modId: string; lessonIdx: number } | null>(null);
+  const draggingModuleIndexRef = useRef<number | null>(null);
+  const draggingLessonIndexRef = useRef<{ modId: string; lessonIdx: number } | null>(null);
+
   const fetchCourses = async () => {
     setLoading(true);
     try {
@@ -132,7 +138,8 @@ export default function AdminCourses() {
           )
         `)
         .eq('course_id', Number(courseId))
-        .order('order_index', { ascending: true });
+        .order('order_index', { ascending: true })
+        .order('order_index', { foreignTable: 'lessons', ascending: true });
 
       if (modulesError) throw modulesError;
 
@@ -713,7 +720,33 @@ export default function AdminCourses() {
                 {/* Modules List */}
                 <div className="space-y-6">
                   {modules.map((mod, modIdx) => (
-                    <div key={mod.id} className="bg-zinc-900/30 border border-white/5 rounded-[2.5rem] overflow-hidden transition-all">
+                    <div 
+                      key={mod.id} 
+                      draggable={draggingModuleIdx === modIdx}
+                      onDragStart={(e) => {
+                        draggingModuleIndexRef.current = modIdx;
+                        e.dataTransfer.effectAllowed = "move";
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                      }}
+                      onDrop={(e) => {
+                        const dragIdx = draggingModuleIndexRef.current;
+                        if (dragIdx !== null && dragIdx !== modIdx) {
+                          const newMods = [...modules];
+                          const [movedMod] = newMods.splice(dragIdx, 1);
+                          newMods.splice(modIdx, 0, movedMod);
+                          setModules(newMods);
+                        }
+                      }}
+                      onDragEnd={() => {
+                        draggingModuleIndexRef.current = null;
+                        setDraggingModuleIdx(null);
+                      }}
+                      className={`bg-zinc-900/30 border rounded-[2.5rem] overflow-hidden transition-all ${
+                        draggingModuleIdx === modIdx ? "border-primary bg-zinc-900/60 opacity-50 scale-[0.98]" : "border-white/5"
+                      }`}
+                    >
                       <div className="p-6 flex items-center justify-between bg-white/5">
                          <div className="flex items-center gap-4 flex-1">
                             <button
@@ -728,7 +761,14 @@ export default function AdminCourses() {
                             >
                               <ChevronDown size={20} />
                             </button>
-                            <GripVertical className="text-zinc-800 shrink-0" />
+                            <div 
+                              onMouseDown={() => setDraggingModuleIdx(modIdx)}
+                              onMouseUp={() => setDraggingModuleIdx(null)}
+                              className="cursor-grab active:cursor-grabbing p-1 text-zinc-500 hover:text-white transition-colors flex items-center justify-center shrink-0"
+                              title="Arraste para reordenar o módulo"
+                            >
+                              <GripVertical size={20} />
+                            </div>
                             <div className="flex-1 flex flex-col gap-1 pr-4">
                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Título do Módulo</label>
                                <input 
@@ -833,7 +873,51 @@ export default function AdminCourses() {
                         </div>
 
                         {mod.lessons.map((lesson, lessonIdx) => (
-                          <div key={lesson.id} className="bg-black/40 border border-white/5 rounded-[2rem] p-6 grid grid-cols-1 md:grid-cols-12 gap-6 group hover:border-white/10 transition-all">
+                          <div 
+                            key={lesson.id} 
+                            draggable={draggingLessonIdx?.modId === mod.id && draggingLessonIdx?.lessonIdx === lessonIdx}
+                            onDragStart={(e) => {
+                              draggingLessonIndexRef.current = { modId: mod.id, lessonIdx };
+                              e.dataTransfer.effectAllowed = "move";
+                            }}
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                            }}
+                            onDrop={(e) => {
+                              const drag = draggingLessonIndexRef.current;
+                              if (drag) {
+                                const newMods = [...modules];
+                                const sourceMod = newMods.find(m => m.id === drag.modId);
+                                const targetMod = newMods.find(m => m.id === mod.id);
+                                if (sourceMod && targetMod) {
+                                  const [movedLesson] = sourceMod.lessons.splice(drag.lessonIdx, 1);
+                                  targetMod.lessons.splice(lessonIdx, 0, movedLesson);
+                                  setModules(newMods);
+                                }
+                              }
+                            }}
+                            onDragEnd={() => {
+                              draggingLessonIndexRef.current = null;
+                              setDraggingLessonIdx(null);
+                            }}
+                            className={`bg-black/40 border rounded-[2rem] p-6 grid grid-cols-1 md:grid-cols-12 gap-6 group hover:border-white/10 transition-all ${
+                              draggingLessonIdx?.modId === mod.id && draggingLessonIdx?.lessonIdx === lessonIdx
+                                ? "border-primary bg-black/60 opacity-50 scale-[0.99]"
+                                : "border-white/5"
+                            }`}
+                          >
+                             {/* Lesson Drag Grip Header */}
+                             <div className="md:col-span-12 flex items-center gap-2 border-b border-white/5 pb-2 mb-2">
+                               <div 
+                                 onMouseDown={() => setDraggingLessonIdx({ modId: mod.id, lessonIdx })}
+                                 onMouseUp={() => setDraggingLessonIdx(null)}
+                                 className="cursor-grab active:cursor-grabbing p-1 text-zinc-500 hover:text-white transition-colors flex items-center justify-center shrink-0"
+                                 title="Arraste para reordenar a aula"
+                               >
+                                 <GripVertical size={16} />
+                               </div>
+                               <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">Aula {lessonIdx + 1}</span>
+                             </div>
                              {/* Lesson Thumbnail */}
                              <div className="md:col-span-3">
                                 <div 

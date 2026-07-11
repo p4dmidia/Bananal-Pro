@@ -55,6 +55,52 @@ export default async function handler(req: any, res: any) {
       paymentId = parts[parts.length - 1];
     } else if (body.action?.startsWith('payment.') && body.data && body.data.id) {
       paymentId = body.data.id.toString();
+    } else if ((body.type === 'subscription_authorized_payment' || body.action?.startsWith('subscription_authorized_payment.')) && body.data && body.data.id) {
+      const authorizedPaymentId = body.data.id.toString();
+      console.log(`Webhook: Buscando detalhes do pagamento autorizado de assinatura: ${authorizedPaymentId}`);
+      try {
+        const authRes = await fetch(`https://api.mercadopago.com/authorized_payments/${authorizedPaymentId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`
+          }
+        });
+        const authData = await authRes.json();
+        if (authRes.ok && authData.payment?.id) {
+          paymentId = authData.payment.id.toString();
+          console.log(`Webhook: ID do pagamento real obtido da assinatura via authorized_payment: ${paymentId}`);
+        } else {
+          console.error(`Webhook: Erro ao buscar pagamento autorizado de assinatura ${authorizedPaymentId}:`, authData);
+        }
+      } catch (err) {
+        console.error(`Webhook: Erro de rede ao buscar pagamento autorizado de assinatura ${authorizedPaymentId}:`, err);
+      }
+    } else if ((body.type === 'subscription_preapproval' || body.type === 'preapproval' || body.action?.startsWith('subscription_preapproval.') || body.action?.startsWith('preapproval.')) && body.data && body.data.id) {
+      const preapprovalId = body.data.id.toString();
+      console.log(`Webhook: Recebida notificação de assinatura (preapproval): ${preapprovalId}. Buscando pagamentos associados...`);
+      try {
+        const payRes = await fetch(`https://api.mercadopago.com/authorized_payments/search?preapproval_id=${preapprovalId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`
+          }
+        });
+        const payData = await payRes.json();
+        if (payRes.ok && payData.results && payData.results.length > 0) {
+          // Pega o pagamento mais recente que esteja aprovado ou processado
+          const approvedPayment = payData.results.find((p: any) => p.payment?.status === 'approved' || p.status === 'processed');
+          if (approvedPayment && approvedPayment.payment?.id) {
+            paymentId = approvedPayment.payment.id.toString();
+            console.log(`Webhook: ID do pagamento real obtido da busca de preapproval ${preapprovalId}: ${paymentId}`);
+          } else {
+            console.warn(`Webhook: Nenhum pagamento aprovado/processado encontrado para preapproval ${preapprovalId}`);
+          }
+        } else {
+          console.error(`Webhook: Erro ao buscar pagamentos para preapproval ${preapprovalId}:`, payData);
+        }
+      } catch (err) {
+        console.error(`Webhook: Erro de rede ao buscar pagamentos para preapproval ${preapprovalId}:`, err);
+      }
     }
 
     if (!paymentId) {
@@ -157,29 +203,31 @@ export default async function handler(req: any, res: any) {
         }
 
         console.log(`Pedido #${order.id} atualizado para 'paid'.`);
-      }
 
-      // 3. Ativa o perfil do produtor (is_active = true) para liberar o acesso dele
-      if (order.user_id) {
-        const { error: updateProfileError } = await supabase
-          .from('user_profiles')
-          .update({
-            is_active: true,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', order.user_id);
+        // 3. Ativa o perfil do produtor (is_active = true) para liberar o acesso dele
+        if (order.user_id) {
+          const { error: updateProfileError } = await supabase
+            .from('user_profiles')
+            .update({
+              is_active: true,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', order.user_id);
 
-        if (updateProfileError) {
-          console.error(`Erro ao ativar acesso do usuário ID ${order.user_id}:`, updateProfileError);
-          return res.status(500).json({ error: 'Database error activating profile.' });
+          if (updateProfileError) {
+            console.error(`Erro ao ativar acesso do usuário ID ${order.user_id}:`, updateProfileError);
+            return res.status(500).json({ error: 'Database error activating profile.' });
+          }
+
+          console.log(`Perfil de Usuário ID ${order.user_id} ativado (is_active = true).`);
+
+          // Processa a divisão de lucros e a notificação do Telegram de forma assíncrona
+          processProfitSharingAndNotifications(order, paymentData).catch(err => {
+            console.error('Erro assíncrono em processProfitSharingAndNotifications:', err);
+          });
         }
-
-        console.log(`Perfil de Usuário ID ${order.user_id} ativado (is_active = true).`);
-
-        // Processa a divisão de lucros e a notificação do Telegram de forma assíncrona
-        processProfitSharingAndNotifications(order, paymentData).catch(err => {
-          console.error('Erro assíncrono em processProfitSharingAndNotifications:', err);
-        });
+      } else {
+        console.log(`Pedido #${order.id} já estava marcado como 'paid'. Ignorando processamento redundante.`);
       }
     } else if (status === 'rejected' || status === 'cancelled' || status === 'refunded' || status === 'charged_back') {
       // Se a cobrança foi recusada ou estornada, desativamos o usuário no Supabase

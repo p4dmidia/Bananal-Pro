@@ -25,7 +25,8 @@ import {
   CloudLightning,
   AlertTriangle,
   FileText,
-  ArrowUpRight
+  ArrowUpRight,
+  Plus
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../contexts/AuthContext";
@@ -542,6 +543,12 @@ export default function Overview() {
     const loadDashboardData = async () => {
       setLoading(true);
       try {
+        if (profile) {
+          if (profile.city) setCity(profile.city);
+          if (profile.state) setState(profile.state);
+          if (profile.cep) setCep(profile.cep);
+          if (profile.property_name) setFarmName(profile.property_name);
+        }
         const { data: areasData } = await supabase.from("producer_areas").select("*");
         setRawAreas(areasData || []);
 
@@ -642,33 +649,40 @@ export default function Overview() {
         <div className="max-w-[1300px] mx-auto px-4 md:px-8 space-y-6 pb-20 -mt-10 relative z-20">
           
           {/* Seletor de Glebas/Talhões */}
-          {rawAreas.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-50/80 backdrop-blur border border-slate-100 rounded-2xl w-fit">
+          <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-50/80 backdrop-blur border border-slate-100 rounded-2xl w-fit">
+            <button
+              onClick={() => setSelectedAreaId("all")}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
+                selectedAreaId === "all"
+                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/10"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+              }`}
+            >
+              Visão Geral
+            </button>
+            {rawAreas.map((area) => (
               <button
-                onClick={() => setSelectedAreaId("all")}
+                key={area.id}
+                onClick={() => setSelectedAreaId(String(area.id))}
                 className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-                  selectedAreaId === "all"
+                  selectedAreaId === String(area.id)
                     ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/10"
                     : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
                 }`}
               >
-                Visão Geral
+                {area.name}
               </button>
-              {rawAreas.map((area) => (
-                <button
-                  key={area.id}
-                  onClick={() => setSelectedAreaId(String(area.id))}
-                  className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-                    selectedAreaId === String(area.id)
-                      ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/10"
-                      : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
-                  }`}
-                >
-                  {area.name}
-                </button>
-              ))}
-            </div>
-          )}
+            ))}
+            {rawAreas.length === 0 && (
+              <Link
+                to="/configuracoes?tab=farm"
+                className="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border border-emerald-500/20 flex items-center gap-1 cursor-pointer"
+              >
+                <Plus size={12} />
+                Cadastrar Nova Área
+              </Link>
+            )}
+          </div>
 
           {/* Grade de KPIs Principais */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

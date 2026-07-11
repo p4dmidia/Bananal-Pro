@@ -48,6 +48,7 @@ interface LiveSession {
   materials?: { title: string; url: string }[];
   chat_enabled?: boolean;
   raw_status?: string;
+  thumbnail_url?: string;
 }
 
 // Helpers para extração de IDs de vídeo e thumbnail
@@ -81,6 +82,9 @@ function isDirectVideoUrl(url: string) {
 }
 
 function getSessionThumbnail(item: any) {
+  if (item.thumbnail_url) {
+    return item.thumbnail_url;
+  }
   if (item.replay_url) {
     const ytId = getYoutubeId(item.replay_url);
     if (ytId) {
@@ -201,7 +205,8 @@ export default function Lives() {
               replay_url: item.replay_url,
               materials: item.materials || [],
               chat_enabled: item.chat_enabled,
-              raw_status: item.status
+              raw_status: item.status,
+              thumbnail_url: item.thumbnail_url
             };
           });
 

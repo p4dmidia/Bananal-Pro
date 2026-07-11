@@ -51,6 +51,7 @@ interface Subscription {
   user_name: string;
   user_email: string;
   user_whatsapp?: string;
+  user_active?: boolean;
   amount: number;
   status: string;
   payment_method: string;
@@ -66,10 +67,18 @@ interface PeriodStats {
   retention: number;
 }
 
-const calculateStatsForPeriod = (subsList: Subscription[]): PeriodStats => {
+const calculateStatsForPeriod = (subsList: Subscription[], allSubs: Subscription[] = []): PeriodStats => {
   const active = subsList.filter(s => s.status === 'paid');
   const pending = subsList.filter(s => s.status === 'pending');
-  const cancelled = subsList.filter(s => s.status === 'cancelled');
+  
+  // A cancelled subscription (churn) is a user who once had a paid subscription (anywhere in history)
+  // but is currently not active.
+  const cancelled = subsList.filter(s => {
+    if (s.status !== 'cancelled') return false;
+    const history = allSubs.length > 0 ? allSubs : subsList;
+    const userHasEverPaid = history.some(allS => allS.user_id === s.user_id && allS.status === 'paid');
+    return userHasEverPaid && !s.user_active;
+  });
   
   const activeCount = active.length;
   const pendingCount = pending.length;
@@ -166,7 +175,8 @@ export default function AdminFinancial() {
           user_profiles:user_profiles!orders_user_id_fkey (
             full_name,
             email,
-            phone
+            phone,
+            is_active
           )
         `)
         .order('created_at', { ascending: false });
@@ -182,6 +192,7 @@ export default function AdminFinancial() {
           user_name: o.user_profiles?.full_name || "Produtor Desconhecido",
           user_email: o.user_profiles?.email || "desconhecido@bananalpro.com",
           user_whatsapp: o.user_profiles?.phone || "",
+          user_active: o.user_profiles?.is_active ?? false,
           amount: o.total_amount || 97.00,
           status: o.status || "pending",
           payment_method: o.payment_method || "PIX",
@@ -433,8 +444,8 @@ export default function AdminFinancial() {
       return d >= previousStart && d < previousEnd;
     });
 
-    const currentPeriodStats = calculateStatsForPeriod(currentSubs);
-    const previousPeriodStats = calculateStatsForPeriod(previousSubs);
+    const currentPeriodStats = calculateStatsForPeriod(currentSubs, subscriptions);
+    const previousPeriodStats = calculateStatsForPeriod(previousSubs, subscriptions);
 
     const mrrDiff = hasComparison ? getPercentageChange(currentPeriodStats.mrr, previousPeriodStats.mrr) : 0;
     const faturamentoDiff = hasComparison ? getPercentageChange(currentPeriodStats.faturamento, previousPeriodStats.faturamento) : 0;

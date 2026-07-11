@@ -35,7 +35,10 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    // Consulta os detalhes do pagamento diretamente na API do Mercado Pago
+    let status = 'pending';
+    let realPaymentId = payment_id;
+
+    // Tenta consultar os detalhes como pagamento direto (Pix ou Cartão avulso)
     const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${payment_id}`, {
       method: 'GET',
       headers: {
@@ -43,15 +46,36 @@ export default async function handler(req: any, res: any) {
       }
     });
 
-    const paymentData = await mpRes.json();
+    let paymentData = await mpRes.json();
 
-    if (!mpRes.ok) {
-      console.error(`Erro ao consultar pagamento ${payment_id} no Mercado Pago:`, paymentData);
-      return res.status(400).json({ error: 'Erro ao validar pagamento no Mercado Pago.' });
+    if (mpRes.ok) {
+      status = paymentData.status;
+      console.log(`Status do pagamento ${payment_id} via consulta direta: ${status}`);
+    } else {
+      // Se não encontrou (404), tenta consultar como assinatura (Preapproval)
+      console.log(`Payment ID ${payment_id} não encontrado como pagamento direto. Tentando como assinatura/preapproval...`);
+      const subRes = await fetch(`https://api.mercadopago.com/authorized_payments/search?preapproval_id=${payment_id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`
+        }
+      });
+      const subData = await subRes.json();
+      if (subRes.ok && subData.results && subData.results.length > 0) {
+        // Encontra o pagamento recorrente aprovado ou processado
+        const approvedPayment = subData.results.find((p: any) => p.payment?.status === 'approved' || p.status === 'processed');
+        if (approvedPayment) {
+          status = 'approved';
+          realPaymentId = approvedPayment.payment?.id || payment_id;
+          console.log(`Assinatura ativa e paga encontrada! ID do pagamento real: ${realPaymentId}`);
+        } else {
+          console.log(`Nenhum pagamento aprovado encontrado para a assinatura ${payment_id}.`);
+        }
+      } else {
+        console.error(`Erro ao consultar assinatura ${payment_id} no Mercado Pago:`, subData);
+        return res.status(400).json({ error: 'Erro ao validar pagamento/assinatura no Mercado Pago.' });
+      }
     }
-
-    const { status } = paymentData;
-    console.log(`Status do pagamento ${payment_id} via consulta direta: ${status}`);
 
     if (status === 'approved') {
       // 1. Busca o pedido correspondente no Supabase

@@ -34,6 +34,7 @@ interface LiveItem {
   materials: { title: string; url: string }[];
   host?: string;
   category?: string;
+  thumbnail_url?: string;
 }
 
 export default function AdminLives() {
@@ -92,6 +93,57 @@ export default function AdminLives() {
     } finally {
       setIsUploadingVideo(false);
       setUploadProgress(0);
+    }
+  };
+
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
+  const [thumbnailUploadProgress, setThumbnailUploadProgress] = useState(0);
+
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      return toast.error("Por favor, selecione um arquivo de imagem válido.");
+    }
+
+    setIsUploadingThumbnail(true);
+    setThumbnailUploadProgress(0);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `thumbnails/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('lives-replays')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          onUploadProgress: (progress: any) => {
+            const percentage = Math.round((progress.loaded / progress.total) * 100);
+            setThumbnailUploadProgress(percentage);
+          }
+        });
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('lives-replays')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({
+        ...prev,
+        thumbnail_url: publicUrl
+      }));
+
+      toast.success("Miniatura enviada com sucesso!");
+    } catch (err: any) {
+      console.error("Erro ao fazer upload da miniatura:", err);
+      toast.error("Erro ao enviar miniatura: " + err.message);
+    } finally {
+      setIsUploadingThumbnail(false);
+      setThumbnailUploadProgress(0);
     }
   };
 
@@ -161,6 +213,7 @@ export default function AdminLives() {
     materialUrl: "",
     host: "",
     category: "",
+    thumbnail_url: "",
   });
 
   const [materialsList, setMaterialsList] = useState<{ title: string; url: string }[]>([]);
@@ -249,7 +302,8 @@ export default function AdminLives() {
         replay_url: formData.replay_url || undefined,
         materials: finalMaterials,
         host: formData.host || undefined,
-        category: formData.category || undefined
+        category: formData.category || undefined,
+        thumbnail_url: formData.thumbnail_url || undefined
       };
 
       // Tenta salvar no Supabase
@@ -344,6 +398,7 @@ export default function AdminLives() {
       materialUrl: "",
       host: live.host || "",
       category: live.category || "",
+      thumbnail_url: live.thumbnail_url || "",
     });
     setMaterialsList(live.materials || []);
     setEditingId(live.id);
@@ -376,6 +431,7 @@ export default function AdminLives() {
       materialUrl: "",
       host: "",
       category: "",
+      thumbnail_url: "",
     });
     setMaterialsList([]);
     setEditingId(null);
@@ -669,6 +725,58 @@ export default function AdminLives() {
                         </div>
                       </div>
                     )}
+
+                    <div className="space-y-4 md:col-span-2 bg-zinc-900/20 border border-white/5 p-5 rounded-[2rem]">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Miniatura Personalizada (URL da Imagem - Opcional)</label>
+                        <input 
+                          type="url" value={formData.thumbnail_url} 
+                          placeholder="https://exemplo.com/imagem.jpg"
+                          onChange={e => setFormData({...formData, thumbnail_url: e.target.value})}
+                          className="w-full bg-zinc-900/50 border border-white/10 rounded-2xl px-5 py-4 text-white focus:ring-2 focus:ring-purple-500/50 font-mono"
+                        />
+                      </div>
+                      
+                      <div className="relative flex flex-col items-center justify-center border border-dashed border-white/10 hover:border-purple-500/30 p-6 rounded-2xl bg-black/40 group transition-all text-center">
+                        {isUploadingThumbnail ? (
+                          <div className="flex flex-col items-center space-y-2 py-4">
+                            <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+                            <p className="text-xs font-bold text-white">Enviando imagem...</p>
+                            <p className="text-[10px] text-zinc-500">{thumbnailUploadProgress}% concluído</p>
+                          </div>
+                        ) : (
+                          <label className="cursor-pointer w-full py-4 space-y-2">
+                            <div className="text-xs font-bold text-purple-400 group-hover:text-purple-300">
+                              Ou faça upload de uma imagem (.png, .jpg, .jpeg, .webp)
+                            </div>
+                            <div className="text-[10px] text-zinc-500">
+                              O arquivo será salvo no Supabase Storage
+                            </div>
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              onChange={handleThumbnailUpload} 
+                              className="hidden" 
+                            />
+                          </label>
+                        )}
+                      </div>
+                      {formData.thumbnail_url && (
+                        <div className="flex items-center gap-4 p-3 bg-black/30 rounded-xl border border-white/5">
+                          <img src={formData.thumbnail_url} alt="Preview da miniatura" className="w-20 aspect-video object-cover rounded-lg border border-white/10" />
+                          <div className="text-left">
+                            <span className="text-[10px] text-emerald-400 font-bold block">✓ Miniatura configurada</span>
+                            <button 
+                              type="button" 
+                              onClick={() => setFormData({...formData, thumbnail_url: ""})} 
+                              className="text-red-400 hover:text-red-500 text-[10px] font-bold mt-1"
+                            >
+                              Remover Miniatura
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
                     <div className="space-y-2 md:col-span-2">
                       <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Resumo / Descrição</label>

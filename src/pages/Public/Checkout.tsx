@@ -94,8 +94,8 @@ export default function Checkout() {
     }
   }, [searchParams]);
 
-  // Preço oficial de produção (R$ 97 mensal / R$ 497 anual)
-  const planPrice = selectedPlan === 'mensal' ? 97.00 : 497.00;
+  // Preço de teste: R$ 1,00 para ambos os planos
+  const planPrice = 1.00;
 
   const handlePlanChange = (plan: 'mensal' | 'anual') => {
     setSelectedPlan(plan);
@@ -504,8 +504,8 @@ if (loading) {
                       </div>
                       <div className="mt-4 pt-2 border-t border-zinc-150 w-full flex items-baseline gap-1">
                         <span className="text-[9px] text-zinc-500 font-medium font-inter-medium">12x de</span>
-                        <span className="text-base font-inter-extrabold text-[#16a34a]">R$ 49,70</span>
-                        <span className="text-[9px] text-zinc-400 font-inter-medium">ou R$ 497 à vista</span>
+                        <span className="text-base font-inter-extrabold text-[#16a34a]">R$ 1,00</span>
+                        <span className="text-[9px] text-zinc-400 font-inter-medium">ou R$ 1,00 à vista</span>
                       </div>
                     </button>
 
@@ -524,7 +524,7 @@ if (loading) {
                         <span className="text-[9px] text-zinc-500 block font-inter-medium">Sem fidelidade, cancele quando quiser</span>
                       </div>
                       <div className="mt-4 pt-2 border-t border-zinc-150 w-full flex items-baseline gap-1">
-                        <span className="text-base font-inter-extrabold text-zinc-800">R$ 97,00</span>
+                        <span className="text-base font-inter-extrabold text-zinc-800">R$ 1,00</span>
                         <span className="text-[9px] text-zinc-500 font-inter-medium">/ mês</span>
                       </div>
                     </button>

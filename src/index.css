@@ -480,9 +480,9 @@ body:not(.dark-theme) .btn-primary:not(.hero-banner-container *):not(aside *):ho
 }
 
 /* 5. Botões Secundários & Outline */
-body:not(.dark-theme) button:not(.bg-primary):not([type="submit"]):not(.hero-banner-container *):not(aside *),
-body:not(.dark-theme) .btn-secondary:not(.hero-banner-container *):not(aside *),
-body:not(.dark-theme) .border-white\/10:not(.hero-banner-container *):not(aside *) {
+body:not(.dark-theme) button:not(.bg-primary):not([type="submit"]):not(.hero-banner-container *):not(aside *):not(.chico-assistant-drawer *):not(.chico-tour-box *):not(.chico-floating-btn),
+body:not(.dark-theme) .btn-secondary:not(.hero-banner-container *):not(aside *):not(.chico-assistant-drawer *):not(.chico-tour-box *):not(.chico-floating-btn),
+body:not(.dark-theme) .border-white\/10:not(.hero-banner-container *):not(aside *):not(.chico-assistant-drawer *):not(.chico-tour-box *):not(.chico-floating-btn) {
   background-color: #ffffff !important;
   border: 1px solid #cbd5e1 !important; /* border-slate-300 */
   color: #334155 !important; /* text-slate-700 */
@@ -490,9 +490,9 @@ body:not(.dark-theme) .border-white\/10:not(.hero-banner-container *):not(aside 
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-body:not(.dark-theme) button:not(.bg-primary):not([type="submit"]):not(.hero-banner-container *):not(aside *):hover,
-body:not(.dark-theme) .btn-secondary:not(.hero-banner-container *):hover,
-body:not(.dark-theme) .border-white\/10:not(.hero-banner-container *):not(aside *):hover {
+body:not(.dark-theme) button:not(.bg-primary):not([type="submit"]):not(.hero-banner-container *):not(aside *):not(.chico-assistant-drawer *):not(.chico-tour-box *):not(.chico-floating-btn):hover,
+body:not(.dark-theme) .btn-secondary:not(.hero-banner-container *):not(.chico-assistant-drawer *):not(.chico-tour-box *):not(.chico-floating-btn):hover,
+body:not(.dark-theme) .border-white\/10:not(.hero-banner-container *):not(aside *):not(.chico-assistant-drawer *):not(.chico-tour-box *):not(.chico-floating-btn):hover {
   background-color: #f8fafc !important; /* bg-slate-50 */
   border-color: #94a3b8 !important; /* border-slate-400 */
   color: #0f172a !important; /* text-slate-900 */
@@ -611,4 +611,176 @@ body:not(.dark-theme) .bg-emerald-500\/5:not(aside *) {
 .weather-metric-icon {
   color: #60a5fa !important; /* Tons de azul */
 }
+
+/* 12. Chico Virtual Assistant Custom Styles */
+.chico-assistant-drawer {
+  background-color: #020c08 !important;
+  background-image: linear-gradient(180deg, #020c08 0%, #010603 100%) !important;
+  color: #ecfdf5 !important;
+  border-left: 1px solid rgba(16, 185, 129, 0.15) !important;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.7) !important;
+}
+
+.chico-assistant-header {
+  background-color: rgba(16, 185, 129, 0.03) !important;
+  border-bottom: 1px solid rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Reset buttons inside assistant drawer to avoid aggressive light-mode white button overrides */
+.chico-assistant-drawer button,
+.chico-assistant-drawer div[role="button"],
+.chico-tour-box button,
+.chico-floating-btn {
+  background-color: transparent !important;
+  border: none !important;
+  color: inherit !important;
+}
+
+.chico-tab-active {
+  border-bottom: 2px solid #10b981 !important;
+  color: #10b981 !important;
+  background-color: rgba(16, 185, 129, 0.05) !important;
+}
+
+.chico-tab-inactive {
+  color: #6b7280 !important;
+  border-bottom: 2px solid transparent !important;
+}
+
+.chico-tab-inactive:hover {
+  color: #d1fae5 !important;
+}
+
+.chico-card-danger {
+  background-color: rgba(239, 68, 68, 0.06) !important;
+  border: 1px solid rgba(239, 68, 68, 0.25) !important;
+  color: #fca5a5 !important;
+}
+
+.chico-card-warning {
+  background-color: rgba(245, 158, 11, 0.06) !important;
+  border: 1px solid rgba(245, 158, 11, 0.25) !important;
+  color: #fde047 !important;
+}
+
+.chico-card-success {
+  background-color: rgba(16, 185, 129, 0.06) !important;
+  border: 1px solid rgba(16, 185, 129, 0.25) !important;
+  color: #6ee7b7 !important;
+}
+
+.chico-card-info {
+  background-color: rgba(59, 130, 246, 0.06) !important;
+  border: 1px solid rgba(59, 130, 246, 0.25) !important;
+  color: #93c5fd !important;
+}
+
+.chico-text-primary {
+  color: #ffffff !important;
+}
+
+.chico-text-secondary {
+  color: #a2b5ab !important;
+}
+
+.chico-btn-green {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+  border-radius: 0.75rem !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.05em !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  display: block !important;
+  width: 100% !important;
+}
+
+.chico-btn-green:hover {
+  background-color: #059669 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3) !important;
+}
+
+.chico-tour-box {
+  background-color: #020c08 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8) !important;
+}
+
+.chico-floating-btn {
+  background-color: #0d2f19 !important;
+  color: #ffffff !important;
+  border: 2px solid rgba(16, 185, 129, 0.4) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+.chico-floating-btn:hover {
+  background-color: #0a2413 !important;
+  border-color: rgba(16, 185, 129, 0.7) !important;
+  border-radius: 50% !important;
+}
+
+/* Light mode overrides to protect Chico Assistant text colors and backgrounds from aggressive resets */
+body:not(.dark-theme) .chico-tour-box h3,
+body:not(.dark-theme) .chico-tour-box h4,
+body:not(.dark-theme) .chico-tour-box .text-white {
+  color: #ffffff !important;
+}
+
+body:not(.dark-theme) .chico-tour-box p,
+body:not(.dark-theme) .chico-tour-box .text-zinc-300 {
+  color: #cbd5e1 !important;
+}
+
+body:not(.dark-theme) .chico-tour-box span:not(.bg-emerald-600 *) {
+  color: #8b9d94 !important;
+}
+
+/* Force dark card and accordion backgrounds inside the drawer */
+body:not(.dark-theme) .chico-assistant-drawer .bg-white\/\[0\.01\],
+body:not(.dark-theme) .chico-assistant-drawer .bg-white\/5,
+body:not(.dark-theme) .chico-assistant-drawer .bg-black\/40,
+body:not(.dark-theme) .chico-assistant-drawer details {
+  background-color: rgba(3, 20, 11, 0.45) !important;
+  border-color: rgba(16, 185, 129, 0.15) !important;
+}
+
+body:not(.dark-theme) .chico-assistant-drawer details[open] {
+  background-color: rgba(16, 185, 129, 0.05) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Legible text overrides inside the assistant drawer */
+body:not(.dark-theme) .chico-assistant-drawer .chico-text-primary,
+body:not(.dark-theme) .chico-assistant-drawer h3,
+body:not(.dark-theme) .chico-assistant-drawer h4,
+body:not(.dark-theme) .chico-assistant-drawer summary {
+  color: #ffffff !important;
+}
+
+body:not(.dark-theme) .chico-assistant-drawer .chico-text-secondary,
+body:not(.dark-theme) .chico-assistant-drawer p,
+body:not(.dark-theme) .chico-assistant-drawer span:not(.bg-emerald-600 *) {
+  color: #cbd5e1 !important; /* light grey with high contrast against dark green/black backgrounds */
+}
+
+/* Specific FAQ accordion details text color */
+body:not(.dark-theme) .chico-assistant-drawer details summary h4 {
+  color: #ecfdf5 !important;
+}
+
+body:not(.dark-theme) .chico-assistant-drawer details[open] summary h4 {
+  color: #10b981 !important;
+}
+
+body:not(.dark-theme) .chico-assistant-drawer details p {
+  color: #cbd5e1 !important;
+}
+
 

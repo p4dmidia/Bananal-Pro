@@ -20,10 +20,12 @@ import {
   Calendar
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../../lib/supabase";
+import { supabase as supabaseClient } from "../../lib/supabase";
+const supabase = supabaseClient as any;
 import { Tables } from "../../types/database";
 import { useAuth } from "../../contexts/AuthContext";
 import YouTubePlayer from "../../components/Courses/YouTubePlayer";
+import { toast } from "sonner";
 
 // Import da imagem exclusiva do Módulo 0 (Boas-vindas)
 import modulo0Img from "../../assets/modulo0.jpg";
@@ -248,6 +250,9 @@ export default function Catalog() {
   };
 
   const getLiveSessionThumbnail = (item: any) => {
+    if (item.thumbnail_url) {
+      return item.thumbnail_url;
+    }
     if (item.replay_url) {
       const ytId = getLiveYoutubeId(item.replay_url);
       if (ytId) {
@@ -305,7 +310,8 @@ export default function Catalog() {
             videoUrl: getLiveSessionThumbnail(item),
             description: item.description,
             replay_url: item.replay_url,
-            materials: item.materials || []
+            materials: item.materials || [],
+            thumbnail_url: item.thumbnail_url
           };
         });
 

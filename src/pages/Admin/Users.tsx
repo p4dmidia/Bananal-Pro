@@ -442,6 +442,18 @@ export default function AdminUsers() {
     user.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
+
   return (
     <AdminLayout>
       <div className="max-w-7xl mx-auto space-y-8">
@@ -530,7 +542,7 @@ export default function AdminUsers() {
                     </td>
                   </tr>
                 ) : (
-                  filteredUsers.map((user, index) => (
+                  paginatedUsers.map((user, index) => (
                     <motion.tr 
                       key={user.id}
                       initial={{ opacity: 0, x: -10 }}
@@ -575,7 +587,7 @@ export default function AdminUsers() {
                       </td>
                       <td className="px-8 py-6">
                         <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase ${
-                          user.is_active ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-500" : "bg-red-500/10 text-red-600 dark:text-red-500"
+                          user.is_active ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-500" : "bg-red-500/10 text-red-650 dark:text-red-500"
                         }`}>
                           {user.is_active ? "Ativo" : "Inativo"}
                         </span>
@@ -620,11 +632,28 @@ export default function AdminUsers() {
           
           <div className="p-6 bg-slate-50 dark:bg-white/[0.01] border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
             <p className="text-xs text-slate-400 dark:text-zinc-500 font-medium">
-              Mostrando {filteredUsers.length} de {stats.total} usuários
+              Mostrando {filteredUsers.length > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + itemsPerPage, filteredUsers.length)} de {filteredUsers.length} usuários
             </p>
-            <div className="flex gap-2">
-              <button className="px-4 py-2 bg-slate-100 dark:bg-white/5 rounded-xl text-xs font-bold disabled:opacity-50" disabled>Anterior</button>
-              <button className="px-4 py-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-xl text-xs font-bold cursor-pointer">Próxima</button>
+            <div className="flex items-center gap-4">
+              <span className="text-xs text-slate-400 dark:text-zinc-500 font-medium">
+                Página {currentPage} de {totalPages || 1}
+              </span>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-slate-100 disabled:dark:hover:bg-white/5 rounded-xl text-xs font-bold cursor-pointer transition-colors"
+                >
+                  Anterior
+                </button>
+                <button 
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="px-4 py-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:hover:bg-slate-100 disabled:dark:hover:bg-white/5 rounded-xl text-xs font-bold cursor-pointer transition-colors"
+                >
+                  Próxima
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -96,8 +96,14 @@ export default function AdminDashboard() {
       // MRR is active users * 87
       const mrrValue = activeCount * 87;
 
-      // Calculate cancelled users
-      const cancelledOrders = ordersData.filter((o: any) => o.status === 'cancelled');
+      // Calculate cancelled users (must have had a paid order in history and profile is currently not active)
+      const cancelledOrders = ordersData.filter((o: any) => {
+        if (o.status !== 'cancelled') return false;
+        const userHasEverPaid = ordersData.some((allO: any) => allO.user_id === o.user_id && allO.status === 'paid');
+        const userProfile = usersData?.find((u: any) => u.id === o.user_id);
+        const isCurrentlyActive = userProfile ? userProfile.is_active : false;
+        return userHasEverPaid && !isCurrentlyActive;
+      });
       const cancelledUserIds = Array.from(new Set(cancelledOrders.map((o: any) => o.user_id)));
       const cancelledCount = cancelledUserIds.length;
 

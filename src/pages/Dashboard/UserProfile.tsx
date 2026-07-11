@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Layout from "../../components/Layout/Layout";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   User, 
@@ -28,8 +28,20 @@ import { ptBR } from "date-fns/locale";
 
 export default function UserProfile() {
   const { user, profile, refreshProfile } = useAuth();
-  const [activeTab, setActiveTab] = useState<"personal" | "farm" | "billing">("personal");
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<"personal" | "farm" | "billing">(
+    (tabParam === "farm" || tabParam === "billing" || tabParam === "personal") ? tabParam : "personal"
+  );
   const [isSaving, setIsSaving] = useState(false);
+
+  // Sync tab state if searchParams change
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "farm" || tab === "billing" || tab === "personal") {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   // Form states
   const [personalData, setPersonalData] = useState({

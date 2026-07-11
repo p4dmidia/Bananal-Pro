@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
+import VirtualAssistant from "../Assistant/VirtualAssistant";
 
 export default function Layout({ children, headerActions }: { children: React.ReactNode; headerActions?: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -237,6 +238,7 @@ export default function Layout({ children, headerActions }: { children: React.Re
         <main className={isDashboard ? "overflow-y-auto w-full" : "p-4 md:p-8 overflow-y-auto"}>
           {children}
         </main>
+        <VirtualAssistant />
       </div>
     </div>
   );
