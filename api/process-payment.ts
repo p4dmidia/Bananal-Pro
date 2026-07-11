@@ -36,8 +36,8 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes: plan, user_id e payment_method_id.' });
     }
 
-    // Preço de teste: R$ 1,00 para ambos os planos
-    const finalAmount = 1.00;
+    // Preço oficial de produção (R$ 97 mensal / R$ 497 anual)
+    const finalAmount = plan === 'mensal' ? 97.00 : 497.00;
 
     // Normaliza informações do pagador para suportar tanto o formulário simplificado quanto o antigo Payment Brick
     const email = payer_email || formData?.payer?.email;
