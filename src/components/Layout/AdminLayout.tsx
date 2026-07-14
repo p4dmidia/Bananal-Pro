@@ -61,14 +61,14 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
       {/* Mobile Overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998] lg:hidden"
           onClick={onClose}
         />
       )}
 
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-72 sidebar-premium text-white flex flex-col h-screen transition-transform duration-300 lg:translate-x-0
-        ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+        fixed inset-y-0 left-0 w-72 sidebar-premium text-white flex flex-col h-[100dvh] transition-transform duration-300 lg:translate-x-0
+        ${isOpen ? "translate-x-0 z-[9999]" : "-translate-x-full lg:translate-x-0 z-50"}
       `}>
         {/* Header com Logotipo Transparente Anexado */}
         <div className="py-6 px-6 flex items-center justify-between relative border-b border-emerald-950/30">

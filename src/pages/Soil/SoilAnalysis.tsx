@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Layout from "../../components/Layout/Layout";
 import bannerImg from "../../assets/banana_soil_analysis_banner.png";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { 
   Sprout, 
   Calculator, 
@@ -14,7 +14,8 @@ import {
   Trash2,
   Loader2,
   Download,
-  FileUp
+  FileUp,
+  X
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../contexts/AuthContext";
@@ -43,6 +44,139 @@ interface SoilTest {
   hAl: number;
   vPercent: number;
   limingNeed: number;
+  documentUrl?: string;
+}
+
+const loadPdfjs = () => {
+  return new Promise<any>((resolve) => {
+    if ((window as any).pdfjsLib) {
+      resolve((window as any).pdfjsLib);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+    script.onload = () => {
+      const pdfjsLib = (window as any).pdfjsLib;
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+      resolve(pdfjsLib);
+    };
+    document.head.appendChild(script);
+  });
+};
+
+const extractTextFromPdf = async (file: File): Promise<string> => {
+  const pdfjsLib = await loadPdfjs();
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let fullText = "";
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items.map((item: any) => item.str).join(" ");
+    fullText += pageText + "\n";
+  }
+  return fullText;
+};
+
+const parseSoilPdfText = (text: string) => {
+  const normalized = text.replace(/,/g, '.').replace(/\s+/g, ' ');
+  
+  // Default values
+  let ph = 5.5;
+  let p = 12.0;
+  let k = 0.15;
+  let ca = 1.8;
+  let mg = 0.6;
+  let hAl = 4.2;
+
+  // 1. pH em Água
+  const phMatch = normalized.match(/ph(?:[- ]?água|[- ]?agua)?[^0-9]*([3-8]\.[0-9])/i);
+  if (phMatch) {
+    ph = parseFloat(phMatch[1]);
+  }
+
+  // 2. Fósforo (P)
+  const pMatch = normalized.match(/(?:fósforo|fosforo|p\s+mg\/dm³|p\s+mg\/dm3)[^0-9]*(\d+(?:\.\d+)?)/i);
+  if (pMatch) {
+    p = parseFloat(pMatch[1]);
+  } else {
+    const pSimple = normalized.match(/\b(?:p)\b[^0-9]*(\d+(?:\.\d+)?)/i);
+    if (pSimple) p = parseFloat(pSimple[1]);
+  }
+
+  // 3. Potássio (K)
+  const kMatch = normalized.match(/(?:potássio|potassio|k\s+mg\/dm³|k\s+mg\/dm3)[^0-9]*(\d+(?:\.\d+)?)/i);
+  if (kMatch) {
+    const val = parseFloat(kMatch[1]);
+    k = val > 5 ? parseFloat((val / 391).toFixed(3)) : val;
+  } else {
+    const kSimple = normalized.match(/\b(?:k)\b[^0-9]*(\d+(?:\.\d+)?)/i);
+    if (kSimple) {
+      const val = parseFloat(kSimple[1]);
+      k = val > 5 ? parseFloat((val / 391).toFixed(3)) : val;
+    }
+  }
+
+  // 4. Cálcio (Ca)
+  const caMatch = normalized.match(/(?:cálcio|calcio|ca\s+cmolc)[^0-9]*(\d+(?:\.\d+)?)/i);
+  if (caMatch) {
+    ca = parseFloat(caMatch[1]);
+  } else {
+    const caSimple = normalized.match(/\b(?:ca)\b[^0-9]*(\d+(?:\.\d+)?)/i);
+    if (caSimple) ca = parseFloat(caSimple[1]);
+  }
+
+  // 5. Magnésio (Mg)
+  const mgMatch = normalized.match(/(?:magnésio|magnesio|mg\s+cmolc)[^0-9]*(\d+(?:\.\d+)?)/i);
+  if (mgMatch) {
+    mg = parseFloat(mgMatch[1]);
+  } else {
+    const mgSimple = normalized.match(/\b(?:mg)\b[^0-9]*(\d+(?:\.\d+)?)/i);
+    if (mgSimple) mg = parseFloat(mgSimple[1]);
+  }
+
+  // 6. H + Al
+  const hAlMatch = normalized.match(/(?:h\s*\+\s*al|acidez)[^0-9]*(\d+(?:\.\d+)?)/i);
+  if (hAlMatch) {
+    hAl = parseFloat(hAlMatch[1]);
+  }
+
+  return { ph, p, k, ca, mg, hAl };
+};
+
+const openDataUrlOrBlob = (url: string) => {
+  if (!url) return;
+  if (url.startsWith('data:')) {
+    try {
+      const parts = url.split(',');
+      const mime = parts[0].match(/:(.*?);/)?.[1] || 'application/pdf';
+      const bstr = atob(parts[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      const blob = new Blob([u8arr], { type: mime });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+    } catch (err) {
+      console.error("Error opening base64 document:", err);
+      const newTab = window.open();
+      if (newTab) {
+        newTab.document.write(`<iframe src="${url}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+      }
+    }
+  } else {
+    window.open(url, '_blank');
+  }
+};
+
+interface SoilTestExtended extends SoilTest {
+  user_profiles?: {
+    full_name: string;
+    email: string;
+    property_name: string | null;
+  } | null;
 }
 
 export default function SoilAnalysis() {
@@ -57,6 +191,32 @@ export default function SoilAnalysis() {
   const [prnt, setPrnt] = useState(80); // %
   const [areas, setAreas] = useState<any[]>([]);
   const [selectedAreaId, setSelectedAreaId] = useState<string>("custom");
+
+  const [documentUrl, setDocumentUrl] = useState("");
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [activeTab, setActiveTab] = useState<"calculator" | "all-analyses">("calculator");
+
+  // General history states for admin, partner, pj
+  const [allAnalyses, setAllAnalyses] = useState<SoilTestExtended[]>([]);
+  const [loadingAllAnalyses, setLoadingAllAnalyses] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Edit modal states
+  const [editingAnalysis, setEditingAnalysis] = useState<SoilTestExtended | null>(null);
+  const [editDescription, setEditDescription] = useState("");
+  const [editPh, setEditPh] = useState(5.2);
+  const [editP, setEditP] = useState(12);
+  const [editK, setEditK] = useState(0.15);
+  const [editCa, setEditCa] = useState(1.8);
+  const [editMg, setEditMg] = useState(0.6);
+  const [editHAl, setEditHAl] = useState(4.2);
+  const [editPrnt, setEditPrnt] = useState(80);
+  const [editDocumentUrl, setEditDocumentUrl] = useState("");
+  const [uploadingEditDoc, setUploadingEditDoc] = useState(false);
 
   const [history, setHistory] = useState<SoilTest[]>([]);
   const [targetV, setTargetV] = useState(70);
@@ -100,45 +260,109 @@ export default function SoilAnalysis() {
   const [scanProgress, setScanProgress] = useState(0);
   const [scanStatusMsg, setScanStatusMsg] = useState("");
 
-  const handleUploadLabReport = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadLabReport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+      toast.error("Por favor, selecione apenas arquivos em formato PDF.");
+      return;
+    }
+
     setScanningReport(true);
     setScanProgress(0);
-    setScanStatusMsg("Carregando arquivo de laudo...");
+    setScanStatusMsg("Carregando arquivo de laudo PDF...");
+
+    // Real upload promise running concurrently
+    const uploadPromise = (async () => {
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `soil-analysis-${Date.now()}.${fileExt}`;
+        const filePath = `${profile?.id || 'public'}/${fileName}`;
+        
+        await supabase.storage.createBucket('soil-analyses', { public: true }).catch(() => {});
+        
+        const { error: uploadError } = await supabase.storage
+          .from('soil-analyses')
+          .upload(filePath, file, { cacheControl: '3600', upsert: true });
+          
+        if (uploadError) {
+          const { error: fallbackError } = await supabase.storage
+            .from('library-files')
+            .upload(filePath, file, { cacheControl: '3600', upsert: true });
+          if (fallbackError) {
+            // base64 fallback
+            return new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(file);
+            });
+          } else {
+            return supabase.storage.from('library-files').getPublicUrl(filePath).data.publicUrl;
+          }
+        } else {
+          return supabase.storage.from('soil-analyses').getPublicUrl(filePath).data.publicUrl;
+        }
+      } catch (err) {
+        console.warn("Upload error in background:", err);
+        return "";
+      }
+    })();
+
+    // Client-side PDF text extraction
+    let parsedValues = {
+      ph: 5.5,
+      p: 12.0,
+      k: 0.15,
+      ca: 1.8,
+      mg: 0.6,
+      hAl: 4.2
+    };
+
+    try {
+      setScanStatusMsg("Extraindo texto digital do laudo PDF...");
+      const text = await extractTextFromPdf(file);
+      if (text.trim()) {
+        const parsed = parseSoilPdfText(text);
+        parsedValues = parsed;
+      }
+    } catch (err) {
+      console.warn("Error parsing PDF text, using default fallbacks:", err);
+    }
 
     const steps = [
-      { progress: 15, msg: "Lendo cabecalho do laboratorio..." },
-      { progress: 45, msg: "Identificando teores de nutrientes (K, P, Ca, Mg)..." },
-      { progress: 75, msg: "Lendo acidez potencial e pH em agua..." },
-      { progress: 95, msg: "Concluindo extracao digital dos dados..." },
-      { progress: 100, msg: "Concluido!" }
+      { progress: 25, msg: "Lendo estrutura do PDF..." },
+      { progress: 55, msg: "Identificando teores de nutrientes (K, P, Ca, Mg)..." },
+      { progress: 85, msg: "Lendo acidez potencial e pH em água..." },
+      { progress: 100, msg: "Concluído!" }
     ];
 
     let currentStep = 0;
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       if (currentStep < steps.length) {
         setScanProgress(steps[currentStep].progress);
         setScanStatusMsg(steps[currentStep].msg);
         currentStep++;
       } else {
         clearInterval(interval);
+        const uploadedUrl = await uploadPromise;
+        setDocumentUrl(uploadedUrl);
+        
         setTimeout(() => {
-          setDescription(`Laudo Extraido - Gleba ${file.name.replace(/\.[^/.]+$/, "")}`);
-          setPh(5.1);
-          setP(8.5);
-          setK(0.12);
-          setCa(1.4);
-          setMg(0.4);
-          setHAl(4.1);
+          setDescription(`Laudo PDF - ${file.name.replace(/\.[^/.]+$/, "")}`);
+          setPh(parsedValues.ph);
+          setP(parsedValues.p);
+          setK(parsedValues.k);
+          setCa(parsedValues.ca);
+          setMg(parsedValues.mg);
+          setHAl(parsedValues.hAl);
           setPrnt(80);
           
           setScanningReport(false);
-          toast.success("Laudo laboratorial processado! Dados de solo extraidos e preenchidos automaticamente.");
+          toast.success("Laudo PDF importado! Revise e ajuste os valores se necessário.");
         }, 550);
       }
-    }, 600);
+    }, 450);
   };
 
   const handleExportPDF = (gleba: string, values: {
@@ -344,7 +568,7 @@ export default function SoilAnalysis() {
 
       if (error) throw error;
 
-      const mapped: SoilTest[] = (data || []).map((t) => ({
+      const mapped: SoilTest[] = (data || []).map((t: any) => ({
         id: String(t.id),
         date: t.created_at ? t.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
         description: t.description,
@@ -355,7 +579,8 @@ export default function SoilAnalysis() {
         mg: Number(t.mg),
         hAl: Number(t.h_al),
         vPercent: Number(t.v_percent),
-        limingNeed: Number(t.liming_need)
+        limingNeed: Number(t.liming_need),
+        documentUrl: t.document_url || ""
       }));
       setHistory(mapped);
     } catch (err) {
@@ -363,6 +588,66 @@ export default function SoilAnalysis() {
       toast.error('Erro ao buscar histórico de análises de solo.');
     } finally {
       setLoadingHistory(false);
+    }
+  };
+
+  const fetchAllSoilAnalyses = async () => {
+    if (!profile?.id) return;
+    setLoadingAllAnalyses(true);
+    try {
+      const { data, error } = await (supabase as any)
+        .from('soil_analyses')
+        .select(`
+          *,
+          user_profiles:user_id (
+            id,
+            full_name,
+            email
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Buscar áreas de produtores para associar o nome da propriedade
+      const { data: areasData } = await supabase
+        .from('producer_areas')
+        .select('user_id, property_name');
+
+      const propertyMap: Record<string, string> = {};
+      if (areasData) {
+        areasData.forEach((a: any) => {
+          if (a.user_id && a.property_name) {
+            propertyMap[String(a.user_id)] = a.property_name;
+          }
+        });
+      }
+
+      const mapped: SoilTestExtended[] = (data || []).map((t: any) => ({
+        id: String(t.id),
+        date: t.created_at ? t.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+        description: t.description,
+        ph: Number(t.ph),
+        p: Number(t.p),
+        k: Number(t.k),
+        ca: Number(t.ca),
+        mg: Number(t.mg),
+        hAl: Number(t.h_al),
+        vPercent: Number(t.v_percent),
+        limingNeed: Number(t.liming_need),
+        documentUrl: t.document_url || "",
+        user_profiles: t.user_profiles ? {
+          full_name: t.user_profiles.full_name,
+          email: t.user_profiles.email,
+          property_name: propertyMap[String(t.user_profiles.id)] || propertyMap[String(t.user_id)] || "Sem propriedade cadastrada"
+        } : null
+      }));
+      setAllAnalyses(mapped);
+    } catch (err) {
+      console.error('Error fetching all soil analyses:', err);
+      toast.error('Erro ao buscar histórico geral de análises de solo.');
+    } finally {
+      setLoadingAllAnalyses(false);
     }
   };
 
@@ -412,6 +697,9 @@ export default function SoilAnalysis() {
     if (profile?.id) {
       fetchSoilAnalyses();
       fetchAreas();
+      if (['admin', 'partner', 'pj'].includes(profile.role)) {
+        fetchAllSoilAnalyses();
+      }
     }
   }, [profile]);
 
@@ -450,20 +738,69 @@ export default function SoilAnalysis() {
           mg,
           h_al: hAl,
           v_percent: parseFloat(v1.toFixed(1)),
-          liming_need: limingNeed
+          liming_need: limingNeed,
+          document_url: documentUrl || null
         }]);
 
       if (error) throw error;
 
       toast.success("Análise de solo salva com sucesso no histórico!");
       setDescription("");
+      setDocumentUrl("");
       setSelectedAreaId("custom");
       fetchSoilAnalyses();
+      if (['admin', 'partner', 'pj'].includes(profile.role)) {
+        fetchAllSoilAnalyses();
+      }
     } catch (err) {
       console.error('Error saving soil analysis:', err);
       toast.error('Erro ao salvar análise no Supabase.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleUpdateAnalysis = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAnalysis) return;
+    if (!editDescription.trim()) {
+      toast.error("Por favor, forneça uma descrição.");
+      return;
+    }
+
+    const editSb = editCa + editMg + editK;
+    const editCtc = editSb + editHAl;
+    const editV = editCtc > 0 ? (editSb / editCtc) * 100 : 0;
+    const editLimingNeed = editV < targetV && editCtc > 0
+      ? parseFloat((((targetV - editV) * editCtc) / editPrnt).toFixed(2))
+      : 0;
+
+    try {
+      const { error } = await (supabase as any)
+        .from('soil_analyses')
+        .update({
+          description: editDescription,
+          ph: editPh,
+          p: editP,
+          k: editK,
+          ca: editCa,
+          mg: editMg,
+          h_al: editHAl,
+          v_percent: parseFloat(editV.toFixed(1)),
+          liming_need: editLimingNeed,
+          document_url: editDocumentUrl || null
+        })
+        .eq('id', Number(editingAnalysis.id));
+
+      if (error) throw error;
+
+      toast.success("Análise de solo atualizada com sucesso!");
+      setEditingAnalysis(null);
+      fetchSoilAnalyses();
+      fetchAllSoilAnalyses();
+    } catch (err) {
+      console.error('Error updating soil analysis:', err);
+      toast.error('Erro ao atualizar análise de solo.');
     }
   };
 
@@ -523,7 +860,31 @@ export default function SoilAnalysis() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {profile && ['admin', 'partner', 'pj'].includes(profile.role) && (
+          <div className="flex border-b border-white/5 pb-4 mb-2 flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => { setActiveTab("calculator"); setCurrentPage(1); }}
+              className={`px-5 py-3 rounded-xl font-bold text-xs tracking-wider uppercase transition-all cursor-pointer ${
+                activeTab === "calculator" ? "bg-primary text-white border border-primary/20 shadow-lg shadow-primary/20" : "bg-white/5 text-zinc-400 hover:bg-white/10"
+              }`}
+            >
+              Calculadora e Minhas Análises
+            </button>
+            <button
+              type="button"
+              onClick={() => { setActiveTab("all-analyses"); setCurrentPage(1); }}
+              className={`px-5 py-3 rounded-xl font-bold text-xs tracking-wider uppercase transition-all cursor-pointer ${
+                activeTab === "all-analyses" ? "bg-primary text-white border border-primary/20 shadow-lg shadow-primary/20" : "bg-white/5 text-zinc-400 hover:bg-white/10"
+              }`}
+            >
+              Todas as Análises dos Assinantes
+            </button>
+          </div>
+        )}
+
+        {activeTab === "calculator" ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Form Column */}
           <div className="lg:col-span-2 space-y-8">
             <div className="glass-card p-8 rounded-[2.5rem] border-white/5 bg-zinc-900/40 relative overflow-hidden">
@@ -533,7 +894,10 @@ export default function SoilAnalysis() {
               </div>
 
               {scanningReport ? (
-                <div className="p-8 border border-primary/20 bg-primary/5 rounded-2xl flex flex-col items-center justify-center text-center space-y-4 mb-6 transition-all">
+                <div 
+                  className="p-8 border border-primary/20 bg-primary/5 rounded-2xl flex flex-col items-center justify-center text-center space-y-4 mb-6 transition-all notranslate"
+                  translate="no"
+                >
                   <Loader2 className="w-8 h-8 text-primary animate-spin" />
                   <div>
                     <p className="text-white font-bold text-sm">{scanStatusMsg}</p>
@@ -545,11 +909,11 @@ export default function SoilAnalysis() {
               ) : (
                 <div className="border border-dashed border-white/10 hover:border-primary/30 bg-black/20 rounded-2xl p-5 text-center flex flex-col items-center justify-center transition-all relative overflow-hidden group mb-6">
                   <FileUp className="text-primary w-6 h-6 mb-2 group-hover:scale-110 transition-transform" />
-                  <p className="text-xs font-bold text-white mb-0.5">Simular Importação de Laudo Laboratorial</p>
-                  <p className="text-[10px] text-zinc-500">Suba um PDF ou Imagem do laudo químico para preenchimento inteligente</p>
+                  <p className="text-xs font-bold text-white mb-0.5">Leitura Automática de Laudo PDF</p>
+                  <p className="text-[10px] text-zinc-500">Faça o upload do laudo digital em PDF para extrair e preencher os dados automaticamente</p>
                   <input
                     type="file"
-                    accept=".pdf,image/*"
+                    accept=".pdf"
                     onChange={handleUploadLabReport}
                     className="absolute inset-0 opacity-0 cursor-pointer"
                   />
@@ -677,6 +1041,76 @@ export default function SoilAnalysis() {
                       className="w-full bg-black/40 border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:outline-none focus:border-primary/50"
                     />
                   </div>
+                </div>
+
+                {/* Campo para anexar laudo PDF manualmente */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-300">Anexar Laudo PDF (Opcional)</label>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (!file.name.toLowerCase().endsWith('.pdf')) {
+                        toast.error("Por favor, selecione apenas arquivos em formato PDF.");
+                        return;
+                      }
+                      setUploadingDoc(true);
+                      try {
+                        const fileExt = file.name.split('.').pop();
+                        const fileName = `soil-analysis-${Date.now()}.${fileExt}`;
+                        const filePath = `${profile?.id || 'public'}/${fileName}`;
+                        
+                        await supabase.storage.createBucket('soil-analyses', { public: true }).catch(() => {});
+                        
+                        let finalUrl = "";
+                        const { error: uploadError } = await supabase.storage
+                          .from('soil-analyses')
+                          .upload(filePath, file, { cacheControl: '3600', upsert: true });
+                          
+                        if (uploadError) {
+                          const { error: fallbackError } = await supabase.storage
+                            .from('library-files')
+                            .upload(filePath, file, { cacheControl: '3600', upsert: true });
+                          if (fallbackError) {
+                            // base64 fallback
+                            finalUrl = await new Promise<string>((resolve) => {
+                              const reader = new FileReader();
+                              reader.onloadend = () => resolve(reader.result as string);
+                              reader.readAsDataURL(file);
+                            });
+                          } else {
+                            finalUrl = supabase.storage.from('library-files').getPublicUrl(filePath).data.publicUrl;
+                          }
+                        } else {
+                          finalUrl = supabase.storage.from('soil-analyses').getPublicUrl(filePath).data.publicUrl;
+                        }
+                        
+                        setDocumentUrl(finalUrl);
+                        toast.success("Laudo anexado com sucesso!");
+                      } catch (err) {
+                        console.error("Error uploading manual document:", err);
+                        toast.error("Erro ao fazer upload do laudo.");
+                      } finally {
+                        setUploadingDoc(false);
+                      }
+                    }}
+                    className="w-full bg-black/40 border border-white/10 rounded-2xl py-3 px-4 text-white text-xs focus:outline-none focus:border-primary/50 file:mr-4 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-primary file:text-white"
+                  />
+                  {uploadingDoc && <p className="text-[10px] text-zinc-500 animate-pulse">Enviando arquivo...</p>}
+                  {documentUrl && !uploadingDoc && (
+                    <p className="text-[10px] text-emerald-400 flex items-center gap-1">
+                      <CheckCircle2 size={12} /> Laudo anexado!{' '}
+                      <button
+                        type="button"
+                        onClick={() => openDataUrlOrBlob(documentUrl)}
+                        className="underline font-bold text-white hover:text-primary bg-transparent border-0 p-0 cursor-pointer text-[10px] inline-block font-sans"
+                      >
+                        Ver arquivo
+                      </button>
+                    </p>
+                  )}
                 </div>
 
                 <button
@@ -864,6 +1298,258 @@ export default function SoilAnalysis() {
             </div>
           </div>
         </div>
+        ) : (
+          /* Render General subscriber list tab */
+          <div className="space-y-8 animate-fadeIn">
+            <div className="glass-card p-8 rounded-[2.5rem] border border-white/5 bg-zinc-900/40 space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/5">
+                <div>
+                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <FileText className="text-primary w-6 h-6" />
+                    Histórico Geral de Análises de Solo
+                  </h3>
+                  <p className="text-xs text-zinc-400 mt-1">Consulte, filtre e gerencie as análises cadastradas pelos produtores assinantes.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => fetchAllSoilAnalyses()}
+                  className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 cursor-pointer transition-colors border border-white/10"
+                >
+                  <History size={14} /> Atualizar Lista
+                </button>
+              </div>
+
+              {/* Filtros */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Pesquisar</label>
+                  <input
+                    type="text"
+                    placeholder="Nome, e-mail ou gleba..."
+                    value={searchTerm}
+                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white text-xs focus:outline-none focus:border-primary/50 transition-colors"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Data Inicial</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => { setStartDate(e.target.value); setCurrentPage(1); }}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Data Final</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => { setEndDate(e.target.value); setCurrentPage(1); }}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Itens por Página</label>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white text-xs focus:outline-none focus:border-primary/50"
+                  >
+                    <option value="5" className="bg-zinc-950">5 itens</option>
+                    <option value="10" className="bg-zinc-950">10 itens</option>
+                    <option value="25" className="bg-zinc-950">25 itens</option>
+                    <option value="50" className="bg-zinc-950">50 itens</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Tabela de Resultados */}
+              {loadingAllAnalyses ? (
+                <div className="flex flex-col items-center justify-center py-20 text-slate-500 gap-2">
+                  <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                  <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">Carregando histórico...</span>
+                </div>
+              ) : allAnalyses.length === 0 ? (
+                <div className="text-center py-16 text-zinc-500 bg-black/10 rounded-3xl border border-dashed border-white/5">
+                  Nenhuma análise encontrada.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="overflow-x-auto rounded-2xl border border-white/5 bg-black/20 no-scrollbar">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-white/5 border-b border-white/5 text-zinc-400">
+                          <th className="px-5 py-4 font-bold uppercase tracking-wider">Assinante / Propriedade</th>
+                          <th className="px-5 py-4 font-bold uppercase tracking-wider">Gleba</th>
+                          <th className="px-5 py-4 font-bold uppercase tracking-wider">Data</th>
+                          <th className="px-5 py-4 font-bold uppercase tracking-wider text-center">Química (pH / V% / P / K)</th>
+                          <th className="px-5 py-4 font-bold uppercase tracking-wider text-center">Recomendação Calagem</th>
+                          <th className="px-5 py-4 font-bold uppercase tracking-wider text-center">Laudo / Arquivo</th>
+                          <th className="px-5 py-4 font-bold uppercase tracking-wider text-center">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 text-zinc-300">
+                        {allAnalyses
+                          .filter(item => {
+                            const matchesSearch = !searchTerm.trim() || 
+                              item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              (item.user_profiles?.full_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              (item.user_profiles?.email || "").toLowerCase().includes(searchTerm.toLowerCase());
+                              
+                            const matchesDate = (!startDate || item.date >= startDate) &&
+                                                (!endDate || item.date <= endDate);
+                                                
+                            return matchesSearch && matchesDate;
+                          })
+                          .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                          .map((test) => {
+                            const name = test.user_profiles?.full_name || "Assinante";
+                            const email = test.user_profiles?.email || "Não informado";
+                            const farmName = test.user_profiles?.property_name || "Sem propriedade cadastrada";
+                            
+                            return (
+                              <tr key={test.id} className="hover:bg-white/[0.01] transition-colors">
+                                <td className="px-5 py-4">
+                                  <p className="font-bold text-white text-sm">{name}</p>
+                                  <p className="text-[10px] text-zinc-500">{email}</p>
+                                  <p className="text-[10px] text-emerald-500 font-medium mt-0.5">{farmName}</p>
+                                </td>
+                                <td className="px-5 py-4 font-semibold text-white">{test.description}</td>
+                                <td className="px-5 py-4 text-zinc-400">{test.date}</td>
+                                <td className="px-5 py-4 text-center">
+                                  <div className="flex justify-center items-center gap-1.5 flex-wrap">
+                                    <span className="px-2 py-0.5 rounded bg-white/5 font-semibold text-[10px]" title="pH">pH: {test.ph}</span>
+                                    <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-semibold text-[10px]" title="V%">V: {test.vPercent}%</span>
+                                    <span className={`px-2 py-0.5 rounded font-semibold text-[10px] ${getPStatus(test.p).color} bg-white/5`} title="Fósforo">P: {test.p}</span>
+                                    <span className={`px-2 py-0.5 rounded font-semibold text-[10px] ${getKStatus(test.k).color} bg-white/5`} title="Potássio">K: {test.k}</span>
+                                  </div>
+                                </td>
+                                <td className="px-5 py-4 text-center font-bold text-yellow-500 text-sm">
+                                  {test.limingNeed > 0 ? `${test.limingNeed} t/ha` : "Não necessita"}
+                                </td>
+                                <td className="px-5 py-4 text-center">
+                                  {test.documentUrl ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => openDataUrlOrBlob(test.documentUrl || "")}
+                                      className="inline-flex items-center gap-1 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white px-3 py-1.5 rounded-xl border border-emerald-500/20 text-[10px] font-bold uppercase transition-all cursor-pointer"
+                                    >
+                                      <FileText size={12} /> Ver Laudo
+                                    </button>
+                                  ) : (
+                                    <span className="text-zinc-600 text-[10px] italic">Sem documento</span>
+                                  )}
+                                </td>
+                                <td className="px-5 py-4 text-center">
+                                  <div className="flex justify-center items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingAnalysis(test);
+                                        setEditDescription(test.description);
+                                        setEditPh(test.ph);
+                                        setEditP(test.p);
+                                        setEditK(test.k);
+                                        setEditCa(test.ca);
+                                        setEditMg(test.mg);
+                                        setEditHAl(test.hAl);
+                                        setEditPrnt(80);
+                                        setEditDocumentUrl(test.documentUrl || "");
+                                      }}
+                                      className="bg-primary/10 hover:bg-primary text-primary hover:text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border-0"
+                                      title="Editar"
+                                    >
+                                      Editar
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDelete(test.id)}
+                                      className="bg-red-500/5 hover:bg-red-500/20 text-red-400 p-2 rounded-xl text-xs font-bold transition-all cursor-pointer border-0"
+                                      title="Excluir"
+                                    >
+                                      <Trash2 size={13} />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Paginação */}
+                  {Math.ceil(
+                    allAnalyses.filter(item => {
+                      const matchesSearch = !searchTerm.trim() || 
+                        item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        (item.user_profiles?.full_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        (item.user_profiles?.email || "").toLowerCase().includes(searchTerm.toLowerCase());
+                        
+                      const matchesDate = (!startDate || item.date >= startDate) &&
+                                          (!endDate || item.date <= endDate);
+                                          
+                      return matchesSearch && matchesDate;
+                    }).length / itemsPerPage
+                  ) > 1 && (
+                    <div className="flex items-center justify-between pt-4 border-t border-white/5 text-xs">
+                      <p className="text-zinc-500">
+                        Página <span className="text-white font-bold">{currentPage}</span>
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          disabled={currentPage === 1}
+                          className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-50 text-white font-semibold cursor-pointer disabled:cursor-not-allowed transition-colors border-0"
+                        >
+                          Anterior
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const total = allAnalyses.filter(item => {
+                              const matchesSearch = !searchTerm.trim() || 
+                                item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                (item.user_profiles?.full_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                (item.user_profiles?.email || "").toLowerCase().includes(searchTerm.toLowerCase());
+                                
+                              const matchesDate = (!startDate || item.date >= startDate) &&
+                                                  (!endDate || item.date <= endDate);
+                                                  
+                              return matchesSearch && matchesDate;
+                            }).length;
+                            const maxPage = Math.ceil(total / itemsPerPage);
+                            setCurrentPage(prev => Math.min(prev + 1, maxPage));
+                          }}
+                          disabled={
+                            currentPage === Math.ceil(
+                              allAnalyses.filter(item => {
+                                const matchesSearch = !searchTerm.trim() || 
+                                  item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                  (item.user_profiles?.full_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                  (item.user_profiles?.email || "").toLowerCase().includes(searchTerm.toLowerCase());
+                                  
+                                const matchesDate = (!startDate || item.date >= startDate) &&
+                                                    (!endDate || item.date <= endDate);
+                                                    
+                                return matchesSearch && matchesDate;
+                              }).length / itemsPerPage
+                            )
+                          }
+                          className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-50 text-white font-semibold cursor-pointer disabled:cursor-not-allowed transition-colors border-0"
+                        >
+                          Próximo
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* COMPARATIVO DE EVOLUÇÃO DO SOLO */}
         {history.length >= 2 ? (
@@ -1068,6 +1754,226 @@ export default function SoilAnalysis() {
             </div>
           </div>
         )}
+
+        {/* EDIT ANALYSIS MODAL */}
+        <AnimatePresence>
+          {editingAnalysis && (
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setEditingAnalysis(null)}
+                className="fixed inset-0 bg-black/80 backdrop-blur-md"
+              />
+
+              <motion.div
+                initial={{ scale: 0.95, y: 20, opacity: 0 }}
+                animate={{ scale: 1, y: 0, opacity: 1 }}
+                exit={{ scale: 0.95, y: 20, opacity: 0 }}
+                className="bg-zinc-950 border border-emerald-500/20 rounded-[2.5rem] w-full max-w-2xl p-6 md:p-8 relative z-10 overflow-hidden shadow-2xl space-y-6 font-sans text-white max-h-[90vh] overflow-y-auto"
+              >
+                <button
+                  type="button"
+                  onClick={() => setEditingAnalysis(null)}
+                  className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/5 text-zinc-400 hover:text-white transition-colors cursor-pointer border-0"
+                >
+                  <X size={18} />
+                </button>
+
+                <div>
+                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Calculator className="text-primary w-5 h-5" />
+                    Editar Análise de Solo
+                  </h3>
+                  <p className="text-xs text-zinc-400 mt-1">
+                    Editando análise de {editingAnalysis.user_profiles?.full_name || "Assinante"} - Gleba: {editingAnalysis.description}
+                  </p>
+                </div>
+
+                <form onSubmit={handleUpdateAnalysis} className="space-y-5">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-zinc-400 uppercase tracking-widest block">Identificação / Gleba</label>
+                    <input
+                      type="text"
+                      required
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                      className="w-full bg-black/40 border border-white/10 rounded-2xl py-3 px-4 text-white text-xs focus:outline-none focus:border-primary/50"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-slate-300">pH (Água)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="3"
+                        max="9"
+                        value={editPh}
+                        onChange={(e) => setEditPh(parseFloat(e.target.value) || 0)}
+                        className="w-full bg-black/40 border border-white/10 rounded-2xl py-2 px-3 text-white text-xs focus:outline-none focus:border-primary/50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-slate-300">Fósforo P (mg/dm³)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={editP}
+                        onChange={(e) => setEditP(parseFloat(e.target.value) || 0)}
+                        className="w-full bg-black/40 border border-white/10 rounded-2xl py-2 px-3 text-white text-xs focus:outline-none focus:border-primary/50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-slate-300">Potássio K (cmolc/dm³)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editK}
+                        onChange={(e) => setEditK(parseFloat(e.target.value) || 0)}
+                        className="w-full bg-black/40 border border-white/10 rounded-2xl py-2 px-3 text-white text-xs focus:outline-none focus:border-primary/50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-slate-300">Cálcio Ca (cmolc/dm³)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={editCa}
+                        onChange={(e) => setEditCa(parseFloat(e.target.value) || 0)}
+                        className="w-full bg-black/40 border border-white/10 rounded-2xl py-2 px-3 text-white text-xs focus:outline-none focus:border-primary/50"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-slate-300">Magnésio Mg (cmolc/dm³)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={editMg}
+                        onChange={(e) => setEditMg(parseFloat(e.target.value) || 0)}
+                        className="w-full bg-black/40 border border-white/10 rounded-2xl py-2 px-3 text-white text-xs focus:outline-none focus:border-primary/50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-slate-300">H + Al (cmolc/dm³)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={editHAl}
+                        onChange={(e) => setEditHAl(parseFloat(e.target.value) || 0)}
+                        className="w-full bg-black/40 border border-white/10 rounded-2xl py-2 px-3 text-white text-xs focus:outline-none focus:border-primary/50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-slate-300">PRNT do Calcário (%)</label>
+                      <input
+                        type="number"
+                        step="1"
+                        min="50"
+                        max="120"
+                        value={editPrnt}
+                        onChange={(e) => setEditPrnt(parseInt(e.target.value) || 80)}
+                        className="w-full bg-black/40 border border-white/10 rounded-2xl py-2 px-3 text-white text-xs focus:outline-none focus:border-primary/50"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-slate-300">Anexar Novo Laudo PDF (Opcional)</label>
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (!file.name.toLowerCase().endsWith('.pdf')) {
+                            toast.error("Por favor, selecione apenas arquivos em formato PDF.");
+                            return;
+                          }
+                          setUploadingEditDoc(true);
+                          try {
+                            const fileExt = file.name.split('.').pop();
+                            const fileName = `soil-analysis-${Date.now()}.${fileExt}`;
+                            const filePath = `${editingAnalysis.user_id}/${fileName}`;
+                            
+                            await supabase.storage.createBucket('soil-analyses', { public: true }).catch(() => {});
+                            
+                            let finalUrl = "";
+                            const { error: uploadError } = await supabase.storage
+                              .from('soil-analyses')
+                              .upload(filePath, file, { cacheControl: '3600', upsert: true });
+                              
+                            if (uploadError) {
+                              const { error: fallbackError } = await supabase.storage
+                                .from('library-files')
+                                .upload(filePath, file, { cacheControl: '3600', upsert: true });
+                              if (fallbackError) {
+                                // base64 fallback
+                                finalUrl = await new Promise<string>((resolve) => {
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => resolve(reader.result as string);
+                                  reader.readAsDataURL(file);
+                                });
+                              } else {
+                                finalUrl = supabase.storage.from('library-files').getPublicUrl(filePath).data.publicUrl;
+                              }
+                            } else {
+                              finalUrl = supabase.storage.from('soil-analyses').getPublicUrl(filePath).data.publicUrl;
+                            }
+                            
+                            setEditDocumentUrl(finalUrl);
+                            toast.success("Novo laudo anexado com sucesso!");
+                          } catch (err) {
+                            console.error("Error uploading edit document:", err);
+                            toast.error("Erro ao fazer upload do documento.");
+                          } finally {
+                            setUploadingEditDoc(false);
+                          }
+                        }}
+                        className="flex-1 bg-black/40 border border-white/10 rounded-2xl py-2.5 px-4 text-white text-xs file:mr-4 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-primary file:text-white"
+                      />
+                      {uploadingEditDoc && <Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />}
+                    </div>
+                    {editDocumentUrl && (
+                      <p className="text-[10px] text-emerald-400">
+                        Laudo atual:{' '}
+                        <button
+                          type="button"
+                          onClick={() => openDataUrlOrBlob(editDocumentUrl)}
+                          className="underline font-bold text-white hover:text-primary bg-transparent border-0 p-0 cursor-pointer text-[10px] inline-block font-sans"
+                        >
+                          Visualizar
+                        </button>
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-3">
+                    <button
+                      type="button"
+                      onClick={() => setEditingAnalysis(null)}
+                      className="px-5 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-semibold text-xs cursor-pointer transition-colors border-0"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-3 rounded-2xl bg-primary hover:bg-primary-dark text-white font-black text-xs uppercase tracking-wider transition-all shadow-md cursor-pointer border-0"
+                    >
+                      Salvar Alterações
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </Layout>
   );

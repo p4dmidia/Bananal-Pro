@@ -109,7 +109,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 z-40 bg-white pt-24 px-6 md:hidden flex flex-col gap-6"
+            className="fixed inset-0 z-40 bg-white pt-24 pb-8 px-6 md:hidden flex flex-col gap-6 overflow-y-auto"
           >
             <div className="flex flex-col gap-6 py-4">
               <Link

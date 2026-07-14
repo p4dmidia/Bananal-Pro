@@ -103,11 +103,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       )}
 
       <aside className={`
-        fixed inset-y-0 left-0 w-72 sidebar-premium text-white flex flex-col h-screen transition-all duration-300 lg:translate-x-0
-        ${isOpen || tourActiveStep === 2 ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+        fixed inset-y-0 left-0 w-72 sidebar-premium text-white flex flex-col h-[100dvh] transition-all duration-300 lg:translate-x-0
+        ${isOpen || tourActiveStep === 2 ? "translate-x-0 z-[9999]" : "-translate-x-full lg:translate-x-0 z-50"}
         ${tourActiveStep === 2 
-          ? "z-[9999] shadow-[0_0_50px_rgba(16,185,129,0.4)] border-r border-emerald-500/60 ring-4 ring-emerald-500/20" 
-          : "z-50"
+          ? "shadow-[0_0_50px_rgba(16,185,129,0.4)] border-r border-emerald-500/60 ring-4 ring-emerald-500/20" 
+          : ""
         }
       `}>
         {/* Header com Logotipo Transparente Anexado */}
@@ -237,7 +237,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* SUPPORT OPTIONS MODAL */}
       <AnimatePresence>
         {showSupportModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
             {/* Overlay */}
             <motion.div
               initial={{ opacity: 0 }}
