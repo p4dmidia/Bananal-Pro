@@ -66,6 +66,8 @@ export default function VirtualAssistant() {
         // Delay opening the welcome dialog slightly for better feel
         const timer = setTimeout(() => {
           setTourStep(1);
+          // Set to true immediately when tour triggers, so it does not auto-open again on subsequent navigation/reloads
+          localStorage.setItem(`bananalpro_tour_done_${profile.id}`, "true");
         }, 3000);
         return () => clearTimeout(timer);
       }
