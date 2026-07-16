@@ -140,8 +140,32 @@ export default function UserProfile() {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        // Find latest active or cancelled order
-        const latestOrder = data.find(o => o.status === 'paid' || o.status === 'cancelled');
+        // Prioritize finding a valid paid order
+        let latestOrder = data.find(o => {
+          if (o.status !== 'paid') return false;
+          const isMonthly = o.total_amount <= 150;
+          const daysLimit = isMonthly ? 30 : 365;
+          const orderDate = new Date(o.created_at);
+          const expiryDate = new Date(orderDate.getTime() + daysLimit * 24 * 60 * 60 * 1000);
+          return new Date() <= expiryDate;
+        });
+
+        // If no active paid order, search for a cancelled order that is still in grace period
+        if (!latestOrder) {
+          latestOrder = data.find(o => {
+            if (o.status !== 'cancelled') return false;
+            const isMonthly = o.total_amount <= 150;
+            const daysLimit = isMonthly ? 30 : 365;
+            const orderDate = new Date(o.created_at);
+            const expiryDate = new Date(orderDate.getTime() + daysLimit * 24 * 60 * 60 * 1000);
+            return new Date() <= expiryDate;
+          });
+        }
+
+        // Fallback to the absolute latest paid or cancelled order (even if expired)
+        if (!latestOrder) {
+          latestOrder = data.find(o => o.status === 'paid' || o.status === 'cancelled');
+        }
         
         if (latestOrder) {
           const isMonthly = latestOrder.total_amount <= 150;

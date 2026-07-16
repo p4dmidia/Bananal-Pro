@@ -69,26 +69,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .eq('user_id', data.id);
 
             if (!ordersError && orders && orders.length > 0) {
-              const sortedOrders = [...orders].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-              const latestActiveOrCancelled = sortedOrders.find(o => o.status === 'paid' || o.status === 'cancelled');
-
-              if (latestActiveOrCancelled && latestActiveOrCancelled.status === 'cancelled') {
-                const isMonthly = latestActiveOrCancelled.total_amount <= 150;
+              const now = new Date();
+              // Check if there is at least one active order (either paid or cancelled) that is still within its validity period
+              const hasActiveOrder = orders.some(o => {
+                if (o.status !== 'paid' && o.status !== 'cancelled') return false;
+                
+                const isMonthly = o.total_amount <= 150;
                 const daysLimit = isMonthly ? 30 : 365;
-                const orderDate = new Date(latestActiveOrCancelled.created_at);
+                const orderDate = new Date(o.created_at);
                 const expiryDate = new Date(orderDate.getTime() + daysLimit * 24 * 60 * 60 * 1000);
-                const now = new Date();
+                
+                return now <= expiryDate;
+              });
 
-                if (now > expiryDate) {
-                  console.log('Auth: Grace period expired. Updating profile to inactive...');
-                  const { error: updateError } = await supabase
-                    .from('user_profiles')
-                    .update({ is_active: false })
-                    .eq('id', data.id);
+              if (!hasActiveOrder) {
+                console.log('Auth: No active paid or cancelled orders in grace period found. Updating profile to inactive...');
+                const { error: updateError } = await supabase
+                  .from('user_profiles')
+                  .update({ is_active: false })
+                  .eq('id', data.id);
 
-                  if (!updateError) {
-                    data.is_active = false;
-                  }
+                if (!updateError) {
+                  data.is_active = false;
                 }
               }
             }

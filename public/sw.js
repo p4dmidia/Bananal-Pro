@@ -1,46 +1,19 @@
-const CACHE_NAME = 'bananal-pro-cache-v1';
-
+// Self-destructing Service Worker
+// This is used to clean up any active Service Workers and clear browser service worker caches
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim());
-});
-
-self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-  
-  // Ignorar requisições que não sejam GET (como POST de pagamentos)
-  if (event.request.method !== 'GET') {
-    return;
-  }
-
-  // Ignorar chamadas da API local/Vercel
-  if (url.pathname.startsWith('/api/')) {
-    return;
-  }
-  
-  // Ignorar chamadas para o Supabase (API e Edge Functions)
-  if (url.hostname.includes('supabase.co')) {
-    return;
-  }
-
-  // Ignore Vite-specific and development resources
-  if (
-    url.pathname.startsWith('/@vite') || 
-    url.pathname.startsWith('/src') ||
-    url.pathname.startsWith('/node_modules') ||
-    url.pathname.includes('hot-update') ||
-    url.search.includes('t=') ||
-    (url.hostname === 'localhost' && url.port === '3000' && !url.pathname.includes('.'))
-  ) {
-    return;
-  }
-
-  event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
-    })
+  event.waitUntil(
+    self.registration.unregister()
+      .then(() => self.clients.matchAll())
+      .then((clients) => {
+        clients.forEach((client) => {
+          if (client.url) {
+            client.navigate(client.url);
+          }
+        });
+      })
   );
 });
