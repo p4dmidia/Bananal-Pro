@@ -189,21 +189,6 @@ export default function LandingPage() {
               </a>
             </div>
 
-            {/* Quick Metrics Badge */}
-            <div className="grid grid-cols-3 gap-6 pt-6 border-t border-outline-variant/30">
-              <div>
-                <p className="text-xl font-headline font-bold text-white">1.5k+</p>
-                <p className="text-[10px] text-on-surface-variant uppercase font-inter font-semibold">Fazendas Ativas</p>
-              </div>
-              <div>
-                <p className="text-xl font-headline font-bold text-secondary-fixed">800+</p>
-                <p className="text-[10px] text-on-surface-variant uppercase font-inter font-semibold">Alunos Formados</p>
-              </div>
-              <div>
-                <p className="text-xl font-headline font-bold text-tertiary-fixed">100%</p>
-                <p className="text-[10px] text-on-surface-variant uppercase font-inter font-semibold">Apoio Agronômico</p>
-              </div>
-            </div>
           </div>
 
           {/* Right Interactive Dashboard Mockup & Floating Cards */}

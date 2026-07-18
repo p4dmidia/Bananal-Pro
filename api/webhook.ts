@@ -28,6 +28,9 @@ export default async function handler(req: any, res: any) {
 
   try {
     let body = req.body;
+    if (body && Buffer.isBuffer(body)) {
+      body = body.toString('utf-8');
+    }
     if (typeof body === 'string') {
       try {
         body = JSON.parse(body);
@@ -55,7 +58,7 @@ export default async function handler(req: any, res: any) {
       paymentId = parts[parts.length - 1];
     } else if (body.action?.startsWith('payment.') && body.data && body.data.id) {
       paymentId = body.data.id.toString();
-    } else if ((body.type === 'subscription_authorized_payment' || body.action?.startsWith('subscription_authorized_payment.')) && body.data && body.data.id) {
+    } else if ((body.type === 'subscription_authorized_payment' || body.type === 'authorized_payment' || body.action?.startsWith('subscription_authorized_payment.') || body.action?.startsWith('authorized_payment.')) && body.data && body.data.id) {
       const authorizedPaymentId = body.data.id.toString();
       console.log(`Webhook: Buscando detalhes do pagamento autorizado de assinatura: ${authorizedPaymentId}`);
       try {
@@ -135,12 +138,14 @@ export default async function handler(req: any, res: any) {
 
     // Se o pagamento foi aprovado, vamos garantir que o pedido esteja marcado como pago e o usuário ativo
     if (status === 'approved') {
-      // 1. Busca o pedido correspondente no Supabase (tracking_code)
-      let { data: order, error: orderError } = await supabase
+      // 1. Busca o pedido correspondente no Supabase (tracking_code), ordenando por data para pegar o mais recente se houver duplicatas
+      let { data: orders, error: orderError } = await supabase
         .from('orders')
         .select('*')
         .eq('tracking_code', lookupCode)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
+
+      let order = orders && orders.length > 0 ? orders[0] : null;
 
       if (orderError) {
         console.error('Erro ao buscar pedido no Supabase via Webhook:', orderError);
@@ -221,10 +226,12 @@ export default async function handler(req: any, res: any) {
 
           console.log(`Perfil de Usuário ID ${order.user_id} ativado (is_active = true).`);
 
-          // Processa a divisão de lucros e a notificação do Telegram de forma assíncrona
-          processProfitSharingAndNotifications(order, paymentData).catch(err => {
-            console.error('Erro assíncrono em processProfitSharingAndNotifications:', err);
-          });
+          // Processa a divisão de lucros e a notificação do Telegram
+          try {
+            await processProfitSharingAndNotifications(order, paymentData);
+          } catch (err) {
+            console.error('Erro no processamento de divisão de lucros/notificação:', err);
+          }
         }
       } else {
         console.log(`Pedido #${order.id} já estava marcado como 'paid'. Ignorando processamento redundante.`);
@@ -233,11 +240,13 @@ export default async function handler(req: any, res: any) {
       // Se a cobrança foi recusada ou estornada, desativamos o usuário no Supabase
       console.log(`Pagamento ${paymentId} não foi aprovado (status: ${status}). Processando desativação...`);
       
-      const { data: order, error: orderError } = await supabase
+      const { data: orders, error: orderError } = await supabase
         .from('orders')
         .select('*')
         .eq('tracking_code', lookupCode)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
+
+      const order = orders && orders.length > 0 ? orders[0] : null;
 
       if (orderError) {
         console.error('Erro ao buscar pedido no Supabase via Webhook:', orderError);
@@ -256,21 +265,48 @@ export default async function handler(req: any, res: any) {
           .eq('id', order.id);
 
         if (order.user_id) {
-          // Desativa o perfil do produtor (is_active = false)
-          const { error: updateProfileError } = await supabase
-            .from('user_profiles')
-            .update({
-              is_active: false,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', order.user_id);
+          // Verifica se o usuário tem outro pedido pago que ainda está ativo
+          const { data: activePaidOrders, error: activeOrdersError } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('user_id', order.user_id)
+            .eq('status', 'paid')
+            .neq('id', order.id);
 
-          if (updateProfileError) {
-            console.error(`Erro ao desativar acesso do usuário ID ${order.user_id}:`, updateProfileError);
-            return res.status(500).json({ error: 'Database error deactivating profile.' });
+          let hasActiveSubscription = false;
+          if (!activeOrdersError && activePaidOrders && activePaidOrders.length > 0) {
+            const now = new Date();
+            for (const o of activePaidOrders) {
+              const createdDate = new Date(o.created_at);
+              // Plano Anual (> R$ 150): 365 dias, Plano Mensal: 30 dias
+              const daysLimit = Number(o.total_amount) > 150 ? 365 : 30;
+              const expirationDate = new Date(createdDate.getTime() + daysLimit * 24 * 60 * 60 * 1000);
+              if (now <= expirationDate) {
+                hasActiveSubscription = true;
+                break;
+              }
+            }
           }
 
-          console.log(`Perfil de Usuário ID ${order.user_id} desativado devido a pagamento ${status}.`);
+          if (!hasActiveSubscription) {
+            // Desativa o perfil do produtor (is_active = false) apenas se não houver outra assinatura válida
+            const { error: updateProfileError } = await supabase
+              .from('user_profiles')
+              .update({
+                is_active: false,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', order.user_id);
+
+            if (updateProfileError) {
+              console.error(`Erro ao desativar acesso do usuário ID ${order.user_id}:`, updateProfileError);
+              return res.status(500).json({ error: 'Database error deactivating profile.' });
+            }
+
+            console.log(`Perfil de Usuário ID ${order.user_id} desativado devido a pagamento ${status}.`);
+          } else {
+            console.log(`Perfil de Usuário ID ${order.user_id} mantido ativo (is_active = true) pois possui outro pedido pago e válido.`);
+          }
         }
       }
     }
