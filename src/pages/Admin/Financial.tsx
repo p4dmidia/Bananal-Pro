@@ -25,7 +25,9 @@ import {
   ShieldCheck, 
   Plus, 
   Trash2, 
-  Percent
+  Percent,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { toast } from "sonner";
@@ -68,30 +70,48 @@ interface PeriodStats {
 }
 
 const calculateStatsForPeriod = (subsList: Subscription[], allSubs: Subscription[] = []): PeriodStats => {
-  const active = subsList.filter(s => s.status === 'paid');
-  const pending = subsList.filter(s => s.status === 'pending');
-  
-  // A cancelled subscription (churn) is a user who once had a paid subscription (anywhere in history)
-  // but is currently not active.
-  const cancelled = subsList.filter(s => {
-    if (s.status !== 'cancelled') return false;
-    const history = allSubs.length > 0 ? allSubs : subsList;
-    const userHasEverPaid = history.some(allS => allS.user_id === s.user_id && allS.status === 'paid');
-    return userHasEverPaid && !s.user_active;
-  });
-  
-  const activeCount = active.length;
+  // Faturamento e pendentes são específicos do período filtrado
+  const activeInPeriod = subsList.filter(s => s.status === 'paid' && s.user_id !== null && s.user_id !== undefined);
+  const pending = subsList.filter(s => s.status === 'pending' && s.user_id !== null && s.user_id !== undefined);
   const pendingCount = pending.length;
-  const cancelledCount = cancelled.length;
-  
-  const faturamento = active.reduce((acc, curr) => acc + curr.amount, 0);
-  
-  // MRR: Monthly (<= 150) adds R$ 97, Annual (> 150) adds R$ 41.41 (R$ 497 / 12)
-  const mrr = active.reduce((acc, curr) => {
-    const isMonthly = curr.amount <= 150;
-    return acc + (isMonthly ? 97 : 41.41);
-  }, 0);
-  
+  const faturamento = activeInPeriod.reduce((acc, curr) => acc + curr.amount, 0);
+
+  // MRR, Assinantes Ativos, Churn e Retenção medem a base inteira (allSubs) para evitar divergências
+  const history = allSubs.length > 0 ? allSubs : subsList;
+  const historyPaid = history.filter(s => s.status === 'paid' && s.user_id !== null && s.user_id !== undefined);
+
+  // Mapeia o último valor de plano de cada usuário ativo na base histórica
+  const activeUsersMap = new Map<number, number>();
+  historyPaid.forEach(s => {
+    if (s.user_active) {
+      const existingDate = activeUsersMap.get(s.user_id) ? new Date(historyPaid.find(x => x.user_id === s.user_id)?.created_at || 0) : new Date(0);
+      if (new Date(s.created_at) >= existingDate) {
+        activeUsersMap.set(s.user_id, s.amount);
+      }
+    }
+  });
+
+  const activeCount = activeUsersMap.size;
+
+  // Calcula MRR real
+  let mrr = 0;
+  activeUsersMap.forEach((amount) => {
+    const isMonthly = amount <= 150;
+    mrr += isMonthly ? 97 : 41.41;
+  });
+
+  // Calcula churn baseados nos usuários que já pagaram mas estão inativos hoje
+  const uniquePaidUserIds = Array.from(new Set(historyPaid.map(s => s.user_id)));
+  let cancelledCount = 0;
+
+  uniquePaidUserIds.forEach(userId => {
+    const orderForUser = history.find(s => s.user_id === userId);
+    const isUserActive = orderForUser ? orderForUser.user_active : false;
+    if (!isUserActive) {
+      cancelledCount++;
+    }
+  });
+
   const totalSubs = activeCount + cancelledCount;
   const churn = totalSubs > 0 ? (cancelledCount / totalSubs) * 100 : 0;
   const retention = 100 - churn;
@@ -133,15 +153,39 @@ const getWhatsAppLink = (fullName: string, whatsapp: string, status: string = 'c
 };
 
 export default function AdminFinancial() {
-  const { profile } = useAuth();
+  const { profile, session } = useAuth();
   const supabaseAny = supabase as any;
   const LayoutComponent = profile?.role === 'admin' ? AdminLayout : Layout;
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [timeFilter, setTimeFilter] = useState<string>("6"); // "30" | "6" | "12" | "all"
+  const [timeFilter, setTimeFilter] = useState<string>("30"); // Inicializar com "30" por padrão
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+
+  // Novos estados para agrupamento e datas customizadas
+  const [expandedEmails, setExpandedEmails] = useState<{ [email: string]: boolean }>({});
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+
+  // Estados para lançamento de Assinatura Manual
+  const [isManualSubModalOpen, setIsManualSubModalOpen] = useState(false);
+  const [manualSubForm, setManualSubForm] = useState({
+    userId: "",
+    planType: "mensal", // "mensal" | "anual" | "custom"
+    customAmount: "",
+    paymentMethod: "PIX",
+    trackingCode: "",
+  });
+  const [manualSubLoading, setManualSubLoading] = useState(false);
+  const [userSearchTerm, setUserSearchTerm] = useState("");
+
+  const toggleExpand = (email: string) => {
+    setExpandedEmails(prev => ({
+      ...prev,
+      [email.toLowerCase()]: !prev[email.toLowerCase()]
+    }));
+  };
 
   // Estados adicionais para divisão de lucros e controle sócio/PJ
   const [activeTab, setActiveTab] = useState<'orders' | 'earnings' | 'config'>('orders');
@@ -151,6 +195,82 @@ export default function AdminFinancial() {
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [configForm, setConfigForm] = useState({ userId: "", roleType: "pj", percentage: 0 });
   const [userList, setUserList] = useState<any[]>([]);
+
+  // Filtro de usuários para assinatura manual
+  const filteredUserListForManualSub = React.useMemo(() => {
+    if (!userSearchTerm.trim()) return userList.slice(0, 100);
+    return userList.filter(u =>
+      (u.full_name || '').toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+      (u.email || '').toLowerCase().includes(userSearchTerm.toLowerCase())
+    );
+  }, [userList, userSearchTerm]);
+
+  const handleCreateManualSub = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualSubForm.userId) {
+      toast.error("Por favor, selecione um usuário.");
+      return;
+    }
+
+    let finalAmount = 97.00;
+    if (manualSubForm.planType === 'anual') {
+      finalAmount = 497.00;
+    } else if (manualSubForm.planType === 'custom') {
+      finalAmount = Number(manualSubForm.customAmount);
+      if (isNaN(finalAmount) || finalAmount <= 0) {
+        toast.error("Por favor, insira um valor válido maior que zero.");
+        return;
+      }
+    }
+
+    setManualSubLoading(true);
+    try {
+      const token = session?.access_token;
+      if (!token) {
+        throw new Error("Sessão não encontrada. Por favor, refaça o login.");
+      }
+
+      const res = await fetch("/api/create-manual-subscription", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          userId: Number(manualSubForm.userId),
+          amount: finalAmount,
+          paymentMethod: manualSubForm.paymentMethod,
+          trackingCode: manualSubForm.trackingCode || `MANUAL-${Date.now()}`
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Erro ao criar assinatura manual.");
+      }
+
+      toast.success(data.message || "Assinatura manual lançada com sucesso!");
+      setIsManualSubModalOpen(false);
+      // Reset form
+      setManualSubForm({
+        userId: "",
+        planType: "mensal",
+        customAmount: "",
+        paymentMethod: "PIX",
+        trackingCode: "",
+      });
+      setUserSearchTerm("");
+      
+      // Recarrega todos os dados
+      await fetchAllData();
+    } catch (err: any) {
+      console.error("Erro ao criar assinatura manual:", err);
+      toast.error(err.message || "Erro inesperado.");
+    } finally {
+      setManualSubLoading(false);
+    }
+  };
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -419,26 +539,47 @@ export default function AdminFinancial() {
   // Memoized stats calculation for current and previous period
   const computedStats = React.useMemo(() => {
     const now = new Date();
+    const getStartOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const startOfToday = getStartOfDay(now);
+
     let currentStart = new Date(0);
+    let currentEnd = now;
     let previousStart = new Date(0);
     let previousEnd = new Date(0);
-    const hasComparison = timeFilter !== "all";
+    let hasComparison = timeFilter !== "all" && timeFilter !== "custom";
 
-    if (timeFilter === "30") {
+    if (timeFilter === "today") {
+      currentStart = startOfToday;
+      previousStart = subDays(startOfToday, 1);
+      previousEnd = startOfToday;
+    } else if (timeFilter === "yesterday") {
+      currentStart = subDays(startOfToday, 1);
+      currentEnd = startOfToday;
+      previousStart = subDays(startOfToday, 2);
+      previousEnd = subDays(startOfToday, 1);
+    } else if (timeFilter === "7") {
+      currentStart = subDays(now, 7);
+      previousStart = subDays(now, 14);
+      previousEnd = subDays(now, 7);
+    } else if (timeFilter === "15") {
+      currentStart = subDays(now, 15);
+      previousStart = subDays(now, 30);
+      previousEnd = subDays(now, 15);
+    } else if (timeFilter === "30") {
       currentStart = subDays(now, 30);
       previousStart = subDays(now, 60);
       previousEnd = subDays(now, 30);
-    } else if (timeFilter === "6") {
-      currentStart = subDays(now, 180);
-      previousStart = subDays(now, 360);
-      previousEnd = subDays(now, 180);
-    } else if (timeFilter === "12") {
-      currentStart = subDays(now, 365);
-      previousStart = subDays(now, 730);
-      previousEnd = subDays(now, 365);
+    } else if (timeFilter === "custom") {
+      currentStart = startDate ? new Date(startDate + "T00:00:00") : new Date(0);
+      currentEnd = endDate ? new Date(endDate + "T23:59:59") : now;
+      hasComparison = false;
     }
 
-    const currentSubs = subscriptions.filter(s => new Date(s.created_at) >= currentStart);
+    const currentSubs = subscriptions.filter(s => {
+      const d = new Date(s.created_at);
+      return d >= currentStart && d <= currentEnd;
+    });
+
     const previousSubs = subscriptions.filter(s => {
       const d = new Date(s.created_at);
       return d >= previousStart && d < previousEnd;
@@ -460,7 +601,7 @@ export default function AdminFinancial() {
       pendingDiff,
       hasComparison
     };
-  }, [subscriptions, timeFilter]);
+  }, [subscriptions, timeFilter, startDate, endDate]);
 
   // Ganhos totais acumulados do PJ atual
   const myTotalEarnings = React.useMemo(() => {
@@ -476,50 +617,80 @@ export default function AdminFinancial() {
     return sharingConfigs.find(c => Number(c.user_id) === Number(profile.id))?.share_percentage || 0;
   }, [sharingConfigs, profile]);
 
-  // Agrega dados mensais para o gráfico de evolução
+  // Agrega dados mensais ou diários para o gráfico de evolução
   const getChartData = () => {
-    const monthsData: { [key: string]: { month: string; mrr: number; faturamento: number; timestamp: number } } = {};
     const now = new Date();
-    let limitDate = new Date(0);
-    
-    if (timeFilter === "30") limitDate = subDays(now, 30);
-    else if (timeFilter === "6") limitDate = subDays(now, 180);
-    else if (timeFilter === "12") limitDate = subDays(now, 365);
+    const getStartOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const startOfToday = getStartOfDay(now);
 
-    const activeOrders = subscriptions.filter(s => s.status === 'paid' && new Date(s.created_at) >= limitDate);
+    let limitStart = new Date(0);
+    let limitEnd = now;
+    
+    if (timeFilter === "today") limitStart = startOfToday;
+    else if (timeFilter === "yesterday") {
+      limitStart = subDays(startOfToday, 1);
+      limitEnd = startOfToday;
+    }
+    else if (timeFilter === "7") limitStart = subDays(now, 7);
+    else if (timeFilter === "15") limitStart = subDays(now, 15);
+    else if (timeFilter === "30") limitStart = subDays(now, 30);
+    else if (timeFilter === "custom") {
+      limitStart = startDate ? new Date(startDate + "T00:00:00") : new Date(0);
+      limitEnd = endDate ? new Date(endDate + "T23:59:59") : now;
+    }
+
+    const activeOrders = subscriptions.filter(s => s.status === 'paid' && new Date(s.created_at) >= limitStart && new Date(s.created_at) <= limitEnd);
+
+    // Se o período for curto (<= 30 dias), agrupamos por dia. Caso contrário, agrupamos por mês.
+    const isShortPeriod = timeFilter === "today" || timeFilter === "yesterday" || timeFilter === "7" || timeFilter === "15" || timeFilter === "30" || (timeFilter === "custom" && (limitEnd.getTime() - limitStart.getTime()) <= 30 * 24 * 60 * 60 * 1000);
+
+    const pointsData: { [key: string]: { month: string; mrr: number; faturamento: number; timestamp: number } } = {};
 
     activeOrders.forEach(sub => {
       const date = new Date(sub.created_at);
-      const key = format(date, "yyyy-MM");
-      const monthLabel = format(date, "MMM/yy", { locale: ptBR });
+      const key = isShortPeriod ? format(date, "yyyy-MM-dd") : format(date, "yyyy-MM");
+      const label = isShortPeriod ? format(date, "dd/MM", { locale: ptBR }) : format(date, "MMM/yy", { locale: ptBR });
 
-      if (!monthsData[key]) {
-        monthsData[key] = {
-          month: monthLabel,
+      if (!pointsData[key]) {
+        pointsData[key] = {
+          month: label,
           mrr: 0,
           faturamento: 0,
-          timestamp: new Date(date.getFullYear(), date.getMonth(), 1).getTime()
+          timestamp: isShortPeriod ? date.getTime() : new Date(date.getFullYear(), date.getMonth(), 1).getTime()
         };
       }
 
       const isMonthly = sub.amount <= 150;
-      monthsData[key].faturamento += sub.amount;
-      monthsData[key].mrr += isMonthly ? 97 : 41.41;
+      pointsData[key].faturamento += sub.amount;
+      pointsData[key].mrr += isMonthly ? 97 : 41.41;
     });
 
-    return Object.values(monthsData).sort((a, b) => a.timestamp - b.timestamp);
+    return Object.values(pointsData).sort((a, b) => a.timestamp - b.timestamp);
   };
 
   // Distribuição de assinantes por tipo de plano
   const getPlanDistribution = () => {
     const now = new Date();
-    let limitDate = new Date(0);
-    
-    if (timeFilter === "30") limitDate = subDays(now, 30);
-    else if (timeFilter === "6") limitDate = subDays(now, 180);
-    else if (timeFilter === "12") limitDate = subDays(now, 365);
+    const getStartOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const startOfToday = getStartOfDay(now);
 
-    const activeOrders = subscriptions.filter(s => s.status === 'paid' && new Date(s.created_at) >= limitDate);
+    let limitStart = new Date(0);
+    let limitEnd = now;
+    
+    if (timeFilter === "today") limitStart = startOfToday;
+    else if (timeFilter === "yesterday") {
+      limitStart = subDays(startOfToday, 1);
+      limitEnd = startOfToday;
+    }
+    else if (timeFilter === "7") limitStart = subDays(now, 7);
+    else if (timeFilter === "15") limitStart = subDays(now, 15);
+    else if (timeFilter === "30") limitStart = subDays(now, 30);
+    else if (timeFilter === "custom") {
+      limitStart = startDate ? new Date(startDate + "T00:00:00") : new Date(0);
+      limitEnd = endDate ? new Date(endDate + "T23:59:59") : now;
+    }
+
+    const activeOrders = subscriptions.filter(s => s.status === 'paid' && new Date(s.created_at) >= limitStart && new Date(s.created_at) <= limitEnd);
     const monthlyCount = activeOrders.filter(s => s.amount <= 150).length;
     const annualCount = activeOrders.filter(s => s.amount > 150).length;
 
@@ -566,9 +737,82 @@ export default function AdminFinancial() {
     }
   }, [subscriptions, partnerEarnings, activeTab, searchTerm, statusFilter]);
 
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  // Agrupamento inteligente para a aba de assinaturas
+  interface GroupedSubscription {
+    main: Subscription;
+    attempts: Subscription[];
+  }
+
+  const groupedSubscriptions = React.useMemo(() => {
+    if (activeTab !== 'orders') return [];
+    
+    const emailGroups: { [email: string]: Subscription[] } = {};
+    filtered.forEach(sub => {
+      const email = sub.user_email.toLowerCase();
+      if (!emailGroups[email]) {
+        emailGroups[email] = [];
+      }
+      emailGroups[email].push(sub);
+    });
+
+    const groups: GroupedSubscription[] = [];
+    Object.values(emailGroups).forEach(subs => {
+      // Ordena por data decrescente (mais recente primeiro)
+      subs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      groups.push({
+        main: subs[0],
+        attempts: subs.slice(1)
+      });
+    });
+
+    // Ordena os grupos pela data do item principal decrescente
+    groups.sort((a, b) => new Date(b.main.created_at).getTime() - new Date(a.main.created_at).getTime());
+    return groups;
+  }, [filtered, activeTab]);
+
+  const totalPages = activeTab === 'orders' 
+    ? Math.ceil(groupedSubscriptions.length / itemsPerPage)
+    : Math.ceil(filtered.length / itemsPerPage);
+
   const startIndex = (currentPage - 1) * itemsPerPage;
+
   const paginated = filtered.slice(startIndex, startIndex + itemsPerPage);
+  
+  const paginatedGroups = React.useMemo(() => {
+    if (activeTab !== 'orders') return [];
+    return groupedSubscriptions.slice(startIndex, startIndex + itemsPerPage);
+  }, [groupedSubscriptions, startIndex]);
+
+  // Auxiliar para Badge de Status inteligente
+  const getStatusBadge = (status: string, userActive: boolean) => {
+    if (status === "paid") {
+      return (
+        <span className="text-[10px] font-black px-3 py-1.5 rounded-full uppercase border bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
+          Ativa
+        </span>
+      );
+    }
+    // Se o usuário correspondente já estiver ativo por outra via/compra, o status desta tentativa pendente é considerado falha no pagamento
+    if (userActive) {
+      return (
+        <span className="text-[10px] font-black px-3 py-1.5 rounded-full uppercase border bg-red-500/10 text-red-650 dark:text-red-500 border-red-500/20">
+          Falha no Pagamento
+        </span>
+      );
+    }
+    if (status === "pending") {
+      return (
+        <span className="text-[10px] font-black px-3 py-1.5 rounded-full uppercase border bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border-yellow-500/20">
+          Pendente
+        </span>
+      );
+    }
+    return (
+      <span className="text-[10px] font-black px-3 py-1.5 rounded-full uppercase border bg-red-500/10 text-red-650 dark:text-red-500 border-red-500/20">
+        Cancelada
+      </span>
+    );
+  };
 
   const baseStats = [
     { 
@@ -676,7 +920,7 @@ export default function AdminFinancial() {
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-2xl border border-emerald-500/20">
               <DollarSign className="text-[#589c1c] dark:text-[#6ee7b7] w-8 h-8" />
@@ -693,37 +937,76 @@ export default function AdminFinancial() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3 self-end md:self-auto">
+          <div className="flex flex-wrap items-center gap-3 self-start lg:self-auto w-full lg:w-auto justify-start lg:justify-end">
             {/* Time Filter */}
             {!isPj && (
-              <div className="bg-white dark:bg-zinc-900/40 p-1.5 rounded-2xl border border-slate-200 dark:border-white/10 flex gap-1 shadow-sm font-sans">
-                {[
-                  { id: "30", label: "30 dias" },
-                  { id: "6", label: "6 meses" },
-                  { id: "12", label: "1 ano" },
-                  { id: "all", label: "Tudo" }
-                ].map(opt => (
-                  <button
-                    key={opt.id}
-                    onClick={() => setTimeFilter(opt.id)}
-                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
-                      timeFilter === opt.id
-                        ? "bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-white"
-                        : "text-slate-400 dark:text-zinc-500 hover:text-slate-650 dark:hover:text-zinc-300"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                {timeFilter === "custom" && (
+                  <div className="flex items-center gap-2 bg-white dark:bg-zinc-900/40 p-1.5 rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm text-xs font-semibold px-3 shrink-0">
+                    <span className="text-[9px] uppercase font-black tracking-wider text-slate-450 dark:text-zinc-500">De:</span>
+                    <input 
+                      type="date" 
+                      value={startDate} 
+                      onChange={(e) => setStartDate(e.target.value)} 
+                      className="bg-transparent text-slate-800 dark:text-white focus:outline-none border-none text-[11px] cursor-pointer"
+                    />
+                    <span className="text-[9px] uppercase font-black tracking-wider text-slate-450 dark:text-zinc-500">Até:</span>
+                    <input 
+                      type="date" 
+                      value={endDate} 
+                      onChange={(e) => setEndDate(e.target.value)} 
+                      className="bg-transparent text-slate-800 dark:text-white focus:outline-none border-none text-[11px] cursor-pointer"
+                    />
+                  </div>
+                )}
+                
+                <div className="bg-white dark:bg-zinc-900/40 p-1.5 rounded-2xl border border-slate-200 dark:border-white/10 flex gap-1 shadow-sm font-sans overflow-x-auto whitespace-nowrap max-w-full flex-nowrap scrollbar-thin">
+                  {[
+                    { id: "today", label: "Hoje" },
+                    { id: "yesterday", label: "Ontem" },
+                    { id: "7", label: "7 dias" },
+                    { id: "15", label: "15 dias" },
+                    { id: "30", label: "30 dias" },
+                    { id: "custom", label: "Personalizado" },
+                    { id: "all", label: "Tudo" }
+                  ].map(opt => (
+                    <button
+                      key={opt.id}
+                      onClick={() => {
+                        setTimeFilter(opt.id);
+                        if (opt.id === "custom") {
+                          if (!startDate) setStartDate(format(subDays(new Date(), 7), "yyyy-MM-dd"));
+                          if (!endDate) setEndDate(format(new Date(), "yyyy-MM-dd"));
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                        timeFilter === opt.id
+                          ? "bg-slate-100 dark:bg-white/10 text-slate-800 dark:text-white"
+                          : "text-slate-400 dark:text-zinc-500 hover:text-slate-650 dark:hover:text-zinc-300"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
             <button 
               onClick={fetchAllData}
-              className="p-3 bg-white dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-2xl text-slate-650 dark:text-zinc-300 hover:text-slate-800 dark:hover:text-white transition-all shadow-sm flex items-center gap-2 font-bold text-xs cursor-pointer"
+              className="p-3 bg-white dark:bg-zinc-900/40 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-2xl text-slate-655 dark:text-zinc-300 hover:text-slate-800 dark:hover:text-white transition-all shadow-sm flex items-center gap-2 font-bold text-xs cursor-pointer"
             >
               <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
               Atualizar
             </button>
+            {isAdmin && (
+              <button 
+                onClick={() => setIsManualSubModalOpen(true)}
+                className="p-3 bg-[#589c1c] hover:bg-emerald-600 dark:bg-[#10b981] dark:hover:bg-[#0d9468] text-white rounded-2xl font-bold text-xs cursor-pointer shadow-md flex items-center gap-2 transition-all"
+              >
+                <Plus size={16} />
+                Lançar Assinatura
+              </button>
+            )}
           </div>
         </div>
 
@@ -1015,109 +1298,185 @@ export default function AdminFinancial() {
                       </motion.tr>
                     ))
                   ) : (
-                    // Renderiza lista normal de pedidos para Admins/Sócios
-                    paginated.map((sub: any, index) => (
-                      <motion.tr 
-                        key={sub.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.01 }}
-                        className="hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-colors border-b border-slate-100 dark:border-white/5 last:border-0"
-                      >
-                        <td className="px-8 py-6">
-                          <div className="flex flex-col">
-                            <span className="text-sm font-mono text-slate-650 dark:text-zinc-450">#{sub.id}</span>
-                            <span className="text-xs text-slate-400 dark:text-zinc-500">
-                              {format(new Date(sub.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-8 py-6">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
-                              <User size={16} />
-                            </div>
-                            <div>
-                              <p className="font-bold text-slate-800 dark:text-white text-sm">{sub.user_name}</p>
-                              <p className="text-xs text-slate-400 dark:text-zinc-500">{sub.user_email}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-8 py-6">
-                          <div>
-                            <p className="text-sm font-bold text-slate-800 dark:text-white">
-                              {sub.amount <= 150 ? "Plano Mensal" : "Plano Anual"}
-                            </p>
-                            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">
-                              R$ {sub.amount.toLocaleString('pt-BR')} {sub.amount <= 150 ? '/mês' : '/ano'}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="px-8 py-6">
-                          <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400 text-xs font-bold">
-                            <CreditCard size={14} className="text-slate-400" />
-                            {sub.payment_method}
-                          </div>
-                        </td>
-                        <td className="px-8 py-6">
-                          <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase border ${
-                            sub.status === "paid" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" :
-                            sub.status === "pending" ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 border-yellow-500/20" :
-                            "bg-red-500/10 text-red-650 dark:text-red-500 border-red-500/20"
-                          }`}>
-                            {sub.status === "paid" ? "Ativa" : sub.status === "pending" ? "Pendente" : "Cancelada"}
-                          </span>
-                        </td>
-                        <td className="px-8 py-6 text-right">
-                          <div className="flex justify-end gap-2">
-                            {(sub.status === "cancelled" || sub.status === "pending") && sub.user_whatsapp && (
-                              <a
-                                href={getWhatsAppLink(sub.user_name, sub.user_whatsapp, sub.status, sub.amount) || "#"}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`px-3 py-2 text-white rounded-xl transition-all font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm ${
-                                  sub.status === "pending" 
-                                    ? "bg-amber-650 hover:bg-amber-700 shadow-amber-500/10" 
-                                    : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/10"
-                                }`}
-                                title={sub.status === "pending" ? "Recuperar Carrinho via WhatsApp" : "Chamar no WhatsApp para reverter cancelamento"}
+                    // Renderiza lista agrupada de pedidos para Admins/Sócios
+                    paginatedGroups.map((group, index) => {
+                      const sub = group.main;
+                      const hasHistory = group.attempts.length > 0;
+                      const isExpanded = !!expandedEmails[sub.user_email.toLowerCase()];
+
+                      return (
+                        <React.Fragment key={sub.id}>
+                          <motion.tr 
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.01 }}
+                            className="hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-colors border-b border-slate-100 dark:border-white/5 last:border-0"
+                          >
+                            <td className="px-8 py-6">
+                              <div className="flex items-center gap-2">
+                                {hasHistory && (
+                                  <button
+                                    onClick={() => toggleExpand(sub.user_email)}
+                                    className="p-1 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg text-slate-400 hover:text-slate-650 transition-all cursor-pointer"
+                                  >
+                                    {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                  </button>
+                                )}
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-mono text-slate-650 dark:text-zinc-450 flex items-center gap-1">
+                                    #{sub.id}
+                                    {hasHistory && (
+                                      <span className="text-[9px] bg-slate-100 dark:bg-zinc-850 text-slate-500 font-black px-1.5 py-0.5 rounded leading-none">
+                                        {group.attempts.length + 1} tent.
+                                      </span>
+                                    )}
+                                  </span>
+                                  <span className="text-xs text-slate-400 dark:text-zinc-500">
+                                    {format(new Date(sub.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                                  <User size={16} />
+                                </div>
+                                <div>
+                                  <p className="font-bold text-slate-800 dark:text-white text-sm">{sub.user_name}</p>
+                                  <p className="text-xs text-slate-400 dark:text-zinc-500">{sub.user_email}</p>
+                                  <div className="flex items-center gap-1.5 mt-1">
+                                    <span className={`text-[9px] px-2 py-0.5 rounded-full font-extrabold tracking-wider border uppercase ${
+                                      sub.user_active 
+                                        ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" 
+                                        : "bg-zinc-500/10 text-zinc-500 border-zinc-500/10"
+                                    }`}>
+                                      {sub.user_active ? "Acesso Ativo no Sistema" : "Sem Acesso no Sistema"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <div>
+                                <p className="text-sm font-bold text-slate-800 dark:text-white">
+                                  {sub.amount <= 150 ? "Plano Mensal" : "Plano Anual"}
+                                </p>
+                                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">
+                                  R$ {sub.amount.toLocaleString('pt-BR')} {sub.amount <= 150 ? '/mês' : '/ano'}
+                                </p>
+                              </div>
+                            </td>
+                            <td className="px-8 py-6">
+                              <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400 text-xs font-bold">
+                                <CreditCard size={14} className="text-slate-400" />
+                                {sub.payment_method}
+                              </div>
+                            </td>
+                            <td className="px-8 py-6">
+                              {getStatusBadge(sub.status, sub.user_active)}
+                            </td>
+                            <td className="px-8 py-6 text-right">
+                              <div className="flex justify-end gap-2">
+                                {(sub.status === "cancelled" || sub.status === "pending") && sub.user_whatsapp && (
+                                  <a
+                                    href={getWhatsAppLink(sub.user_name, sub.user_whatsapp, sub.status, sub.amount) || "#"}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`px-3 py-2 text-white rounded-xl transition-all font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                                      sub.status === "pending" 
+                                        ? "bg-amber-650 hover:bg-amber-700 shadow-amber-500/10" 
+                                        : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/10"
+                                    }`}
+                                    title={sub.status === "pending" ? "Recuperar Carrinho via WhatsApp" : "Chamar no WhatsApp para reverter cancelamento"}
+                                  >
+                                    <MessageCircle size={14} />
+                                    Recuperar
+                                  </a>
+                                )}
+                                {isAdmin && sub.status !== "paid" && !sub.user_active && (
+                                  <button
+                                    disabled={updatingId === sub.id}
+                                    onClick={() => handleUpdateStatus(sub.id, 'paid')}
+                                    className="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-600 text-emerald-600 hover:text-white dark:text-emerald-400 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5 disabled:opacity-50 cursor-pointer border border-emerald-500/10"
+                                  >
+                                    Ativar
+                                  </button>
+                                )}
+                                {isAdmin && sub.status !== "cancelled" && (
+                                  <button
+                                    disabled={updatingId === sub.id}
+                                    onClick={() => handleUpdateStatus(sub.id, 'cancelled')}
+                                    className="px-3 py-2 bg-red-500/10 hover:bg-red-600 text-red-600 hover:text-white dark:text-red-400 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5 disabled:opacity-50 cursor-pointer border border-red-500/10"
+                                  >
+                                    Cancelar
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </motion.tr>
+
+                          {/* Renderiza tentativas falhas/histórico quando expandido */}
+                          <AnimatePresence>
+                            {isExpanded && group.attempts.map((attempt) => (
+                              <motion.tr
+                                key={attempt.id}
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="bg-slate-50/30 dark:bg-white/[0.005] border-b border-slate-100 dark:border-white/5 last:border-0"
                               >
-                                <MessageCircle size={14} />
-                                {sub.status === "pending" ? "Recuperar" : "Recuperar"}
-                              </a>
-                            )}
-                            {isAdmin && sub.status !== "paid" && (
-                              <button
-                                disabled={updatingId === sub.id}
-                                onClick={() => handleUpdateStatus(sub.id, 'paid')}
-                                className="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-600 text-emerald-600 hover:text-white dark:text-emerald-400 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5 disabled:opacity-50 cursor-pointer border border-emerald-500/10"
-                              >
-                                Ativar
-                              </button>
-                            )}
-                            {isAdmin && sub.status !== "cancelled" && (
-                              <button
-                                disabled={updatingId === sub.id}
-                                onClick={() => handleUpdateStatus(sub.id, 'cancelled')}
-                                className="px-3 py-2 bg-red-500/10 hover:bg-red-600 text-red-600 hover:text-white dark:text-red-400 rounded-xl transition-all font-bold text-xs flex items-center gap-1.5 disabled:opacity-50 cursor-pointer border border-red-500/10"
-                              >
-                                Cancelar
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </motion.tr>
-                    ))
+                                <td className="px-8 py-4 pl-14">
+                                  <div className="flex flex-col">
+                                    <span className="text-[11px] font-mono text-slate-400 dark:text-zinc-550">#{attempt.id} (tentativa)</span>
+                                    <span className="text-[10px] text-slate-400 dark:text-zinc-550">
+                                      {format(new Date(attempt.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-8 py-4 text-xs text-slate-400 dark:text-zinc-500">
+                                  <div className="flex items-center gap-2">
+                                    <span>E-mail: {attempt.user_email}</span>
+                                  </div>
+                                </td>
+                                <td className="px-8 py-4 text-xs text-slate-450">
+                                  R$ {attempt.amount.toLocaleString('pt-BR')} ({attempt.amount <= 150 ? 'Mensal' : 'Anual'})
+                                </td>
+                                <td className="px-8 py-4 text-xs text-slate-450">
+                                  {attempt.payment_method}
+                                </td>
+                                <td className="px-8 py-4">
+                                  {getStatusBadge(attempt.status, attempt.user_active)}
+                                </td>
+                                <td className="px-8 py-4 text-right">
+                                  <div className="flex justify-end gap-2">
+                                    {isAdmin && attempt.status !== "paid" && !attempt.user_active && (
+                                      <button
+                                        disabled={updatingId === attempt.id}
+                                        onClick={() => handleUpdateStatus(attempt.id, 'paid')}
+                                        className="px-2 py-1 bg-emerald-500/10 hover:bg-emerald-600 text-emerald-600 hover:text-white dark:text-emerald-400 rounded-lg transition-all font-bold text-[10px] disabled:opacity-50 cursor-pointer border border-emerald-500/10"
+                                      >
+                                        Ativar
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </motion.tr>
+                            ))}
+                          </AnimatePresence>
+                        </React.Fragment>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
             </div>
-
+ 
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="p-6 bg-slate-50 dark:bg-white/[0.01] border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
                 <p className="text-xs text-slate-400 dark:text-zinc-500 font-medium">
-                  Página {currentPage} de {totalPages} ({filtered.length} itens no total)
+                  Página {currentPage} de {totalPages} ({activeTab === 'orders' ? groupedSubscriptions.length : filtered.length} {activeTab === 'orders' ? 'assinantes' : 'itens'} no total)
                 </p>
                 <div className="flex items-center gap-2">
                   <button
@@ -1393,6 +1752,145 @@ export default function AdminFinancial() {
                     className="flex-1 bg-[#589c1c] hover:bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl cursor-pointer shadow-md"
                   >
                     Salvar Regra
+                  </button>
+                </div>
+
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal - Nova Assinatura Manual */}
+      <AnimatePresence>
+        {isManualSubModalOpen && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl relative"
+            >
+              <button
+                onClick={() => {
+                  setIsManualSubModalOpen(false);
+                  setUserSearchTerm("");
+                }}
+                className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 cursor-pointer"
+              >
+                <XCircle size={20} />
+              </button>
+
+              <h3 className="text-lg font-black text-slate-850 dark:text-white mb-6 uppercase tracking-wider">Lançar Assinatura Manual</h3>
+
+              <form onSubmit={handleCreateManualSub} className="space-y-5 font-sans">
+                
+                {/* Buscar e Selecionar Usuário */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Filtrar Usuário:</label>
+                  <input
+                    type="text"
+                    placeholder="Digite nome ou e-mail..."
+                    value={userSearchTerm}
+                    onChange={(e) => setUserSearchTerm(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Selecionar Membro:</label>
+                  <select
+                    value={manualSubForm.userId}
+                    onChange={(e) => setManualSubForm(prev => ({ ...prev, userId: e.target.value }))}
+                    className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  >
+                    <option value="">Selecione um usuário...</option>
+                    {filteredUserListForManualSub.map(u => (
+                      <option key={u.id} value={u.id}>{u.full_name} ({u.email})</option>
+                    ))}
+                  </select>
+                  {filteredUserListForManualSub.length === 0 && (
+                    <p className="text-[10px] text-red-500 font-semibold mt-1">Nenhum usuário correspondente encontrado.</p>
+                  )}
+                </div>
+
+                {/* Selecionar Plano */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Plano:</label>
+                  <select
+                    value={manualSubForm.planType}
+                    onChange={(e) => setManualSubForm(prev => ({ ...prev, planType: e.target.value }))}
+                    className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  >
+                    <option value="mensal">Plano Mensal (R$ 97,00)</option>
+                    <option value="anual">Plano Anual (R$ 497,00)</option>
+                    <option value="custom">Valor Personalizado</option>
+                  </select>
+                </div>
+
+                {/* Valor Personalizado se custom */}
+                {manualSubForm.planType === 'custom' && (
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Valor (R$):</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      placeholder="Ex: 150.00"
+                      value={manualSubForm.customAmount}
+                      onChange={(e) => setManualSubForm(prev => ({ ...prev, customAmount: e.target.value }))}
+                      className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+                )}
+
+                {/* Método de Pagamento */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Método de Pagamento:</label>
+                  <select
+                    value={manualSubForm.paymentMethod}
+                    onChange={(e) => setManualSubForm(prev => ({ ...prev, paymentMethod: e.target.value }))}
+                    className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  >
+                    <option value="PIX">PIX</option>
+                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                    <option value="Transferência Bancária">Transferência Bancária</option>
+                    <option value="Dinheiro">Dinheiro</option>
+                    <option value="Cortesia / Parceria">Cortesia / Parceria</option>
+                  </select>
+                </div>
+
+                {/* Observações / Tracking Code */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Código de Rastreio / Notas (Opcional):</label>
+                  <input
+                    type="text"
+                    placeholder="Ex: TxID do Pix, Comprovante, etc."
+                    value={manualSubForm.trackingCode}
+                    onChange={(e) => setManualSubForm(prev => ({ ...prev, trackingCode: e.target.value }))}
+                    className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+
+                <div className="pt-4 flex gap-3">
+                  <button
+                    type="button"
+                    disabled={manualSubLoading}
+                    onClick={() => {
+                      setIsManualSubModalOpen(false);
+                      setUserSearchTerm("");
+                    }}
+                    className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-655 dark:text-zinc-300 font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl cursor-pointer disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={manualSubLoading}
+                    className="flex-1 bg-[#589c1c] hover:bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl cursor-pointer shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {manualSubLoading && <Loader2 size={14} className="animate-spin" />}
+                    Lançar Assinatura
                   </button>
                 </div>
 

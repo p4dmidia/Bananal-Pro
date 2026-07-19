@@ -44,7 +44,18 @@ export function ProtectedRoute({
     }
   } else {
     // Usuários comuns precisam ter assinatura ativa (is_active === true)
-    if (profile?.role !== 'admin' && profile?.role !== 'partner' && profile?.role !== 'pj' && profile?.is_active !== true) {
+    const hasPaymentParams = location.search.includes('payment_id') || 
+                             location.search.includes('preapproval_id') ||
+                             location.search.includes('preference_id') ||
+                             location.search.includes('collection_id');
+
+    if (
+      profile?.role !== 'admin' && 
+      profile?.role !== 'partner' && 
+      profile?.role !== 'pj' && 
+      profile?.is_active !== true && 
+      !hasPaymentParams
+    ) {
       return <Navigate to="/checkout" replace />;
     }
   }

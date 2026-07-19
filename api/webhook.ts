@@ -187,51 +187,83 @@ export default async function handler(req: any, res: any) {
         }
       }
 
+      if (order && !order.user_id) {
+        console.log(`Pedido #${order.id} encontrado mas sem user_id. Tentando vincular pelo e-mail do Mercado Pago...`);
+        const payerEmail = paymentData.payer?.email;
+        if (payerEmail) {
+          const { data: userProfile } = await supabase
+            .from('user_profiles')
+            .select('id')
+            .eq('email', payerEmail)
+            .maybeSingle();
+
+          if (userProfile) {
+            const { error: linkError } = await supabase
+              .from('orders')
+              .update({ user_id: userProfile.id })
+              .eq('id', order.id);
+
+            if (!linkError) {
+              console.log(`Pedido #${order.id} auto-vinculado ao usuário ID ${userProfile.id} via e-mail.`);
+              order.user_id = userProfile.id;
+            } else {
+              console.error('Erro ao auto-vincular pedido órfão:', linkError);
+            }
+          }
+        }
+      }
+
       if (!order) {
         console.warn(`Pedido com tracking_code ${lookupCode} não pôde ser encontrado nem criado.`);
         return res.status(200).json({ status: 'ignored', message: 'Order not found and could not be created.' });
       }
 
       if (order.status !== 'paid') {
-        // 2. Atualiza o status do pedido para 'paid'
-        const { error: updateOrderError } = await supabase
+        // 2. Atualiza o status do pedido para 'paid' apenas se ele não estiver pago (atômico)
+        const { data: updatedOrders, error: updateOrderError } = await supabase
           .from('orders')
           .update({
             status: 'paid',
             updated_at: new Date().toISOString()
           })
-          .eq('id', order.id);
+          .eq('id', order.id)
+          .neq('status', 'paid')
+          .select('*');
 
         if (updateOrderError) {
           console.error(`Erro ao atualizar pedido #${order.id} para pago:`, updateOrderError);
           return res.status(500).json({ error: 'Database error updating order.' });
         }
 
-        console.log(`Pedido #${order.id} atualizado para 'paid'.`);
+        if (updatedOrders && updatedOrders.length > 0) {
+          console.log(`Pedido #${order.id} atualizado para 'paid'.`);
 
-        // 3. Ativa o perfil do produtor (is_active = true) para liberar o acesso dele
-        if (order.user_id) {
-          const { error: updateProfileError } = await supabase
-            .from('user_profiles')
-            .update({
-              is_active: true,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', order.user_id);
+          // 3. Ativa o perfil do produtor (is_active = true) para liberar o acesso dele
+          if (order.user_id) {
+            const { error: updateProfileError } = await supabase
+              .from('user_profiles')
+              .update({
+                is_active: true,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', order.user_id);
 
-          if (updateProfileError) {
-            console.error(`Erro ao ativar acesso do usuário ID ${order.user_id}:`, updateProfileError);
-            return res.status(500).json({ error: 'Database error activating profile.' });
+            if (updateProfileError) {
+              console.error(`Erro ao ativar acesso do usuário ID ${order.user_id}:`, updateProfileError);
+              return res.status(500).json({ error: 'Database error activating profile.' });
+            }
+
+            console.log(`Perfil de Usuário ID ${order.user_id} ativado (is_active = true).`);
+
+            // Processa a divisão de lucros e a notificação do Telegram
+            try {
+              await processProfitSharingAndNotifications(order, paymentData);
+            } catch (err) {
+              console.error('Erro no processamento de divisão de lucros/notificação:', err);
+            }
           }
-
-          console.log(`Perfil de Usuário ID ${order.user_id} ativado (is_active = true).`);
-
-          // Processa a divisão de lucros e a notificação do Telegram
-          try {
-            await processProfitSharingAndNotifications(order, paymentData);
-          } catch (err) {
-            console.error('Erro no processamento de divisão de lucros/notificação:', err);
-          }
+        } else {
+          console.log(`Pedido #${order.id} já foi atualizado para 'paid' por outra requisição concorrente.`);
         }
       } else {
         console.log(`Pedido #${order.id} já estava marcado como 'paid'. Ignorando processamento redundante.`);
@@ -340,14 +372,24 @@ async function processProfitSharingAndNotifications(order: any, paymentData: any
 
       const messageText = `🔔 Nova Venda Aprovada!\n📦 Plano: ${planName}\n💰 Valor Bruto: ${formattedAmount}\n💳 Método de Pagamento: ${paymentMethodName}\nCliente ${buyerName}`;
 
-      fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: TELEGRAM_CHAT_ID,
-          text: messageText
-        })
-      }).catch(err => console.error('Erro ao enviar mensagem para o Telegram:', err));
+      try {
+        console.log('Sending Telegram notification...');
+        const teleRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: messageText
+          })
+        });
+        if (!teleRes.ok) {
+          console.error('Erro ao enviar mensagem para o Telegram:', await teleRes.text());
+        } else {
+          console.log('Telegram notification sent successfully.');
+        }
+      } catch (teleErr) {
+        console.error('Erro de rede ao enviar mensagem para o Telegram:', teleErr);
+      }
     }
 
     // 3. Processamento de Divisão de Lucros (Profit Split)

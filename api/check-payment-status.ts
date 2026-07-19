@@ -78,6 +78,27 @@ export default async function handler(req: any, res: any) {
     }
 
     if (status === 'approved') {
+      // Se for uma assinatura e achamos o ID do pagamento real, busca os detalhes completos dele
+      if (realPaymentId && realPaymentId.toString() !== payment_id.toString()) {
+        console.log(`Buscando detalhes do pagamento real ${realPaymentId} para a assinatura ${payment_id}...`);
+        try {
+          const mpRealRes = await fetch(`https://api.mercadopago.com/v1/payments/${realPaymentId}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`
+            }
+          });
+          if (mpRealRes.ok) {
+            paymentData = await mpRealRes.json();
+            console.log(`Detalhes do pagamento real obtidos com sucesso.`);
+          } else {
+            console.error(`Erro ao buscar detalhes do pagamento real ${realPaymentId}:`, await mpRealRes.json());
+          }
+        } catch (err) {
+          console.error(`Erro de rede ao buscar detalhes do pagamento real ${realPaymentId}:`, err);
+        }
+      }
+
       // 1. Busca o pedido correspondente no Supabase
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -89,38 +110,85 @@ export default async function handler(req: any, res: any) {
         console.error('Erro ao buscar pedido no Supabase:', orderError);
       }
 
-      // Se o pedido existe e não está pago, atualiza
+      if (order && !order.user_id) {
+        console.log(`Pedido #${order.id} encontrado mas sem user_id. Tentando vincular pelo e-mail do Mercado Pago...`);
+        const payerEmail = paymentData.payer?.email;
+        if (payerEmail) {
+          const { data: userProfile } = await supabase
+            .from('user_profiles')
+            .select('id')
+            .eq('email', payerEmail)
+            .maybeSingle();
+
+          if (userProfile) {
+            const { error: linkError } = await supabase
+              .from('orders')
+              .update({ user_id: userProfile.id })
+              .eq('id', order.id);
+
+            if (!linkError) {
+              console.log(`Pedido #${order.id} auto-vinculado ao usuário ID ${userProfile.id} via e-mail.`);
+              order.user_id = userProfile.id;
+            } else {
+              console.error('Erro ao auto-vincular pedido órfão:', linkError);
+            }
+          }
+        }
+      }
+
+      // Se o pedido existe e não está pago, atualiza (atômico)
       if (order && order.status !== 'paid') {
-        const { error: updateOrderError } = await supabase
+        const { data: updatedOrders, error: updateOrderError } = await supabase
           .from('orders')
           .update({
             status: 'paid',
             updated_at: new Date().toISOString()
           })
-          .eq('id', order.id);
+          .eq('id', order.id)
+          .neq('status', 'paid')
+          .select('*');
 
         if (updateOrderError) {
           console.error(`Erro ao atualizar pedido #${order.id} para pago:`, updateOrderError);
-        } else {
+        } else if (updatedOrders && updatedOrders.length > 0) {
           console.log(`Pedido #${order.id} atualizado para 'paid' via consulta direta.`);
-        }
-      }
+          
+          // 2. Ativa o perfil do produtor (is_active = true) para liberar o acesso dele
+          const targetUserId = order.user_id || user_id;
+          if (targetUserId) {
+            const { error: updateProfileError } = await supabase
+              .from('user_profiles')
+              .update({
+                is_active: true,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', targetUserId);
 
-      // 2. Ativa o perfil do produtor (is_active = true) para liberar o acesso dele
-      const targetUserId = order?.user_id || user_id;
-      if (targetUserId) {
-        const { error: updateProfileError } = await supabase
-          .from('user_profiles')
-          .update({
-            is_active: true,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', targetUserId);
+            if (updateProfileError) {
+              console.error(`Erro ao ativar acesso do usuário ID ${targetUserId}:`, updateProfileError);
+            } else {
+              console.log(`Perfil de Usuário ID ${targetUserId} ativado (is_active = true) via consulta direta.`);
+            }
+          }
 
-        if (updateProfileError) {
-          console.error(`Erro ao ativar acesso do usuário ID ${targetUserId}:`, updateProfileError);
+          // 3. Processa a divisão de lucros e a notificação do Telegram
+          try {
+            await processProfitSharingAndNotifications(order, paymentData);
+          } catch (err) {
+            console.error('Erro no processamento de divisão de lucros/notificação:', err);
+          }
         } else {
-          console.log(`Perfil de Usuário ID ${targetUserId} ativado (is_active = true) via consulta direta.`);
+          console.log(`Pedido #${order.id} já foi atualizado para 'paid' por outra requisição concorrente.`);
+        }
+      } else if (order && order.status === 'paid') {
+        console.log(`Pedido #${order.id} já estava marcado como 'paid'.`);
+        // Garante que o perfil está ativo de qualquer forma
+        const targetUserId = order.user_id || user_id;
+        if (targetUserId) {
+          await supabase
+            .from('user_profiles')
+            .update({ is_active: true, updated_at: new Date().toISOString() })
+            .eq('id', targetUserId);
         }
       }
     }
@@ -131,3 +199,83 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
   }
 }
+
+async function processProfitSharingAndNotifications(order: any, paymentData: any) {
+  try {
+    const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+    const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+    // 1. Busca os dados de perfil do comprador
+    const { data: buyerProfile } = await supabase
+      .from('user_profiles')
+      .select('full_name, email')
+      .eq('id', order.user_id)
+      .maybeSingle();
+
+    const buyerName = buyerProfile?.full_name || 'Produtor Bananal';
+
+    // 2. Notificação do Telegram
+    if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
+      const planName = Number(order.total_amount) > 150 ? 'Anual' : 'Mensal';
+      const paymentMethodName = paymentData.payment_method_id === 'pix' ? 'Pix' : 'Cartão de Crédito';
+      const formattedAmount = Number(order.total_amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+      const messageText = `🔔 Nova Venda Aprovada!\n📦 Plano: ${planName}\n💰 Valor Bruto: ${formattedAmount}\n💳 Método de Pagamento: ${paymentMethodName}\nCliente ${buyerName}`;
+
+      console.log('Sending Telegram notification...');
+      const teleRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHAT_ID,
+          text: messageText
+        })
+      });
+      if (!teleRes.ok) {
+        console.error('Erro ao enviar mensagem para o Telegram:', await teleRes.text());
+      } else {
+        console.log('Telegram notification sent successfully.');
+      }
+    }
+
+    // 3. Processamento de Divisão de Lucros (Profit Split)
+    // Calcula taxas do gateway
+    const gatewayFee = paymentData.fee_details?.reduce((sum: number, fee: any) => sum + (Number(fee.amount) || 0), 0) || 0;
+    const netAmount = Number(order.total_amount) - gatewayFee;
+    const distributableAmount = netAmount * 0.50; // 50% para divisão
+
+    // Busca configurações de divisão
+    const { data: shares, error: sharesError } = await supabase
+      .from('profit_sharing_config')
+      .select('*');
+
+    if (sharesError) {
+      console.error('Erro ao carregar regras de divisão de lucros:', sharesError);
+      return;
+    }
+
+    if (shares && shares.length > 0) {
+      const earningsToInsert = shares.map(share => {
+        const partnerAmount = distributableAmount * (Number(share.share_percentage) / 100);
+        return {
+          order_id: order.id,
+          user_id: share.user_id,
+          amount: Number(partnerAmount.toFixed(2))
+        };
+      });
+
+      const { error: insertErr } = await supabase
+        .from('partner_earnings')
+        .insert(earningsToInsert);
+
+      if (insertErr) {
+        console.error('Erro ao registrar ganhos dos sócios/PJs:', insertErr);
+      } else {
+        console.log(`Registrados ${earningsToInsert.length} lançamentos de comissões/dividendos.`);
+      }
+    }
+  } catch (err) {
+    console.error('Erro no processamento de divisão de lucros/notificação:', err);
+  }
+}
+

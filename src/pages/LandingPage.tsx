@@ -3,13 +3,12 @@ import PublicLayout from "../components/Layout/PublicLayout";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { 
-  Sprout, 
-  Wallet, 
-  Package, 
-  CloudSun, 
-  Calendar, 
-  Camera, 
-  CheckCircle2 
+  HeartHandshake, 
+  UserCheck, 
+  Users, 
+  Wrench, 
+  Coins, 
+  TrendingUp 
 } from "lucide-react";
 
 // Custom Counter Component with IntersectionObserver
@@ -74,48 +73,72 @@ export default function LandingPage() {
   const [dashboardTab, setDashboardTab] = useState("Dashboard");
   const [activeTool, setActiveTool] = useState("solo");
 
-  const toolsList = [
+  const pillarsList = [
     {
-      id: "solo",
-      icon: <Sprout className="text-secondary w-8 h-8" />,
-      title: "Química de Solo & Calagem",
-      desc: "Interprete análises laboratoriais de forma instantânea. O sistema calcula a Soma de Bases (SB), Capacidade de Troca Catiônica (CTC) e a Saturação por Bases (V%). Com base na meta da cultura de banana, a plataforma gera a recomendação exata da Necessidade de Calagem (NC) em toneladas por hectare.",
-      features: ["Interpretação automática de pH, P, K, Ca, Mg", "Cálculo preciso de Necessidade de Calagem", "Histórico digital de glebas/talhões"]
+      id: "acompanhamento",
+      icon: <HeartHandshake className="w-8 h-8" />,
+      title: "Acompanhamento Contínuo",
+      impactPhrase: "Sua lavoura acompanhada de perto por quem entende.",
+      features: [
+        "Não fique sozinho nas decisões da lavoura",
+        "Receba orientação durante todo o ciclo",
+        "Tire dúvidas sempre que precisar"
+      ]
     },
     {
-      id: "financeiro",
-      icon: <Wallet className="text-secondary w-8 h-8" />,
-      title: "Gestão Financeira & Break-Even",
-      desc: "Controle as receitas e custos operacionais da propriedade sem complicações. Monitore despesas com insumos, combustível e mão de obra, calculando automaticamente o custo operacional por hectare e por planta, além do ponto de equilíbrio (Break-even) em caixas de banana.",
-      features: ["Custos operacionais detalhados", "Indicadores de custo por hectare/planta", "Ponto de Equilíbrio (Break-Even) automático"]
+      id: "especialistas",
+      icon: <UserCheck className="w-8 h-8" />,
+      title: "Especialistas",
+      impactPhrase: "Uma equipe acompanhando sua produção.",
+      features: [
+        "Jean Carlos",
+        "Jhonatan",
+        "Francisco"
+      ]
     },
     {
-      id: "estoque",
-      icon: <Package className="text-secondary w-8 h-8" />,
-      title: "Estoque de Insumos NPK",
-      desc: "Evite a interrupção de aplicações críticas. Cadastre adubos e defensivos agrícolas com alerta de validade e quantidade mínima de segurança, facilitando a reposição e o planejamento financeiro de compras.",
-      features: ["Entradas e saídas de insumos", "Aviso de estoque mínimo e validade", "Planejamento de compras integrado"]
+      id: "comunidade",
+      icon: <Users className="w-8 h-8" />,
+      title: "Comunidade",
+      impactPhrase: "Troca de experiências com produtores reais.",
+      features: [
+        "Troca de experiências",
+        "Produtores reais",
+        "Aprendizado coletivo"
+      ]
     },
     {
-      id: "clima",
-      icon: <CloudSun className="text-secondary w-8 h-8" />,
-      title: "Clima & Conselho Agrícola",
-      desc: "Previsões meteorológicas locais calibradas para a pulverização foliar. O sistema calcula a janela ideal com base na velocidade do vento, umidade do ar e chances de precipitação, emitindo alertas automáticos de risco de Sigatoka.",
-      features: ["Temperatura e umidade em tempo real", "Janela ideal de pulverização (vento/umidade)", "Alertas fitossanitários climáticos"]
+      id: "ferramentas",
+      icon: <Wrench className="w-8 h-8" />,
+      title: "Ferramentas",
+      impactPhrase: "Tecnologia simples e prática na palma da mão.",
+      features: [
+        "Calculadoras",
+        "IA especializada",
+        "Biblioteca técnica"
+      ]
     },
     {
-      id: "calendario",
-      icon: <Calendar className="text-secondary w-8 h-8" />,
-      title: "Calendário Agrícola",
-      desc: "Gerencie o cronograma de atividades do campo. Defina datas de adubação, pulverizações, irrigação e colheitas, mantendo toda a equipe técnica alinhada com as tarefas agendadas.",
-      features: ["Agenda de manejo foliar e irrigação", "Notificação de tarefas pendentes", "Histórico de manejos executados"]
+      id: "economia",
+      icon: <Coins className="w-8 h-8" />,
+      title: "Economia",
+      impactPhrase: "Seu dinheiro rendendo mais no campo.",
+      features: [
+        "Evite erros caros",
+        "Reduza desperdícios",
+        "Mais lucro por hectare"
+      ]
     },
     {
-      id: "diagnostico",
-      icon: <Camera className="text-secondary w-8 h-8" />,
-      title: "Diagnóstico Visual por IA",
-      desc: "Use a câmera do seu celular para identificar problemas foliares na bananeira. A Inteligência Artificial analisa os padrões de manchas e estrias, fornecendo sugestões e recomendações de controle cultural, químico e biológico.",
-      features: ["Identificação visual de Sigatoka e Fusariose", "Dicas imediatas de manejo preventivo", "Laudo técnico digital"]
+      id: "produtividade",
+      icon: <TrendingUp className="w-8 h-8" />,
+      title: "Produtividade",
+      impactPhrase: "O caminho mais curto para a máxima rentabilidade.",
+      features: [
+        "Melhor manejo",
+        "Melhor tomada de decisão",
+        "Produza mais com segurança"
+      ]
     }
   ];
 
@@ -149,320 +172,127 @@ export default function LandingPage() {
   return (
     <PublicLayout>
       {/* Hero Section */}
-      <section className="relative min-h-[95vh] flex items-center overflow-hidden bg-grid pt-12 pb-20 leaf-accent">
-        {/* Volumetric Lights */}
-        <div className="glow-spot glow-green top-[-10%] right-[-10%] md:right-[5%]" />
-        <div className="glow-spot glow-yellow top-[40%] left-[-15%] md:left-[-5%]" />
-        <div className="glow-spot glow-primary bottom-[10%] right-[20%]" />
+      <section className="relative min-h-[95vh] flex items-center overflow-hidden pt-12 pb-20 bg-[#002417]">
+        {/* Realístic background image */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="/images/banana_plantation_hero_bg_v2.png"
+            alt="Banana Plantation Sunset"
+            className="w-full h-full object-cover brightness-[0.24]"
+          />
+        </div>
 
+        {/* Ambient Shadows */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#002417] via-transparent to-transparent z-1"></div>
+
+        {/* Grid Container for Left Text Column only */}
         <div className="max-w-7xl mx-auto px-6 md:px-10 grid lg:grid-cols-12 gap-y-10 lg:gap-16 items-center w-full relative z-10 min-w-0">
           {/* Left Text Column */}
           <div className="lg:col-span-5 space-y-8 text-left w-full min-w-0">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary-container/20 border border-secondary/30 backdrop-blur-md">
               <span className="w-1.5 h-1.5 rounded-full bg-secondary-fixed animate-pulse"></span>
               <span className="text-[9px] font-bold tracking-widest text-secondary-fixed uppercase font-inter">
-                Ecossistema Operacional & Educação
+                Acompanhamento & Comunidade
               </span>
             </div>
 
             <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-extrabold tracking-tight leading-[1.1] text-balance">
-              O ecossistema completo para a <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary-fixed to-tertiary-fixed font-black">produtividade</span> da sua bananicultura.
+              Uma equipe ao seu lado durante todo o ciclo da bananicultura.
             </h1>
 
             <p className="font-sans text-sm md:text-base text-on-surface-variant leading-relaxed max-w-xl">
-              Conecte sua lavoura a um ecossistema integrado: cursos técnicos avançados, fórum exclusivo de produtores, suporte contínuo com engenheiros agrônomos e ferramentas inteligentes de solo e gestão financeira.
+              Você não precisa enfrentar os desafios da sua lavoura sozinho. Receba suporte contínuo de agrônomos experientes, discussões com produtores e ferramentas de laudos de solo práticos.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-2 w-full sm:w-auto">
-              <Link
-                to="/auth/register?offer=padrao&plan=anual"
-                className="bg-secondary hover:bg-secondary-fixed text-white hover:text-primary-container px-8 py-4 rounded-xl font-headline font-bold text-sm tracking-wide transition-all border-glow duration-300 shadow-lg shadow-secondary/20 flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto text-center"
-              >
-                Começar Operações
-                <span className="material-symbols-outlined text-sm">arrow_forward</span>
-              </Link>
               <a
                 href="#planos"
-                className="bg-surface-container border border-outline-variant hover:border-secondary-fixed/50 hover:bg-surface-container-high px-8 py-4 rounded-xl font-headline font-bold text-sm tracking-wide text-white transition-all duration-300 flex items-center justify-center w-full sm:w-auto text-center"
+                className="bg-secondary hover:bg-secondary-fixed text-white hover:text-primary-container px-8 py-4 rounded-xl font-headline font-bold text-sm tracking-wide transition-all border-glow duration-300 shadow-lg shadow-secondary/20 flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto text-center font-sans"
+              >
+                Entrar para a Comunidade
+                <span className="material-symbols-outlined text-sm">arrow_forward</span>
+              </a>
+              <a
+                href="#planos"
+                className="bg-surface-container border border-outline-variant hover:border-secondary-fixed/50 hover:bg-surface-container-high px-8 py-4 rounded-xl font-headline font-bold text-sm tracking-wide text-white transition-all duration-300 flex items-center justify-center w-full sm:w-auto text-center font-sans"
               >
                 Ver Soluções
               </a>
             </div>
-
           </div>
+          
+          {/* Empty right column placeholder for spacing in grid */}
+          <div className="lg:col-span-7 h-[20vh] lg:h-0 pointer-events-none"></div>
+        </div>
 
-          {/* Right Interactive Dashboard Mockup & Floating Cards */}
-          <div className="lg:col-span-7 relative flex justify-center items-center w-full min-w-0">
-            {/* Ambient Shadow behind Dashboard */}
-            <div className="absolute inset-0 bg-secondary/5 rounded-[2.5rem] blur-[80px] -z-10"></div>
-
-            {/* High Fidelity Mockup */}
-            <div className="w-full max-w-[620px] dark-glass rounded-[2rem] p-3 shadow-2xl relative border-glow overflow-hidden transition-all duration-500 hover:scale-[1.01] hover:shadow-secondary/5 min-w-0">
-              <div className="w-full rounded-[1.5rem] bg-[#020d08] border border-outline-variant/30 flex flex-col sm:flex-row overflow-hidden min-h-[380px] text-white">
-                
-                {/* Mockup Sidebar */}
-                <div className="w-full sm:w-40 border-b sm:border-b-0 sm:border-r border-outline-variant/30 p-3 flex flex-row sm:flex-col gap-2 overflow-x-auto sm:overflow-x-visible shrink-0 bg-[#010905]">
-                  <div className="hidden sm:flex items-center gap-2 px-2 py-1.5 mb-4 border-b border-outline-variant/20">
-                    <span className="material-symbols-outlined text-secondary-fixed text-lg">eco</span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider font-headline text-white">OPERACIONAL</span>
-                  </div>
-                  {[
-                    { name: "Dashboard", icon: "dashboard" },
-                    { name: "Financeiro", icon: "payments" },
-                    { name: "Análise de Solo", icon: "science" },
-                    { name: "Clima", icon: "thermostat" },
-                    { name: "Estoque", icon: "inventory_2" }
-                  ].map((tab) => (
-                    <button
-                      key={tab.name}
-                      onClick={() => setDashboardTab(tab.name)}
-                      className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all text-left font-inter cursor-pointer whitespace-nowrap ${
-                        dashboardTab === tab.name
-                          ? "bg-secondary text-white shadow-sm"
-                          : "text-on-surface-variant hover:bg-white/5 hover:text-white"
-                      }`}
-                    >
-                      <span className="material-symbols-outlined text-xs leading-none">{tab.icon}</span>
-                      {tab.name}
-                    </button>
-                  ))}
-                  <div className="hidden sm:block mt-auto px-2.5 py-1.5 rounded-lg bg-surface-container/50 border border-outline-variant/20">
-                    <p className="text-[8px] text-on-surface-variant uppercase font-inter">Agrônomo</p>
-                    <p className="text-[9px] font-bold text-secondary-fixed">Online</p>
-                  </div>
-                </div>
-
-                {/* Mockup Content Panel */}
-                <div className="flex-1 p-5 flex flex-col gap-4 overflow-y-auto">
-                  
-                  {/* Dynamic Header */}
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-[8px] uppercase tracking-wider text-on-surface-variant font-inter">Módulo Integrado</p>
-                      <h4 className="text-xs font-bold font-headline text-white flex items-center gap-1">
-                        {dashboardTab === "Dashboard" && "Painel Geral Fazenda Progresso"}
-                        {dashboardTab === "Financeiro" && "Demonstrativo Financeiro Integrado"}
-                        {dashboardTab === "Análise de Solo" && "Química de Solo & Adubação"}
-                        {dashboardTab === "Clima" && "Radar Meteorológico & Alertas"}
-                        {dashboardTab === "Estoque" && "Inventário de Insumos NPK"}
-                      </h4>
-                    </div>
-                    <span className="text-[8px] px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/20 text-emerald-400 font-bold font-inter">
-                      Sincronizado
-                    </span>
-                  </div>
-
-                  {/* Tab Contents */}
-                  {dashboardTab === "Dashboard" && (
-                    <div className="space-y-4 flex-1 flex flex-col justify-between">
-                      {/* Grid Stats */}
-                      <div className="grid grid-cols-3 gap-1.5 xs:gap-2">
-                        <div className="p-2 rounded-lg bg-surface-container/60 border border-outline-variant/20 min-w-0">
-                          <p className="text-[6px] xs:text-[7px] text-on-surface-variant uppercase font-inter truncate">Produtividade</p>
-                          <p className="text-[10px] xs:text-xs font-bold font-headline text-secondary-fixed truncate">+24.8%</p>
-                        </div>
-                        <div className="p-2 rounded-lg bg-surface-container/60 border border-outline-variant/20 min-w-0">
-                          <p className="text-[6px] xs:text-[7px] text-on-surface-variant uppercase font-inter truncate">Adubação NPK</p>
-                          <p className="text-[10px] xs:text-xs font-bold font-headline text-white truncate">Estável</p>
-                        </div>
-                        <div className="p-2 rounded-lg bg-surface-container/60 border border-outline-variant/20 min-w-0">
-                          <p className="text-[6px] xs:text-[7px] text-on-surface-variant uppercase font-inter truncate">Custo Cacho</p>
-                          <p className="text-[10px] xs:text-xs font-bold font-headline text-tertiary-fixed truncate">R$ 8.42</p>
-                        </div>
-                      </div>
-                      {/* Chart Widget */}
-                      <div className="flex-1 min-h-[120px] bg-surface-container/30 border border-outline-variant/20 rounded-lg p-3 flex flex-col justify-between">
-                        <p className="text-[8px] text-on-surface-variant font-inter">Ton / Hectare (Evolução da Safra)</p>
-                        <div className="h-16 flex items-end gap-1.5 pt-4">
-                          <div className="flex-1 bg-secondary/15 border-t border-secondary-fixed/30 rounded-t h-[40%]"></div>
-                          <div className="flex-1 bg-secondary/35 border-t border-secondary-fixed/50 rounded-t h-[65%]"></div>
-                          <div className="flex-1 bg-secondary/25 border-t border-secondary-fixed/40 rounded-t h-[50%]"></div>
-                          <div className="flex-1 bg-secondary/65 border-t border-secondary-fixed/70 rounded-t h-[85%]"></div>
-                          <div className="flex-1 bg-secondary-fixed border-t border-secondary-fixed rounded-t h-[95%] shadow-glow"></div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {dashboardTab === "Financeiro" && (
-                    <div className="space-y-3 flex-1 flex flex-col">
-                      <div className="p-3 rounded-lg bg-surface-container/60 border border-outline-variant/20 flex justify-between items-center">
-                        <div>
-                          <p className="text-[7px] text-on-surface-variant uppercase font-inter">Faturamento Líquido Mensal</p>
-                          <p className="text-sm font-bold font-headline text-white">R$ 142.840,00</p>
-                        </div>
-                        <span className="material-symbols-outlined text-secondary-fixed text-lg">trending_up</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="p-2.5 rounded-lg bg-surface-container/30 border border-outline-variant/20">
-                          <p className="text-[7px] text-on-surface-variant uppercase font-inter">Custos Operacionais</p>
-                          <p className="text-[10px] font-bold text-white">R$ 42.110,00</p>
-                        </div>
-                        <div className="p-2.5 rounded-lg bg-surface-container/30 border border-outline-variant/20">
-                          <p className="text-[7px] text-on-surface-variant uppercase font-inter">ROI Estimado Anual</p>
-                          <p className="text-[10px] font-bold text-secondary-fixed">3.4x Retorno</p>
-                        </div>
-                      </div>
-                      <div className="flex-1 min-h-[60px] bg-red-950/20 border border-red-500/10 rounded-lg p-2.5 flex items-center justify-between">
-                        <div className="flex-1 flex items-center gap-2">
-                          <span className="material-symbols-outlined text-red-400 text-sm">warning</span>
-                          <span className="text-[8px] text-red-300 font-inter">Excesso de custo em Nitratos (Safra 4B)</span>
-                        </div>
-                        <button className="text-[7px] text-white hover:underline uppercase font-inter font-bold">Ajustar</button>
-                      </div>
-                    </div>
-                  )}
-
-                  {dashboardTab === "Análise de Solo" && (
-                    <div className="space-y-3 flex-1 flex flex-col justify-between">
-                      <div className="p-2.5 rounded-lg bg-surface-container/60 border border-outline-variant/20 flex justify-between items-center">
-                        <div>
-                          <p className="text-[7px] text-on-surface-variant uppercase font-inter">pH do Solo (Talhão Norte)</p>
-                          <p className="text-xs font-bold text-secondary-fixed">6.2 (Ideal)</p>
-                        </div>
-                        <div className="h-6 w-16 bg-surface-container-high border border-outline-variant/40 rounded flex items-center justify-center text-[8px] text-white uppercase font-inter">
-                          Calagem Otimizada
-                        </div>
-                      </div>
-                      <div className="flex-1 min-h-[100px] border border-outline-variant/20 rounded-lg p-2.5 bg-surface-container/30 space-y-2">
-                        <p className="text-[8px] text-on-surface-variant uppercase font-inter">Nutrientes Químicos (Laudo)</p>
-                        <div className="space-y-1 text-[8px]">
-                          <div className="flex justify-between items-center p-1 rounded hover:bg-white/5">
-                            <span className="font-semibold text-white">Fósforo (P)</span>
-                            <span className="text-secondary-fixed">Apropriado</span>
-                          </div>
-                          <div className="flex justify-between items-center p-1 rounded hover:bg-white/5">
-                            <span className="font-semibold text-white">Potássio (K)</span>
-                            <span className="text-secondary-fixed">Apropriado</span>
-                          </div>
-                          <div className="flex justify-between items-center p-1 rounded hover:bg-white/5">
-                            <span className="font-semibold text-white">Alumínio (Al)</span>
-                            <span className="text-red-400 font-semibold">Tóxico - Requer Calagem</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {dashboardTab === "Clima" && (
-                    <div className="space-y-3 flex-1 flex flex-col justify-between">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="p-2.5 rounded-lg bg-surface-container/60 border border-outline-variant/20 flex flex-col justify-between min-w-0">
-                          <p className="text-[7px] text-on-surface-variant uppercase font-inter truncate">Precipitação Prevista</p>
-                          <h5 className="text-sm font-bold text-white font-headline truncate">120mm</h5>
-                          <p className="text-[7px] text-on-surface-variant truncate">Próximos 7 dias</p>
-                        </div>
-                        <div className="p-2.5 rounded-lg bg-surface-container/60 border border-outline-variant/20 flex flex-col justify-between min-w-0">
-                          <p className="text-[7px] text-on-surface-variant uppercase font-inter truncate">Janela Pulverização</p>
-                          <h5 className="text-xs font-bold text-secondary-fixed uppercase font-headline truncate">Excelente</h5>
-                          <p className="text-[7px] text-on-surface-variant truncate">Umidade Relativa: 64%</p>
-                        </div>
-                      </div>
-                      <div className="p-3 bg-amber-950/20 border border-amber-500/10 rounded-lg flex items-center gap-2">
-                        <span className="material-symbols-outlined text-amber-500 text-sm">thunderstorm</span>
-                        <div>
-                          <p className="text-[8px] font-bold text-white">Risco de Sigatoka Negra Elevado</p>
-                          <p className="text-[7px] text-on-surface-variant">Temperatura e umidade propícias. Monitore folhas.</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {dashboardTab === "Estoque" && (
-                    <div className="space-y-3 flex-1 flex flex-col justify-between">
-                      <div className="flex justify-between items-center text-[8px] text-on-surface-variant border-b border-outline-variant/20 pb-1">
-                        <span>Insumo cadastrado</span>
-                        <span>Qtd. Disponível</span>
-                      </div>
-                      <div className="space-y-1 flex-1 overflow-y-auto max-h-[100px]">
-                        {[
-                          { name: "Cloreto de Potássio", qty: "450 kg", low: false },
-                          { name: "Superfosfato Simples", qty: "80 kg", low: true },
-                          { name: "Fungicida Systemic Pro", qty: "12 L", low: false },
-                          { name: "Calcário Calcítico", qty: "1.200 kg", low: false }
-                        ].map((item, idx) => (
-                          <div key={idx} className="flex justify-between items-center p-1.5 rounded bg-surface-container/30 border border-outline-variant/10 text-[8px]">
-                            <span className="font-semibold text-white">{item.name}</span>
-                            <span className={item.low ? "text-red-400 font-bold" : "text-white"}>{item.qty} {item.low && "(Repor)"}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Floating Cards around Mockup with Hover & Floating Animations */}
-            <div className="hidden lg:block absolute top-[10%] -left-12 glass p-3.5 rounded-2xl w-44 hover:scale-105 transition-transform duration-300 animate-float-1 z-20 border-glow">
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-secondary-fixed text-lg">rainy</span>
-                <div>
-                  <p className="text-[8px] font-semibold text-on-surface-variant uppercase font-inter">Previsão Semanal</p>
-                  <p className="text-[11px] font-bold text-white">Chuvas: 120mm</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="hidden lg:block absolute bottom-[20%] -right-12 glass p-3.5 rounded-2xl w-48 hover:scale-105 transition-transform duration-300 animate-float-2 z-20 border-glow">
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-secondary-fixed text-lg">trending_up</span>
-                <div>
-                  <p className="text-[8px] font-semibold text-on-surface-variant uppercase font-inter">Produtividade Safra</p>
-                  <p className="text-[11px] font-bold text-secondary-fixed">+18% vs. Anterior</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="hidden lg:block absolute -bottom-8 left-12 glass p-3.5 rounded-2xl w-48 hover:scale-105 transition-transform duration-300 animate-float-3 z-20 border-glow">
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-tertiary-fixed text-lg">science</span>
-                <div>
-                  <p className="text-[8px] font-semibold text-on-surface-variant uppercase font-inter">Análise Química</p>
-                  <p className="text-[11px] font-bold text-white">Solo Otimizado</p>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Absolute specialists container to touch the very bottom border of the head section */}
+        <div className="absolute bottom-0 right-0 lg:right-[7%] xl:right-[10%] w-full lg:w-[45%] h-[50vh] lg:h-[80vh] flex items-end justify-center lg:justify-end overflow-visible pointer-events-none z-10">
+          <img
+            src="/images/specialists_hero.png"
+            alt="Especialistas Bananal PRO"
+            className="max-h-full object-contain object-bottom scale-[1.1] lg:scale-[1.38] xl:scale-[1.44] origin-bottom"
+          />
         </div>
       </section>
 
-      {/* Feature Showcase Grid (Linear Style) — BLOCK 2 (White Background) */}
-      <section className="py-24 relative overflow-hidden bg-white text-zinc-900 border-y border-zinc-200/50 reveal" id="ferramentas">
-        <div className="max-w-7xl mx-auto px-6 md:px-10">
+      {/* Feature Showcase Grid (Linear Style) — BLOCK 2 (Visual Redesign) */}
+      <section className="py-24 relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-50 text-zinc-900 border-y border-zinc-200/50 reveal" id="ferramentas">
+        {/* Subtle grid pattern background */}
+        <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.04] pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto px-6 md:px-10 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
-            <span className="text-secondary font-semibold uppercase tracking-widest text-xs font-inter block">Tecnologia de Precisão</span>
-            <h2 className="font-headline text-2xl sm:text-3xl md:text-4xl text-primary font-bold tracking-tight">Ferramentas Agrícolas que otimizam seu campo.</h2>
-            <p className="text-zinc-600 font-sans text-sm md:text-base leading-relaxed">
-              Substitua planilhas complexas por painéis práticos desenhados exclusivamente para a bananicultura brasileira.
+            <span className="text-secondary font-semibold uppercase tracking-widest text-xs font-inter block">Pilares do Acompanhamento</span>
+            <h2 className="font-headline text-2xl sm:text-3xl md:text-4xl text-primary font-bold tracking-tight">Como o Bananal PRO apoia o seu dia a dia.</h2>
+            <p className="text-zinc-650 font-sans text-sm md:text-base leading-relaxed">
+              Mais do que ferramentas, oferecemos um programa integrado de suporte e conhecimento prático para sua lavoura.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            {toolsList.map((tool, idx) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+            {pillarsList.map((pillar, idx) => (
               <motion.div
-                key={tool.id}
-                initial={{ opacity: 0, y: 20 }}
+                key={pillar.id}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: (idx % 2) * 0.1 }}
-                className="bg-slate-50 border border-zinc-200/80 p-8 md:p-10 rounded-[2.5rem] hover:border-secondary hover:shadow-xl transition-all shadow-sm flex flex-col justify-between group hover:bg-emerald-50/10 duration-300"
+                transition={{ delay: (idx % 3) * 0.1, duration: 0.6, ease: "easeOut" }}
+                className="bg-white/80 backdrop-blur-sm border border-zinc-200/60 p-8 md:p-10 rounded-[2rem] hover:border-emerald-500/40 hover:shadow-2xl hover:shadow-emerald-900/5 hover:-translate-y-2 transition-all duration-500 ease-out flex flex-col justify-between group"
               >
                 <div className="space-y-6">
-                  <div className="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center border border-secondary/20 transition-colors group-hover:bg-secondary/20">
-                    {tool.icon}
+                  {/* Icon with beautiful gradient background */}
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-100/50 flex items-center justify-center text-emerald-600 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-emerald-500 group-hover:text-white group-hover:border-emerald-500 shadow-sm">
+                    {pillar.icon}
                   </div>
-                  <h3 className="text-2xl font-headline font-bold text-primary">{tool.title}</h3>
-                  <p className="text-zinc-600 text-xs leading-relaxed font-sans">{tool.desc}</p>
                   
-                  <div className="space-y-2 pt-4 border-t border-zinc-200/60">
-                    {tool.features.map((feat, fidx) => (
-                      <div key={fidx} className="flex items-center gap-2 text-zinc-700 text-xs font-semibold">
-                        <CheckCircle2 size={16} className="text-secondary shrink-0" />
-                        <span>{feat}</span>
+                  <div className="text-left space-y-2">
+                    <h3 className="text-xl md:text-2xl font-headline font-bold text-primary tracking-tight transition-colors group-hover:text-emerald-950">
+                      {pillar.title}
+                    </h3>
+                  </div>
+
+                  {/* Checklist style */}
+                  <div className="space-y-3.5 pt-2 text-left">
+                    {pillar.features.map((feat, fidx) => (
+                      <div key={fidx} className="flex items-start gap-3 group/item">
+                        <div className="w-5 h-5 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0 mt-0.5 shadow-sm group-hover:bg-emerald-500 group-hover:border-emerald-500 group-hover:text-white transition-all duration-300">
+                          <svg className="w-3 h-3 text-emerald-600 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-zinc-650 text-sm font-medium font-sans leading-snug group-hover:text-zinc-900 transition-colors duration-200">
+                          {feat}
+                        </span>
                       </div>
                     ))}
                   </div>
+                </div>
+
+                {/* Phrase of impact at the bottom with a divider */}
+                <div className="mt-8 pt-5 border-t border-zinc-100 text-left">
+                  <p className="text-emerald-800/90 font-sans text-[13px] font-semibold italic leading-relaxed group-hover:text-emerald-700 transition-colors duration-300">
+                    "{pillar.impactPhrase}"
+                  </p>
                 </div>
               </motion.div>
             ))}
@@ -470,244 +300,115 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Advanced Interactive Solo and Diagnostics Demo (Vercel Style) — BLOCK 3 (Dark Background) */}
-      <section className="py-24 relative overflow-hidden bg-surface-container/40 border-y border-outline-variant/20 reveal">
-        <div className="glow-spot glow-primary top-[20%] right-[-10%]" />
-        
-        <div className="max-w-7xl mx-auto px-6 md:px-10 grid md:grid-cols-2 gap-y-10 md:gap-16 items-center w-full min-w-0">
-          <div className="space-y-8 w-full min-w-0">
-            <span className="text-secondary-fixed font-semibold uppercase tracking-widest text-xs font-inter block">Módulos Avançados</span>
-            <h2 className="font-headline text-2xl sm:text-3xl md:text-4xl text-white font-extrabold tracking-tight leading-tight">
-              Análise Química Otimizada & Diagnóstico de Campo.
+      {/* Timeline Section — BLOCK 3 (Dark Background) */}
+      <section className="py-24 relative overflow-hidden bg-[#002417] border-y border-emerald-900/50 reveal">
+        <div className="max-w-7xl mx-auto px-6 md:px-10 grid lg:grid-cols-12 gap-y-12 lg:gap-16 items-center w-full relative z-10">
+          {/* Left Message Column */}
+          <div className="lg:col-span-5 space-y-6 text-left w-full min-w-0">
+            <span className="text-secondary-fixed font-semibold uppercase tracking-widest text-xs font-inter block">Ciclo Completo</span>
+            <h2 className="font-headline text-3xl sm:text-4xl text-white font-extrabold tracking-tight leading-tight">
+              Acompanhamos todo o ciclo da banana
             </h2>
-            <p className="font-sans text-sm md:text-base text-on-surface-variant leading-relaxed">
-              O Bananal PRO une educação e tecnologia. Acesse cursos de recomendação de adubação ao mesmo tempo em que calcula dosagens ideais com nossa ferramenta inteligente de calagem.
-            </p>
-
-            {/* Quick Switch controls */}
-            <div className="flex gap-4 border-b border-outline-variant/30 pb-2">
-              <button
-                onClick={() => setActiveTool("solo")}
-                className={`pb-2 text-xs font-bold font-inter cursor-pointer transition-all border-b-2 ${
-                  activeTool === "solo"
-                    ? "border-secondary-fixed text-secondary-fixed font-semibold"
-                    : "border-transparent text-on-surface-variant hover:text-white"
-                }`}
-              >
-                Química de Solo
-              </button>
-              <button
-                onClick={() => setActiveTool("diagnostico")}
-                className={`pb-2 text-xs font-bold font-inter cursor-pointer transition-all border-b-2 ${
-                  activeTool === "diagnostico"
-                    ? "border-secondary-fixed text-secondary-fixed font-semibold"
-                    : "border-transparent text-on-surface-variant hover:text-white"
-                }`}
-              >
-                Diagnóstico Visual
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {activeTool === "solo" ? (
-                <>
-                  <div className="flex gap-3">
-                    <span className="material-symbols-outlined text-secondary-fixed text-xl mt-0.5">check_circle</span>
-                    <div>
-                      <p className="text-sm font-headline font-semibold text-white">Recomendação de Adubação</p>
-                      <p className="text-xs text-on-surface-variant font-sans">Aprenda a aplicar as dosagens exatas de fósforo, nitrogênio e potássio na bananeira.</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="material-symbols-outlined text-secondary-fixed text-xl mt-0.5">check_circle</span>
-                    <div>
-                      <p className="text-sm font-headline font-semibold text-white">Evolução do Solo por Talhão</p>
-                      <p className="text-xs text-on-surface-variant font-sans">Acompanhe a correção química da terra de forma visual e de fácil entendimento.</p>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex gap-3">
-                    <span className="material-symbols-outlined text-secondary-fixed text-xl mt-0.5">check_circle</span>
-                    <div>
-                      <p className="text-sm font-headline font-semibold text-white">Envio de Fotos para Análise</p>
-                      <p className="text-xs text-on-surface-variant font-sans">Identifique anomalias como a Sigatoka ou ácaros foliares enviando fotos no painel.</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="material-symbols-outlined text-secondary-fixed text-xl mt-0.5">check_circle</span>
-                    <div>
-                      <p className="text-sm font-headline font-semibold text-white">Recomendação Operacional</p>
-                      <p className="text-xs text-on-surface-variant font-sans">Dicas técnicas de tratamentos fitossanitários com a supervisão dos agrônomos.</p>
-                    </div>
-                  </div>
-                </>
-              )}
+            <div className="border-l-2 border-secondary pl-6 py-2">
+              <p className="font-sans text-lg md:text-xl text-emerald-100 font-medium leading-relaxed italic">
+                "Em cada etapa existe uma decisão importante. E em cada etapa estaremos ao seu lado."
+              </p>
             </div>
           </div>
 
-          {/* Interactive Screen Preview */}
-          <div className="glass p-5 rounded-[2rem] border-glow shadow-2xl relative w-full min-h-[320px] bg-[#020d08] flex flex-col justify-between min-w-0">
-            {activeTool === "solo" ? (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-bold text-white uppercase font-headline">Solo: Interpretação de Laudo Químico</span>
-                  <span className="text-[8px] bg-secondary/20 text-secondary-fixed px-2 py-0.5 rounded font-inter">Talhão Central</span>
-                </div>
-                {/* Visual Dials/Bars */}
-                <div className="space-y-2.5 font-sans">
-                  {[
-                    { label: "pH do Solo", value: "6.4", target: "6.0 - 6.5", color: "text-secondary-fixed" },
-                    { label: "Matéria Orgânica", value: "3.8 %", target: "3.5 % - 4.5 %", color: "text-secondary-fixed" },
-                    { label: "Alumínio (Al3+)", value: "0.1 cmolc/dm³", target: "< 0.2", color: "text-secondary-fixed" },
-                    { label: "Saturação por Bases (V%)", value: "52 %", target: "60 % - 70 %", color: "text-tertiary-fixed" }
-                  ].map((dial, idx) => (
-                    <div key={idx} className="p-3 bg-surface-container/50 border border-outline-variant/20 rounded-xl flex justify-between items-center text-xs">
-                      <div>
-                        <p className="font-semibold text-white">{dial.label}</p>
-                        <p className="text-[10px] text-on-surface-variant">Alvo: {dial.target}</p>
-                      </div>
-                      <span className={`font-headline font-bold ${dial.color}`}>{dial.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-bold text-white uppercase font-headline">Diagnóstico por Imagem</span>
-                  <span className="text-[8px] bg-amber-500/20 text-tertiary-fixed px-2 py-0.5 rounded font-inter">Pendente Verificação</span>
-                </div>
-                {/* Diagnostic visual item */}
-                <div className="flex gap-4 items-center p-4 bg-surface-container/50 border border-outline-variant/20 rounded-2xl">
-                  <div className="w-16 h-16 rounded-xl bg-gradient-to-tr from-secondary/30 to-amber-500/30 flex items-center justify-center border border-outline-variant/30 shrink-0">
-                    <span className="material-symbols-outlined text-secondary-fixed text-3xl">image</span>
+          {/* Right Timeline Column */}
+          <div className="lg:col-span-7 relative w-full min-w-0">
+            {/* Timeline connection line */}
+            <div className="absolute left-8 top-4 bottom-4 w-0.5 bg-emerald-800/40 hidden sm:block"></div>
+
+            <div className="grid grid-cols-1 gap-6">
+              {[
+                { icon: "🌱", title: "Escolha da muda", desc: "Seleção genética de alta produtividade e livre de pragas." },
+                { icon: "🚜", title: "Plantio", desc: "Espaçamento ideal e marcação precisa da área de cultivo." },
+                { icon: "🌱", title: "Solo", desc: "Interpretação química e física para nutrição balanceada." },
+                { icon: "💧", title: "Irrigação", desc: "Manejo hídrico ideal para o desenvolvimento do cacho." },
+                { icon: "🌿", title: "Manejo", desc: "Desbaste, desfolha e condução técnica da planta." },
+                { icon: "🦠", title: "Controle de doenças", desc: "Prevenção contra Sigatoka e fitossanidade foliar." },
+                { icon: "🍌", title: "Enchimento", desc: "Nutrição e cuidados finais para caixas pesadas." },
+                { icon: "🚛", title: "Colheita", desc: "Corte e transporte do cacho sem causar ferimentos." },
+                { icon: "💰", title: "Comercialização", desc: "Classificação, embalagem e preço ideal de venda." }
+              ].map((step, idx) => (
+                <div key={idx} className="flex gap-4 items-start relative z-10 p-4 rounded-2xl bg-emerald-950/20 border border-emerald-900/10 sm:bg-transparent sm:border-transparent sm:p-0">
+                  <div className="w-16 h-16 shrink-0 rounded-2xl bg-emerald-900/50 border border-emerald-700/30 flex items-center justify-center text-2xl shadow-md sm:ml-0.5">
+                    {step.icon}
                   </div>
-                  <div>
-                    <h5 className="text-xs font-bold text-white font-headline">Imagem: Foliar_TalhaoNorte_01.jpg</h5>
-                    <p className="text-[10px] text-on-surface-variant mt-1 leading-relaxed">
-                      Resultado IA: **86% probabilidade de Sigatoka Amarela**. Recomendamos aplicação imediata de fungicida preventivo.
-                    </p>
+                  <div className="space-y-1 pt-1 text-left">
+                    <h4 className="text-sm font-headline font-bold text-white flex items-center gap-2">
+                      <span className="text-[10px] text-secondary font-mono">Etapa {idx + 1}</span>
+                      • {step.title}
+                    </h4>
+                    <p className="text-xs text-emerald-100/70 font-sans leading-relaxed">{step.desc}</p>
                   </div>
                 </div>
-                <div className="p-3 bg-amber-950/20 border border-amber-500/10 rounded-xl flex justify-between items-center text-[10px]">
-                  <span className="text-white font-semibold">Agrônomo Alocado:</span>
-                  <span className="text-secondary-fixed font-bold">Dr. Carlos Eduardo (24h úteis)</span>
-                </div>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* The Intelligence Hub: Slack/Discord Style Community Showcase (Circle/Slack Style) — BLOCK 4 (White Background) */}
-      <section className="py-24 relative overflow-hidden bg-white text-zinc-900 border-b border-zinc-200/50 reveal" id="comunidade">
-        <div className="max-w-7xl mx-auto px-6 md:px-10 grid lg:grid-cols-12 gap-y-10 lg:gap-16 items-center w-full min-w-0">
-          
-          {/* Slack/Discord Workspace Mockup */}
-          <div className="lg:col-span-7 w-full flex justify-center items-center min-w-0">
-            <div className="w-full max-w-[620px] dark-glass rounded-[2rem] p-3 shadow-2xl relative border-glow overflow-hidden min-w-0">
-              <div className="w-full rounded-[1.5rem] bg-[#010905] border border-outline-variant/20 flex flex-col sm:flex-row overflow-hidden min-h-[350px] text-white">
-                
-                {/* Channels list */}
-                <div className="w-full sm:w-40 border-b sm:border-b-0 sm:border-r border-outline-variant/20 p-3 bg-[#010603] flex flex-row sm:flex-col gap-2 overflow-x-auto sm:overflow-x-visible shrink-0">
-                  <div className="hidden sm:flex items-center gap-2 mb-4 px-2 py-1 border-b border-outline-variant/10">
-                    <span className="w-2.5 h-2.5 rounded-full bg-secondary-fixed animate-pulse"></span>
-                    <span className="text-[10px] font-bold text-white uppercase font-headline">BANANAL VIP</span>
-                  </div>
-                  <div className="flex flex-row sm:flex-col gap-1 w-full">
-                    {["Geral", "Preço de Mercado", "Controle de Pragas", "Adubação"].map((chan) => (
-                      <div
-                        key={chan}
-                        className={`flex items-center gap-1.5 px-2.5 py-1 text-[10px] rounded transition-all text-on-surface-variant font-inter whitespace-nowrap cursor-pointer ${
-                          chan === "Controle de Pragas"
-                            ? "bg-secondary/15 text-secondary-fixed font-bold border border-secondary/20"
-                            : "hover:text-white"
-                        }`}
-                      >
-                        <span className="text-on-surface-variant font-mono">#</span>
-                        {chan}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Chat Feed */}
-                <div className="flex-1 p-4 flex flex-col justify-between">
-                  <div className="flex justify-between items-center pb-2 border-b border-outline-variant/10">
-                    <div>
-                      <span className="text-[10px] font-bold font-headline text-white"># Controle de Pragas</span>
-                      <p className="text-[7px] text-on-surface-variant font-inter">Dúvidas técnicas e boletins fitossanitários</p>
-                    </div>
-                    <span className="text-[8px] text-on-surface-variant font-inter">42 online</span>
-                  </div>
-                  
-                  {/* Messages list */}
-                  <div className="flex-1 space-y-3.5 my-3 overflow-y-auto max-h-[180px] pr-2">
-                    <div className="flex gap-2 text-[9px] items-start">
-                      <div className="w-6 h-6 rounded-full bg-secondary/20 flex items-center justify-center shrink-0 border border-outline-variant/20">
-                        <span className="text-secondary-fixed font-bold text-[8px]">AM</span>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-white">Alisson Martins</span>
-                          <span className="text-[7px] text-on-surface-variant">Bahia • 10:24</span>
-                        </div>
-                        <p className="text-on-surface-variant font-sans mt-0.5">Pessoal, surgiu essa mancha nas bananeiras novas no talhão sul. Alguém já viu?</p>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 text-[9px] items-start bg-secondary/5 p-2 rounded-xl border border-secondary/10">
-                      <div className="w-6 h-6 rounded-full bg-secondary-fixed text-primary-container flex items-center justify-center shrink-0 border border-secondary-fixed/20 shadow-glow">
-                        <span className="material-symbols-outlined text-xs">shield</span>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-white flex items-center gap-1">
-                            Dr. Carlos Eduardo
-                            <span className="text-[7px] bg-secondary-fixed text-primary px-1.5 py-0.2 rounded-full font-bold">Agrônomo</span>
-                          </span>
-                          <span className="text-[7px] text-on-surface-variant">10:45</span>
-                        </div>
-                        <p className="text-emerald-300 font-sans mt-0.5">Alisson, esse sintoma indica infestação inicial de Sigatoka. Não aplique excesso de nitrogênio. Aconselho o tratamento biológico com Trichoderma na base da planta.</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Input field mockup */}
-                  <div className="p-2 bg-surface-container/50 border border-outline-variant/20 rounded-xl flex items-center justify-between text-[9px] text-on-surface-variant font-inter">
-                    <span>Pergunte algo à comunidade ou envie uma foto...</span>
-                    <span className="material-symbols-outlined text-xs hover:text-white cursor-pointer">send</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+      {/* Specialists Section — BLOCK 4 (White Background) */}
+      <section className="py-24 bg-white text-zinc-900 border-b border-zinc-200/50 reveal" id="comunidade">
+        <div className="max-w-7xl mx-auto px-6 md:px-10">
+          <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
+            <span className="text-secondary font-semibold uppercase tracking-widest text-xs font-inter block">Equipe de Apoio</span>
+            <h2 className="font-headline text-3xl sm:text-4xl text-primary font-bold tracking-tight">Conheça quem vai acompanhar você</h2>
+            <p className="text-zinc-650 font-sans text-sm md:text-base leading-relaxed">
+              Você terá acesso direto a especialistas que entendem a realidade do campo e vivem a bananicultura no dia a dia.
+            </p>
           </div>
 
-          {/* Right Text Column */}
-          <div className="lg:col-span-5 space-y-8 text-left w-full min-w-0">
-            <span className="text-secondary font-semibold uppercase tracking-widest text-xs font-inter block">Inteligência Coletiva</span>
-            <h2 className="font-headline text-2xl sm:text-3xl md:text-4xl text-primary font-bold tracking-tight">O epicentro de conexões e capacitação rural.</h2>
-            <p className="font-sans text-sm md:text-base text-zinc-600 leading-relaxed">
-              Não produza isolado. Participe de debates técnicos com outros agricultores, participe de lives semanais exclusivas com engenheiros agrônomos convidados e acesse cotações de preços de caixas de banana em tempo real por região.
-            </p>
-            <div className="space-y-4">
-              <div className="flex gap-3">
-                <span className="material-symbols-outlined text-secondary text-xl">school</span>
-                <div>
-                  <h4 className="text-sm font-headline font-semibold text-primary">Cursos Técnicos Avançados</h4>
-                  <p className="text-xs text-zinc-600 font-sans">Aprenda com especialistas os segredos de condução, tratos culturais e combate a pragas.</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                name: "Jean Carlos",
+                role: "Produtor de Banana",
+                bio: "Mais de 5 anos vivendo a bananicultura na prática.",
+                image: "/images/jean.png",
+                position: "object-center"
+              },
+              {
+                name: "Jhonatan",
+                role: "Engenheiro Agrônomo",
+                bio: "Especialista em nutrição, manejo e sanidade da bananeira.",
+                image: "/images/jhonatan.jpeg",
+                position: "object-top"
+              },
+              {
+                name: "Francisco",
+                role: "Especialista em Biológicos",
+                bio: "Mais de 20 anos de Experiência prática aplicada ao campo.",
+                image: "/images/francisco.jpeg",
+                position: "object-center"
+              }
+            ].map((spec, idx) => (
+              <div key={idx} className="bg-slate-50 border border-zinc-200/80 rounded-[2.5rem] overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col hover:-translate-y-1">
+                {/* Large Photo Container */}
+                <div className="w-full h-80 overflow-hidden relative bg-zinc-100">
+                  <img
+                    src={spec.image}
+                    alt={spec.name}
+                    className={`w-full h-full object-cover ${spec.position}`}
+                  />
+                </div>
+                {/* Content */}
+                <div className="p-8 space-y-4 flex-1 flex flex-col justify-between text-left">
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-headline font-bold text-primary">{spec.name}</h3>
+                    <p className="text-secondary font-bold text-xs uppercase tracking-wider font-inter">
+                      {spec.role}
+                    </p>
+                    <p className="text-zinc-650 font-sans text-xs leading-relaxed pt-2 border-t border-zinc-200/60">
+                      {spec.bio}
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="flex gap-3">
-                <span className="material-symbols-outlined text-secondary text-xl">database</span>
-                <div>
-                  <h4 className="text-sm font-headline font-semibold text-primary">Cotações & Transações</h4>
-                  <p className="text-xs text-zinc-600 font-sans">Entenda a média de venda da banana prata e nanica antes de negociar sua colheita.</p>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -748,95 +449,190 @@ export default function LandingPage() {
             <h2 className="font-headline text-2xl sm:text-3xl md:text-4xl text-primary font-bold tracking-tight">O ecossistema completo ao seu alcance.</h2>
           </div>
 
+          {/* Comparison of Value Table */}
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-16">
+            {/* Consultoria Tradicional */}
+            <div className="bg-slate-50 border border-zinc-200/80 p-8 rounded-[2.5rem] text-left space-y-4">
+              <h3 className="text-xl font-headline font-bold text-primary flex items-center gap-2">
+                Consultoria Tradicional
+              </h3>
+              <div className="text-2xl font-headline font-extrabold text-red-700">
+                R$ 2.000 a R$ 2.500
+                <span className="text-xs font-sans text-zinc-500 font-normal"> /visita</span>
+              </div>
+              <ul className="space-y-3.5 text-zinc-700 font-sans text-xs">
+                <li className="flex items-center gap-2">
+                  <span className="text-red-500 shrink-0 font-bold">✓</span>
+                  <span>Uma única visita presencial</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-red-500 shrink-0 font-bold">✓</span>
+                  <span>Diagnóstico pontual e isolado</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-red-500 shrink-0 font-bold">✓</span>
+                  <span>Exigência de novo pagamento para retornos e dúvidas</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Bananal PRO */}
+            <div className="bg-emerald-50/20 border border-emerald-500/30 p-8 rounded-[2.5rem] text-left space-y-4">
+              <h3 className="text-xl font-headline font-bold text-emerald-850 flex items-center gap-2">
+                Acompanhamento Bananal PRO
+              </h3>
+              <div className="text-2xl font-headline font-extrabold text-emerald-700">
+                Acesso Contínuo
+                <span className="text-xs font-sans text-zinc-500 font-normal"> /ano todo</span>
+              </div>
+              <ul className="space-y-3.5 text-zinc-700 font-sans text-xs">
+                <li className="flex items-center gap-2">
+                  <span className="text-emerald-600 shrink-0 font-bold">✓</span>
+                  <span>Acompanhamento contínuo nas decisões diárias</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-emerald-600 shrink-0 font-bold">✓</span>
+                  <span>Especialistas de prontidão para tirar dúvidas</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-emerald-600 shrink-0 font-bold">✓</span>
+                  <span>Comunidade ativa com troca de experiências reais</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-emerald-600 shrink-0 font-bold">✓</span>
+                  <span>Cursos, lives, ferramentas e conteúdos sempre atualizados</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Mensal */}
-            <div className="dark-glass rounded-[2.5rem] p-10 relative price-card hover-card-effect border-glow flex flex-col justify-between">
+            <div className="bg-white border border-zinc-200/80 rounded-[2.5rem] p-8 md:p-10 relative flex flex-col justify-between shadow-sm hover:shadow-xl transition-all duration-300 text-left">
               <div>
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-zinc-800 text-zinc-400 px-5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase font-inter border border-white/5">
-                  PLANO MENSAL
+                <span className="text-zinc-400 text-[11px] font-bold tracking-wider uppercase font-inter block">
+                  Acesso Mensal Recorrente
+                </span>
+                
+                <div className="mt-3">
+                  <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider font-inter inline-block">
+                    Flexibilidade Total
+                  </span>
                 </div>
-                <div className="mb-6 mt-4">
-                  <span className="text-5xl font-headline font-extrabold text-white">R$ 97</span>
-                  <span className="text-on-surface-variant font-sans text-sm">/mês</span>
-                </div>
-                <p className="text-on-surface-variant mb-8 font-sans text-xs leading-relaxed">
-                  Ideal para quem deseja flexibilidade total e testar todos os recursos operacionais.
+                
+                <p className="text-zinc-400 text-[11px] font-bold uppercase tracking-wider mt-8">
+                  Por apenas:
                 </p>
-                <ul className="space-y-3.5 text-left mb-8 font-sans text-[11px] text-zinc-300">
-                  <li className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-secondary-fixed text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                    <span>Treinamentos e Cursos Técnicos Inclusos</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-secondary-fixed text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                    <span>Suporte com Engenheiros Agrônomos</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-secondary-fixed text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                    <span>Comunidade VIP & Cotações de Mercado</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-secondary-fixed text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                    <span>Ferramentas de Solo & Gestão Agrícola</span>
-                  </li>
-                </ul>
+                
+                <div className="mt-2 mb-1 flex items-baseline gap-1">
+                  <span className="text-5xl font-black text-emerald-800 tracking-tight font-headline">R$ 97</span>
+                  <span className="text-zinc-500 font-sans text-sm">/mês</span>
+                </div>
+                
+                <p className="text-zinc-700 font-sans text-sm font-semibold mb-6">
+                  Acesso mensal sem fidelidade
+                </p>
+                
+                <div className="inline-block border border-zinc-200 bg-zinc-50/50 px-4 py-1.5 rounded-xl text-xs text-zinc-500 font-medium font-sans">
+                  Ideal para testar os recursos.
+                </div>
               </div>
-              <div>
+              
+              <div className="mt-10">
                 <Link
                   to="/auth/register?offer=padrao&plan=mensal"
-                  className="w-full bg-white/5 hover:bg-white/10 text-white py-4 rounded-xl font-headline font-bold text-xs tracking-wider uppercase transition-all duration-300 border border-white/10 active:scale-95 block text-center cursor-pointer"
+                  className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-4.5 rounded-2xl font-headline font-bold text-xs tracking-wider uppercase transition-all duration-300 active:scale-95 block text-center cursor-pointer"
                 >
-                  Assinar Mensal
+                  Assinar Plano Mensal
                 </Link>
-                <p className="text-[9px] text-on-surface-variant mt-4 font-sans uppercase tracking-widest font-semibold">Sem fidelidade • Cancele quando quiser</p>
+                <p className="text-[10px] text-zinc-500 mt-4 text-center font-sans">
+                  ✓ Acesso imediato • Cancele quando quiser • Sem fidelidade
+                </p>
+                <p className="text-[10px] text-zinc-400 mt-6 font-sans leading-relaxed text-left">
+                  Tenha acesso a todas as ferramentas de solo, suporte técnico dos agrônomos e comunidade VIP mês a mês.
+                </p>
               </div>
             </div>
 
             {/* Anual */}
-            <div className="dark-glass rounded-[2.5rem] p-10 relative price-card hover-card-effect border-glow border-secondary/50 flex flex-col justify-between overflow-hidden shadow-2xl shadow-secondary/5">
-              <div className="absolute top-0 right-0 bg-secondary text-white text-[8px] font-black uppercase tracking-widest px-4 py-1.5 rounded-bl-2xl">
-                OFERTA MEMBRO FUNDADOR
+            <div className="bg-white border-2 border-emerald-700/90 rounded-[2.5rem] p-8 md:p-10 relative flex flex-col justify-between overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 text-left">
+              {/* Slanted banner top-right */}
+              <div className="absolute top-0 right-0 bg-emerald-800 text-white text-[10px] font-black uppercase tracking-widest px-6 py-2 rounded-bl-2xl">
+                Poucas Vagas
               </div>
+              
               <div>
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-secondary text-white px-5 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase font-inter border border-secondary-fixed/20 shadow-glow">
-                  PLANO ANUAL
+                <span className="text-zinc-400 text-[11px] font-bold tracking-wider uppercase font-inter block">
+                  Acesso Completo de 1 Ano
+                </span>
+                
+                <div className="mt-3 flex items-center gap-3">
+                  <span className="text-zinc-400 line-through text-xs font-medium">De R$ 797/ano</span>
+                  <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider font-inter inline-block">
+                    Desconto Especial
+                  </span>
                 </div>
-                <div className="mb-6 mt-4">
-                  <span className="text-5xl font-headline font-extrabold text-white">R$ 497</span>
-                  <span className="text-on-surface-variant font-sans text-sm">/ano</span>
-                  <p className="text-secondary-fixed text-[10px] font-bold mt-1 uppercase tracking-wider">De R$ 797 por R$ 497 (Economize R$ 300)</p>
-                </div>
-                <p className="text-on-surface-variant mb-8 font-sans text-xs leading-relaxed">
-                  Acesso completo por 12 meses. Parcele em até **12x de R$ 49,70** no cartão de crédito.
+                
+                <p className="text-zinc-400 text-[11px] font-bold uppercase tracking-wider mt-8">
+                  Por apenas:
                 </p>
-                <ul className="space-y-3.5 text-left mb-8 font-sans text-[11px] text-zinc-300">
-                  <li className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-secondary-fixed text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                    <span className="font-bold text-white">Tudo do plano Mensal incluído</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-secondary-fixed text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                    <span>Desconto Membro Fundador de R$ 797 por R$ 497</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-secondary-fixed text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                    <span>Prioridade máxima em laudos de análise de solo</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-secondary-fixed text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                    <span>Acesso a todas as futuras atualizações e ferramentas</span>
-                  </li>
-                </ul>
+                
+                <div className="mt-2 mb-1 flex items-baseline gap-1.5 font-headline">
+                  <span className="text-lg font-bold text-emerald-800">12x de</span>
+                  <span className="text-5xl font-black text-emerald-800 tracking-tight">R$ 49,70</span>
+                </div>
+                
+                <p className="text-zinc-700 font-sans text-sm font-semibold mb-6">
+                  ou <span className="font-bold text-emerald-800">R$ 497 à vista</span> por um ano de acesso
+                </p>
+                
+                <div className="inline-block border border-zinc-200 bg-zinc-50/50 px-4 py-1.5 rounded-xl text-xs text-zinc-500 font-medium font-sans">
+                  Menos de um café por dia.
+                </div>
               </div>
-              <div>
+              
+              <div className="mt-10">
                 <Link
                   to="/auth/register?offer=padrao&plan=anual"
-                  className="w-full bg-secondary hover:bg-secondary-fixed text-white hover:text-primary-container py-4.5 rounded-xl font-headline font-extrabold text-xs tracking-wider uppercase transition-all duration-300 shadow-lg shadow-secondary/15 active:scale-95 block text-center cursor-pointer"
+                  className="w-full bg-emerald-800 hover:bg-emerald-900 text-white py-4.5 rounded-2xl font-headline font-bold text-xs tracking-wider uppercase transition-all duration-300 shadow-md hover:shadow-lg active:scale-95 block text-center cursor-pointer font-sans"
                 >
-                  Assinar Anual (12x de R$ 49,70)
+                  Quero Garantir Meu Acesso Fundador Agora!
                 </Link>
-                <p className="text-[9px] text-on-surface-variant mt-4 font-sans uppercase tracking-widest font-semibold">Parcele em até 12x no cartão de crédito</p>
+                <p className="text-[10px] text-zinc-500 mt-4 text-center font-sans">
+                  ✓ Acesso imediato • Pagamento 100% seguro • Cancele quando quiser
+                </p>
+                <p className="text-[10px] text-zinc-400 mt-6 font-sans leading-relaxed text-left">
+                  Esta oferta de lançamento é por tempo limitado e exclusiva para quem fechar primeiro. Quando estas poucas vagas terminarem, o lote será encerrado e o valor será reajustado.
+                </p>
               </div>
+            </div>
+          </div>
+
+          {/* Footer note moved here below pricing cards */}
+          <p className="text-[11px] text-zinc-500 max-w-3xl mx-auto mt-16 leading-relaxed text-center font-sans">
+            * O Bananal PRO não substitui todas as situações em que uma visita presencial seja necessária. Nosso objetivo é oferecer acompanhamento contínuo para apoiar as decisões do dia a dia da lavoura.
+          </p>
+        </div>
+      </section>
+
+      {/* 7 Days Guarantee Section */}
+      <section className="py-20 bg-white text-zinc-900 border-b border-zinc-200/50 reveal">
+        <div className="max-w-4xl mx-auto px-6 md:px-10">
+          <div className="bg-emerald-50/20 border border-emerald-500/20 rounded-[2.5rem] p-8 md:p-12 flex flex-col md:flex-row items-center gap-8 shadow-sm">
+            {/* Seal Icon */}
+            <div className="w-28 h-28 shrink-0">
+              <img
+                src="/images/selo_garantia.png"
+                alt="7 Dias de Garantia Bananal PRO"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            {/* Content */}
+            <div className="space-y-4 text-left">
+              <h3 className="text-2xl font-headline font-bold text-primary">Garantia Incondicional de 7 Dias</h3>
+              <p className="text-zinc-655 font-sans text-xs md:text-sm leading-relaxed">
+                Experimente o Bananal PRO e tenha acesso a toda a nossa equipe de especialistas, comunidade e ferramentas. Se por qualquer motivo você achar que o acompanhamento não é para você dentro dos primeiros 7 dias, devolvemos todo o seu dinheiro de forma simples e rápida.
+              </p>
             </div>
           </div>
         </div>
@@ -855,8 +651,8 @@ export default function LandingPage() {
                 </span>
               </summary>
               <div className="overflow-hidden transition-all duration-300">
-                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed">
-                  Dentro do módulo de comunidade ou na área do painel de solo, você pode abrir chamados técnicos e enviar fotos e relatórios da sua plantação de bananas. Nossos engenheiros agrônomos respondem em até 24h úteis fornecendo recomendações de tratamento.
+                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed text-left">
+                  Dentro do módulo de comunidade ou na área do painel de solo, você pode abrir chamados técnicos e enviar fotos e relatórios da sua plantação de bananas. Nossos engenheiros agrônomos devem responder em até 24h úteis fornecendo recomendações de tratamento.
                 </p>
               </div>
             </details>
@@ -869,7 +665,7 @@ export default function LandingPage() {
                 </span>
               </summary>
               <div className="overflow-hidden transition-all duration-300">
-                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed">
+                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed text-left">
                   O acesso aos cursos e treinamentos técnicos é liberado imediatamente após a confirmação da sua assinatura. Você e sua equipe podem assistir às aulas teóricas e práticas (vídeos gravados e materiais PDF de apoio) de qualquer computador ou celular.
                 </p>
               </div>
@@ -883,7 +679,7 @@ export default function LandingPage() {
                 </span>
               </summary>
               <div className="overflow-hidden transition-all duration-300">
-                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed">
+                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed text-left">
                   Sim! Você pode registrar seus custos, manejos e controle de estoque mesmo sem sinal de internet ou de celular no campo. Todas as suas informações ficam salvas de forma segura e são atualizadas automaticamente com o sistema assim que você se conectar a uma rede.
                 </p>
               </div>
@@ -897,7 +693,7 @@ export default function LandingPage() {
                 </span>
               </summary>
               <div className="overflow-hidden transition-all duration-300">
-                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed">
+                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed text-left">
                   O Bananal PRO possui parâmetros calibrados para as principais variedades cultivadas no Brasil, incluindo Banana Prata (Anã e Catarinense), Cavendish (Nanica/Nanicão), Banana Maçã, Banana da Terra e Banana Ouro.
                 </p>
               </div>
@@ -911,7 +707,7 @@ export default function LandingPage() {
                 </span>
               </summary>
               <div className="overflow-hidden transition-all duration-300">
-                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed">
+                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed text-left">
                   Você insere manualmente os dados químicos do seu laudo (pH, P, K, Ca, Mg, etc.) e o sistema calcula instantaneamente a Soma de Bases (SB), Capacidade de Troca Catiônica (CTC), saturação por bases atual (V%) e a dose recomendada de calcário em toneladas por hectare (Necessidade de Calagem).
                 </p>
               </div>
@@ -925,7 +721,7 @@ export default function LandingPage() {
                 </span>
               </summary>
               <div className="overflow-hidden transition-all duration-300">
-                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed">
+                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed text-left">
                   Sim! Todos os treinamentos técnicos possuem avaliações de conhecimento e emitem certificados de conclusão nominais em PDF. Perfeito para comprovar a capacitação da sua equipe de campo para auditorias ou certificadoras (como GlobalGAP).
                 </p>
               </div>
@@ -939,7 +735,7 @@ export default function LandingPage() {
                 </span>
               </summary>
               <div className="overflow-hidden transition-all duration-300">
-                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed">
+                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed text-left">
                   Você tira uma foto nítida da folha lesionada ou sintoma com o celular e envia na plataforma. Nosso sistema analisa os padrões visuais para identificar doenças (como Sigatoka Negra/Amarela ou Fusariose) e sugere manejos imediatos de controle cultural ou químico.
                 </p>
               </div>
@@ -953,7 +749,7 @@ export default function LandingPage() {
                 </span>
               </summary>
               <div className="overflow-hidden transition-all duration-300">
-                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed">
+                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed text-left">
                   Sim, você pode gerenciar os custos operacionais (insumos, diesel, mão de obra) de diferentes talhões ou glebas e visualizar os relatórios consolidados ou filtrados por área no seu painel financeiro.
                 </p>
               </div>
@@ -967,7 +763,7 @@ export default function LandingPage() {
                 </span>
               </summary>
               <div className="overflow-hidden transition-all duration-300">
-                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed">
+                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed text-left">
                   Todas as assinaturas são processadas de forma segura através do InfinitePay, um dos maiores gateways de pagamento do Brasil. Você recebe os comprovantes de serviço diretamente no seu e-mail cadastrado.
                 </p>
               </div>
@@ -981,42 +777,11 @@ export default function LandingPage() {
                 </span>
               </summary>
               <div className="overflow-hidden transition-all duration-300">
-                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed">
+                <p className="mt-4 text-xs md:text-sm text-zinc-600 leading-relaxed text-left">
                   Sim! O plano mensal não possui carência ou fidelidade, podendo ser cancelado com um clique no seu painel de configurações. O plano anual garante acesso por 12 meses, com renovação automática opcional.
                 </p>
               </div>
             </details>
-          </div>
-        </div>
-      </section>
-
-      {/* Final Cinematic CTA — BLOCK 8 (Dark image backdrop) */}
-      <section className="relative py-36 overflow-hidden reveal">
-        <div className="absolute inset-0 z-0">
-          <img
-            alt="Banana Plantation"
-            className="w-full h-full object-cover brightness-[0.25] transition-transform duration-[3000ms] hover:scale-105"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNVB0M7qqkD03-wJME2_tzbotkdKN2EIxn9WzqSc6Tdap73X_tPl_Yn0s48W6aBpB4AA5hc2wa6MVYM4Gs1uhTgeZHJNZQCIfPrR44LrMF3FV3mlUdw8rI7BDnJEBtPzG3Z5-5lpzchhJiOzuw70vgqELfrk7HuMDNqNE9fA_b9b6JAdHvRzJj45wKFRACWLHOJLF_xrluSZEa727AxyPfr2_GVEPChgQPBpx4hw6JiY3h1zaJ4bm65kpK-NxofQdZPQqxDk5fdQ"
-          />
-        </div>
-        
-        {/* Volumetric Green overlay inside CTA */}
-        <div className="absolute inset-0 bg-[#002417]/30 z-5"></div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-10 text-center text-white space-y-8">
-          <h2 className="font-headline text-3xl md:text-5xl font-extrabold max-w-4xl mx-auto leading-tight tracking-tight">
-            Pronto para liderar a nova era da bananicultura?
-          </h2>
-          <p className="text-sm md:text-base text-white/70 max-w-xl mx-auto font-sans">
-            Capacite sua equipe, conecte-se a agrônomos experientes e utilize a melhor tecnologia agrícola do mercado.
-          </p>
-          <div className="pt-4">
-            <Link
-              to="/auth/register?offer=padrao&plan=anual"
-              className="bg-secondary hover:bg-secondary-fixed text-white hover:text-primary-container px-12 py-5 rounded-2xl font-headline font-extrabold text-sm tracking-wider uppercase transition-all duration-300 shadow-2xl shadow-secondary/20 hover:scale-[1.02] active:scale-95 inline-block text-center cursor-pointer"
-            >
-              Começar Agora
-            </Link>
           </div>
         </div>
       </section>

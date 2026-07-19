@@ -52,14 +52,14 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               onClick={(e) => handleNavClick(e, "#ferramentas")}
               className="text-zinc-600 hover:text-primary transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
             >
-              Ferramentas
+              Soluções
             </a>
             <a
               href="#comunidade"
               onClick={(e) => handleNavClick(e, "#comunidade")}
               className="text-zinc-600 hover:text-primary transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
             >
-              Comunidade
+              Especialistas
             </a>
             <a
               href="#planos"
@@ -127,7 +127,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 }}
                 className="text-xl font-bold font-headline text-zinc-800"
               >
-                Ferramentas
+                Soluções
               </a>
               <a
                 href="#comunidade"
@@ -137,7 +137,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 }}
                 className="text-xl font-bold font-headline text-zinc-800"
               >
-                Comunidade
+                Especialistas
               </a>
               <a
                 href="#planos"
@@ -214,7 +214,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                   onClick={(e) => handleNavClick(e, "#ferramentas")}
                   className="hover:text-secondary hover:underline transition-all"
                 >
-                  Ferramentas
+                  Soluções
                 </a>
               </li>
               <li>
@@ -224,7 +224,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               </li>
               <li>
                 <a href="#comunidade" onClick={(e) => handleNavClick(e, "#comunidade")} className="hover:text-secondary hover:underline transition-all">
-                  Comunidade
+                  Especialistas
                 </a>
               </li>
               <li>

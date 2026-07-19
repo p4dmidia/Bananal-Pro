@@ -88,24 +88,43 @@ export default function AdminDashboard() {
         }
       }
 
-      // Calculate active users (unique user_ids with paid orders)
-      const paidOrders = ordersData.filter((o: any) => o.status === 'paid');
-      const activeUserIds = Array.from(new Set(paidOrders.map((o: any) => o.user_id)));
-      const activeCount = activeUserIds.length;
+      // Calculate active users (unique user_ids with paid orders, excluding null/undefined user_ids and test orders <= 1.00)
+      const paidOrders = ordersData.filter((o: any) => o.status === 'paid' && o.user_id !== null && o.user_id !== undefined && Number(o.total_amount) > 1.00);
       
-      // MRR is active users * 87
-      const mrrValue = activeCount * 87;
-
-      // Calculate cancelled users (must have had a paid order in history and profile is currently not active)
-      const cancelledOrders = ordersData.filter((o: any) => {
-        if (o.status !== 'cancelled') return false;
-        const userHasEverPaid = ordersData.some((allO: any) => allO.user_id === o.user_id && allO.status === 'paid');
+      // Mapeia o último valor de plano pago de cada usuário ativo
+      const activeUsersMap = new Map<number, number>();
+      paidOrders.forEach((o: any) => {
         const userProfile = usersData?.find((u: any) => u.id === o.user_id);
-        const isCurrentlyActive = userProfile ? userProfile.is_active : false;
-        return userHasEverPaid && !isCurrentlyActive;
+        const isUserActive = userProfile ? userProfile.is_active : false;
+        
+        if (isUserActive) {
+          const existingDate = activeUsersMap.get(o.user_id) ? new Date(paidOrders.find((x: any) => x.user_id === o.user_id)?.created_at || 0) : new Date(0);
+          if (new Date(o.created_at) >= existingDate) {
+            activeUsersMap.set(o.user_id, Number(o.total_amount || 97.00));
+          }
+        }
       });
-      const cancelledUserIds = Array.from(new Set(cancelledOrders.map((o: any) => o.user_id)));
-      const cancelledCount = cancelledUserIds.length;
+
+      const activeCount = activeUsersMap.size;
+      
+      // Calcula o MRR real: R$ 97 para mensal (<= 150) e R$ 41.41 (497/12) para anual (> 150)
+      let mrrValue = 0;
+      activeUsersMap.forEach((amount) => {
+        const isMonthly = amount <= 150;
+        mrrValue += isMonthly ? 97 : 41.41;
+      });
+
+      // Calcula os usuários que deram churn: têm pelo menos um pedido pago na história, mas perfil inativo atualmente
+      const uniquePaidUserIds = Array.from(new Set(paidOrders.map((o: any) => o.user_id)));
+      let cancelledCount = 0;
+
+      uniquePaidUserIds.forEach(userId => {
+        const userProfile = usersData?.find((u: any) => u.id === userId);
+        const isCurrentlyActive = userProfile ? userProfile.is_active : false;
+        if (!isCurrentlyActive) {
+          cancelledCount++;
+        }
+      });
 
       const totalSubs = activeCount + cancelledCount;
       const churnVal = totalSubs > 0 ? (cancelledCount / totalSubs) * 100 : 0;
@@ -136,7 +155,7 @@ export default function AdminDashboard() {
         ).length || 0;
 
         const dailyRevenue = ordersData.filter(o => 
-          o.status === 'paid' && format(new Date(o.created_at), 'yyyy-MM-dd') === dateStr
+          o.status === 'paid' && Number(o.total_amount) > 1.00 && format(new Date(o.created_at), 'yyyy-MM-dd') === dateStr
         ).reduce((acc, curr) => acc + Number(curr.total_amount), 0) || 0;
         
         return {
@@ -250,7 +269,6 @@ export default function AdminDashboard() {
                       fontSize: '11px',
                       boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)'
                     }}
-                    className="dark:!bg-zinc-900 dark:!border-white/10"
                     cursor={{ stroke: 'rgba(16, 185, 129, 0.1)', strokeWidth: 2 }}
                   />
                   <Area 
@@ -309,7 +327,6 @@ export default function AdminDashboard() {
                       fontSize: '11px',
                       boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)'
                     }}
-                    className="dark:!bg-zinc-900 dark:!border-white/10"
                     cursor={{ fill: 'rgba(0, 0, 0, 0.02)' }}
                   />
                   <Bar 

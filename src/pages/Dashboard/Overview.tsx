@@ -89,8 +89,149 @@ function SoilGauge({ value, label, idealText, percentage, color = "#10b981" }: {
 }
 
 export default function Overview() {
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
+  const [confirmingError, setConfirmingError] = useState<string | null>(null);
+
+  // Check for Mercado Pago redirect payment_id / preapproval_id query parameters
+  useEffect(() => {
+    if (authLoading) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentId = urlParams.get("payment_id") || 
+                      urlParams.get("preapproval_id") || 
+                      urlParams.get("collection_id");
+
+    if (!paymentId) return;
+
+    // Se o usuário já está ativo, apenas limpa a URL silenciosamente
+    if (profile?.is_active) {
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+      return;
+    }
+
+    // Se o perfil existe mas está inativo, inicia verificação
+    if (profile && !profile.is_active) {
+      setConfirmingPayment(true);
+      let attempts = 0;
+      const maxAttempts = 12; // 12 * 2.5s = 30s max polling time
+
+      const pollPaymentStatus = async () => {
+        try {
+          console.log(`Polling payment status. Attempt ${attempts + 1}/${maxAttempts} for payment ID ${paymentId}`);
+          const res = await fetch(`/api/check-payment-status?payment_id=${paymentId}&user_id=${profile.id}`);
+          const data = await res.json();
+
+          if (res.ok && data.status === "approved") {
+            toast.success("Pagamento confirmado! Acesso liberado.");
+            await refreshProfile();
+            // Limpa parâmetros da URL
+            const cleanUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+            setConfirmingPayment(false);
+            return true; // Success
+          }
+        } catch (err) {
+          console.error("Error checking payment status during polling:", err);
+        }
+        return false;
+      };
+
+      const interval = setInterval(async () => {
+        attempts++;
+        const isSuccess = await pollPaymentStatus();
+        if (isSuccess || attempts >= maxAttempts) {
+          clearInterval(interval);
+          if (!isSuccess) {
+            setConfirmingError("Não conseguimos confirmar sua assinatura automaticamente. Caso já tenha pago, por favor aguarde alguns minutos ou entre em contato com o suporte.");
+            setConfirmingPayment(false);
+          }
+        }
+      }, 2500);
+
+      // Executa a primeira verificação imediatamente
+      pollPaymentStatus().then(isSuccess => {
+        if (isSuccess) {
+          clearInterval(interval);
+        }
+      });
+
+      return () => clearInterval(interval);
+    }
+  }, [authLoading, profile, refreshProfile]);
+
+  // Se estiver confirmando o pagamento, mostra tela especial de carregamento premium
+  if (confirmingPayment) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center space-y-6 shadow-2xl relative overflow-hidden">
+          {/* Decorative glow */}
+          <div className="absolute -top-10 -left-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl" />
+          
+          <div className="relative">
+            <div className="mx-auto w-16 h-16 bg-emerald-950/50 border border-emerald-500/30 rounded-2xl flex items-center justify-center text-emerald-400">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-white font-display tracking-tight">Confirmando sua assinatura...</h2>
+            <p className="text-sm text-slate-400">
+              Estamos validando o pagamento com o Mercado Pago para liberar o seu acesso ao painel do Bananal PRO. Isso pode levar alguns segundos.
+            </p>
+          </div>
+          
+          <div className="pt-2">
+            <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full w-2/3 animate-pulse animate-duration-2000" />
+            </div>
+          </div>
+
+          <p className="text-[10px] text-slate-500 font-medium tracking-wider uppercase">Por favor, não feche esta página</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (confirmingError) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-slate-900 border border-red-950 rounded-3xl p-8 text-center space-y-6 shadow-2xl relative overflow-hidden">
+          <div className="mx-auto w-16 h-16 bg-red-950/50 border border-red-500/30 rounded-2xl flex items-center justify-center text-red-400">
+            <AlertCircle className="w-8 h-8" />
+          </div>
+          
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-white font-display tracking-tight">Ops! Quase lá...</h2>
+            <p className="text-sm text-slate-400">
+              {confirmingError}
+            </p>
+          </div>
+          
+          <div className="pt-4 flex flex-col gap-2">
+            <button
+              onClick={() => {
+                setConfirmingError(null);
+                window.location.reload();
+              }}
+              className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-2xl transition-all shadow-lg active:scale-[0.98]"
+            >
+              Tentar Novamente
+            </button>
+            <Link
+              to="/checkout"
+              className="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-2xl transition-all"
+            >
+              Ir para o Checkout
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   // Geolocation states
   const [city, setCity] = useState("Sete Lagoas");

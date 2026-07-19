@@ -21,13 +21,28 @@ import {
   XCircle,
   Smartphone,
   Edit2,
-  Save
+  Save,
+  MessageCircle
 } from "lucide-react";
 import { format, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+const getWhatsAppLink = (fullName: string, phone: string) => {
+  let phoneClean = phone.replace(/\D/g, '');
+  if (!phoneClean) return '#';
+  
+  if (phoneClean.length <= 11 && !phoneClean.startsWith('55')) {
+    phoneClean = '55' + phoneClean;
+  }
+  
+  const firstName = fullName.trim().split(' ')[0];
+  const msg = `Olá ${firstName}! Tudo bem? Vi que você fez seu cadastro na Comunidade Bananal PRO, mas ainda não concluiu a assinatura. Ficou com alguma dúvida sobre as ferramentas, suporte de agrônomos ou acesso? Estou à disposição para ajudar!`;
+  
+  return `https://wa.me/${phoneClean}?text=${encodeURIComponent(msg)}`;
+};
+
 interface UserProfile {
-  id: string;
+  id: number;
   full_name: string;
   email: string;
   role: string;
@@ -88,7 +103,7 @@ const UserDetailModal = ({
           throw new Error("Este usuário não possui um ID de autenticação (mocha_user_id) válido.");
         }
         
-        const { error: rpcError } = await supabase.rpc('admin_update_user_password', {
+        const { error: rpcError } = await (supabase as any).rpc('admin_update_user_password', {
           target_user_id: user.mocha_user_id,
           new_password: password.trim()
         });
@@ -565,6 +580,12 @@ export default function AdminUsers() {
                               <Mail size={12} />
                               {user.email}
                             </p>
+                            {user.phone && (
+                              <p className="text-[11px] text-slate-400 dark:text-zinc-500 flex items-center gap-1 mt-1 font-semibold">
+                                <Smartphone size={12} className="text-emerald-500 shrink-0" />
+                                {user.phone}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -601,6 +622,21 @@ export default function AdminUsers() {
                           >
                             <Eye size={18} />
                           </button>
+                          {user.phone && (
+                            <a 
+                              href={getWhatsAppLink(user.full_name, user.phone)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`p-2 rounded-xl transition-all flex items-center justify-center cursor-pointer ${
+                                !user.is_active
+                                  ? "bg-emerald-500/10 hover:bg-emerald-600 text-emerald-600 hover:text-white border border-emerald-500/20"
+                                  : "bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white"
+                              }`}
+                              title={!user.is_active ? "Recuperar Venda (WhatsApp)" : "Enviar Mensagem no WhatsApp"}
+                            >
+                              <MessageCircle size={18} />
+                            </a>
+                          )}
                           <button 
                             onClick={() => toggleUserStatus(user.id, user.is_active)}
                             className={`p-2 rounded-xl transition-all cursor-pointer ${
