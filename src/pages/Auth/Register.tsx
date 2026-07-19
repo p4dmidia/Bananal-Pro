@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "motion/react";
-import { Mail, Lock, ArrowRight, User, Sprout, Globe, CheckCircle2, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, ArrowRight, User, Sprout, Globe, CheckCircle2, Loader2, AlertCircle, Eye, EyeOff, Smartphone } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { toast } from "react-hot-toast";
@@ -14,6 +14,7 @@ export default function Register() {
     fullName: "",
     email: "",
     password: "",
+    phone: "",
   });
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -71,11 +72,28 @@ export default function Register() {
             full_name: formData.fullName,
             firstName: firstName,
             lastName: lastName,
+            phone: formData.phone,
           },
         },
       });
 
       if (signUpError) throw signUpError;
+
+      // Update phone number in user_profiles via our backend API
+      try {
+        await fetch('/api/update-profile-phone', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            phone: formData.phone
+          })
+        });
+      } catch (phoneErr) {
+        console.error("Failed to update profile phone:", phoneErr);
+      }
 
       if (data.user) {
         toast.success("Cadastro realizado com sucesso!");
@@ -248,6 +266,23 @@ export default function Register() {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="exemplo@email.com"
+                  className="w-full bg-surface border border-outline/15 rounded-2xl py-4 pl-12 pr-4 text-on-surface focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all text-sm placeholder:text-on-surface-variant/40"
+                  required
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-on-surface ml-1">WhatsApp / Celular</label>
+              <div className="relative group">
+                <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-on-surface-variant group-focus-within:text-emerald-500 transition-colors" />
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="(99) 99999-9999"
                   className="w-full bg-surface border border-outline/15 rounded-2xl py-4 pl-12 pr-4 text-on-surface focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all text-sm placeholder:text-on-surface-variant/40"
                   required
                   disabled={loading}

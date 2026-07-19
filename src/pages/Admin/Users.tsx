@@ -148,7 +148,7 @@ const UserDetailModal = ({
           </button>
         </div>
         
-        <div className="px-10 pb-10 -mt-16 relative z-10">
+        <div className="px-10 pb-10 -mt-10 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end gap-6 mb-8 justify-between">
             <div className="flex flex-col md:flex-row md:items-end gap-6 flex-1">
               <div className="w-32 h-32 rounded-[2rem] border-4 border-white dark:border-zinc-950 overflow-hidden bg-slate-100 dark:bg-zinc-800 shadow-xl relative z-10 shrink-0">
