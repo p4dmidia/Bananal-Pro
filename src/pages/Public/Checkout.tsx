@@ -230,7 +230,7 @@ export default function Checkout() {
           sessionStorage.removeItem("pending_pix_data");
           toast.success("Sua assinatura já está ativa!");
           await refreshProfile();
-          navigate("/dashboard");
+          navigate("/dashboard?payment_confirmed=true");
           return true;
         }
       }
@@ -311,7 +311,7 @@ export default function Checkout() {
           toast.success("Pagamento aprovado com sucesso! Redirecionando...");
           await refreshProfile();
           await fetchProfileAndCheck(user);
-          navigate("/dashboard");
+          navigate("/dashboard?payment_confirmed=true");
         }
       } catch (err) {
         console.error("Erro ao verificar status do pagamento PIX:", err);

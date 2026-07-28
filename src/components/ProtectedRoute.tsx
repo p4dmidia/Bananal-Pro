@@ -12,8 +12,26 @@ export function ProtectedRoute({
   adminOnly?: boolean;
   allowedRoles?: string[];
 }) {
-  const { user, profile, loading, profileLoading } = useAuth();
+  const { user, profile, loading, profileLoading, refreshProfile } = useAuth();
   const location = useLocation();
+
+  // Efeito para recarregar o perfil silenciosamente se veio da confirmação de pagamento
+  React.useEffect(() => {
+    if (user && profile && !profile.is_active && location.search.includes('payment_confirmed')) {
+      console.log("ProtectedRoute: Detectada confirmação de pagamento recente. Limpando caches e recarregando perfil...");
+      
+      // Limpa caches do navegador para evitar dados agronômicos antigos em cache
+      if ('caches' in window) {
+        caches.keys().then(keys => {
+          for (const key of keys) {
+            caches.delete(key);
+          }
+        });
+      }
+      
+      refreshProfile();
+    }
+  }, [user, profile, location.search, refreshProfile]);
 
   // 1. Carregamento inicial do Usuário e Perfil
   if (loading || profileLoading) {
@@ -47,7 +65,8 @@ export function ProtectedRoute({
     const hasPaymentParams = location.search.includes('payment_id') || 
                              location.search.includes('preapproval_id') ||
                              location.search.includes('preference_id') ||
-                             location.search.includes('collection_id');
+                             location.search.includes('collection_id') ||
+                             location.search.includes('payment_confirmed');
 
     if (
       profile?.role !== 'admin' && 

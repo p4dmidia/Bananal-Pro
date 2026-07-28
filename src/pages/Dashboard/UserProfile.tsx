@@ -18,7 +18,8 @@ import {
   Loader2,
   X,
   Camera,
-  Sparkles
+  Sparkles,
+  RefreshCw
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "../../contexts/AuthContext";
@@ -301,6 +302,45 @@ export default function UserProfile() {
     }
   };
 
+  const handleClearBrowserCache = async () => {
+    const toastId = toast.loading("Limpando cache do navegador...");
+    try {
+      // 1. Desregistrar Service Workers
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+        }
+      }
+      
+      // 2. Limpar Cache Storage do navegador
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        for (const key of keys) {
+          await caches.delete(key);
+        }
+      }
+      
+      // 3. Limpar Session Storage (chaves que não sejam do Supabase)
+      sessionStorage.clear();
+      
+      // 4. Atualizar Perfil do Supabase
+      if (typeof refreshProfile === 'function') {
+        await refreshProfile();
+      }
+      
+      toast.success("Cache limpo com sucesso! Sincronizando...", { id: toastId });
+      
+      // 5. Hard Reload após 1 segundo
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (err) {
+      console.error("Erro ao limpar cache:", err);
+      toast.error("Erro ao limpar cache da aplicação.", { id: toastId });
+    }
+  };
+
   const handlePersonalSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile?.id) {
@@ -389,19 +429,32 @@ export default function UserProfile() {
 
     setIsSaving(true);
     try {
+      // Sanitização de entradas decimais (substitui vírgula por ponto)
+      const parseDecimal = (val: string) => {
+        if (!val) return null;
+        const parsed = parseFloat(String(val).replace(',', '.'));
+        return isNaN(parsed) ? null : parsed;
+      };
+
+      const parseIntSafe = (val: string) => {
+        if (!val) return null;
+        const parsed = parseInt(String(val), 10);
+        return isNaN(parsed) ? null : parsed;
+      };
+
       const payload = {
         user_id: profile.id,
         name: areaForm.name.trim(),
         property_name: areaForm.propertyName.trim(),
-        size_hectares: parseFloat(areaForm.sizeHectares) || 0,
+        size_hectares: parseDecimal(areaForm.sizeHectares) || 0,
         city: areaForm.city.trim(),
         state: areaForm.state.trim().toUpperCase(),
         banana_variety: areaForm.bananaVariety,
         cep: areaForm.cep.trim() || null,
         address: areaForm.address.trim() || null,
-        spacing_row_m: areaForm.spacingRowM ? parseFloat(areaForm.spacingRowM) : null,
-        spacing_plant_m: areaForm.spacingPlantM ? parseFloat(areaForm.spacingPlantM) : null,
-        plants_count: areaForm.plantsCount ? parseInt(areaForm.plantsCount, 10) : null,
+        spacing_row_m: parseDecimal(areaForm.spacingRowM),
+        spacing_plant_m: parseDecimal(areaForm.spacingPlantM),
+        plants_count: parseIntSafe(areaForm.plantsCount),
         planting_date: areaForm.plantingDate || null,
         irrigation_type: areaForm.irrigationType || null,
         soil_type: areaForm.soilType || null
@@ -715,7 +768,15 @@ export default function UserProfile() {
                     </div>
                   </div>
 
-                  <div className="flex justify-end pt-4 border-t border-white/5">
+                  <div className="flex justify-between items-center pt-4 border-t border-white/5 flex-wrap gap-4">
+                    <button
+                      type="button"
+                      onClick={handleClearBrowserCache}
+                      className="bg-zinc-800 hover:bg-zinc-700 text-slate-300 hover:text-white px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase transition-all flex items-center gap-2 cursor-pointer border border-white/5"
+                    >
+                      Limpar Cache & Sincronizar
+                      <RefreshCw size={14} />
+                    </button>
                     <button
                       type="submit"
                       disabled={isSaving}
@@ -990,7 +1051,7 @@ export default function UserProfile() {
               initial={{ scale: 0.95, y: 20, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.95, y: 20, opacity: 0 }}
-              className="bg-zinc-950 border border-white/10 rounded-[2.5rem] w-full max-w-lg p-8 relative z-10 overflow-hidden shadow-2xl space-y-6"
+              className="bg-zinc-950 border border-white/10 rounded-[2.5rem] w-full max-w-lg p-6 md:p-8 relative z-10 max-h-[90vh] overflow-y-auto shadow-2xl space-y-6"
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-white font-headline">
@@ -1243,7 +1304,7 @@ export default function UserProfile() {
               initial={{ scale: 0.95, y: 20, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.95, y: 20, opacity: 0 }}
-              className="bg-zinc-950 border border-white/10 rounded-[2.5rem] w-full max-w-md p-8 relative z-10 overflow-hidden shadow-2xl space-y-6 text-center font-sans"
+              className="bg-zinc-950 border border-white/10 rounded-[2.5rem] w-full max-w-md p-6 md:p-8 relative z-10 max-h-[90vh] overflow-y-auto shadow-2xl space-y-6 text-center font-sans"
             >
               <div className="mx-auto w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/25 flex items-center justify-center text-red-500 shadow-md">
                 <AlertTriangle size={24} />
