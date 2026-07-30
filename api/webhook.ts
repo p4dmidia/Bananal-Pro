@@ -26,7 +26,14 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: 'MERCADO_PAGO_ACCESS_TOKEN not configured.' });
   }
 
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.warn('Webhook: A variável SUPABASE_SERVICE_ROLE_KEY não está configurada. RLS no banco de dados pode bloquear a atualização do status do pedido e do usuário.');
+  }
+
   try {
+    const queryTopic = req.query?.topic || req.query?.type;
+    const queryId = req.query?.id;
+
     let body = req.body;
     if (body && Buffer.isBuffer(body)) {
       body = body.toString('utf-8');
@@ -40,9 +47,20 @@ export default async function handler(req: any, res: any) {
       }
     }
 
+    // Se o corpo veio vazio mas temos dados na Query String (IPN), normaliza para o formato padrão do webhook
+    if ((!body || Object.keys(body).length === 0) && queryTopic && queryId) {
+      console.log(`Webhook: Normalizando notificação IPN via Query String. Topic/Type: ${queryTopic}, ID: ${queryId}`);
+      body = {
+        type: queryTopic,
+        topic: queryTopic,
+        resource: `https://api.mercadolibre.com/v1/payments/${queryId}`,
+        data: { id: queryId }
+      };
+    }
+
     if (!body) {
-      console.warn('Webhook: Corpo da requisição vazio.');
-      return res.status(400).json({ error: 'Empty request body' });
+      console.warn('Webhook: Corpo da requisição vazio e sem parâmetros IPN válidos na Query String.');
+      return res.status(400).json({ error: 'Empty request body and no valid query parameters.' });
     }
 
     console.log('Webhook do Mercado Pago recebido:', JSON.stringify(body));

@@ -757,8 +757,13 @@ export default function AdminFinancial() {
 
     const groups: GroupedSubscription[] = [];
     Object.values(emailGroups).forEach(subs => {
-      // Ordena por data decrescente (mais recente primeiro)
-      subs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      // Ordena de modo que a assinatura ativa ('paid') venha sempre na frente/como principal.
+      // Se ambas tiverem o mesmo status, a mais recente vem primeiro.
+      subs.sort((a, b) => {
+        if (a.status === 'paid' && b.status !== 'paid') return -1;
+        if (a.status !== 'paid' && b.status === 'paid') return 1;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
       groups.push({
         main: subs[0],
         attempts: subs.slice(1)

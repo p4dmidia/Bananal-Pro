@@ -15,9 +15,14 @@ export function ProtectedRoute({
   const { user, profile, loading, profileLoading, refreshProfile } = useAuth();
   const location = useLocation();
 
+  const refreshedRef = React.useRef(false);
+
   // Efeito para recarregar o perfil silenciosamente se veio da confirmação de pagamento
   React.useEffect(() => {
     if (user && profile && !profile.is_active && location.search.includes('payment_confirmed')) {
+      if (refreshedRef.current) return;
+      refreshedRef.current = true;
+
       console.log("ProtectedRoute: Detectada confirmação de pagamento recente. Limpando caches e recarregando perfil...");
       
       // Limpa caches do navegador para evitar dados agronômicos antigos em cache
