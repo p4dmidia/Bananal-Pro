@@ -95,7 +95,7 @@ export default function Benefits() {
             transition={{ delay: 0.2 }}
             className="text-zinc-400 text-xl max-w-2xl mx-auto mb-12"
           >
-            O Cartão de Produtor Bananal PRO é a sua chave para economizar na compra de insumos agrícolas, caixas, mudas e serviços essenciais para o manejo do seu bananal.
+            O Cartão de Produtor Banana PRO é a sua chave para economizar na compra de insumos agrícolas, caixas, mudas e serviços essenciais para o manejo do seu bananal.
           </motion.p>
 
           <motion.div
@@ -156,7 +156,7 @@ export default function Benefits() {
                   
                   <div className="flex justify-between items-start relative z-10">
                     <div className="space-y-1">
-                      <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">Produtor Bananal PRO</p>
+                      <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">Produtor Banana PRO</p>
                       <Zap className="text-primary w-8 h-8" />
                     </div>
                     <Globe className="text-zinc-700 w-8 h-8" />
@@ -221,7 +221,7 @@ export default function Benefits() {
             <div className="absolute top-0 left-0 w-full h-full bg-purple-gradient opacity-10 pointer-events-none" />
             <h2 className="text-4xl md:text-5xl font-display font-bold mb-8 relative z-10">Pronto para começar a <br /> economizar de verdade?</h2>
             <p className="text-zinc-400 text-lg mb-12 max-w-xl mx-auto relative z-10">
-              Junte-se ao Bananal PRO hoje e emita seu cartão digital instantaneamente após a ativação da sua conta.
+              Junte-se ao Banana PRO hoje e emita seu cartão digital instantaneamente após a ativação da sua conta.
             </p>
             <button className="bg-primary hover:bg-primary-dark text-white px-12 py-5 rounded-2xl font-black text-xl shadow-2xl shadow-primary/40 transition-all hover:scale-105 active:scale-95 relative z-10">
               Abrir minha conta gratuita

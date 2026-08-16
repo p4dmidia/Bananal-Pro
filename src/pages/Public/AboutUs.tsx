@@ -37,7 +37,7 @@ export default function AboutUs() {
               Unindo tecnologia e campo para <span className="text-gradient">fortalecer a bananicultura.</span>
             </h1>
             <p className="text-zinc-400 text-lg leading-relaxed max-w-xl">
-              O Bananal PRO nasceu para ser o braço direito do produtor de banana. Acreditamos que a tecnologia, a educação continuada e o suporte técnico qualificado podem elevar a produtividade, reduzir custos de insumos e transformar a vida no campo.
+              O Banana PRO nasceu para ser o braço direito do produtor de banana. Acreditamos que a tecnologia, a educação continuada e o suporte técnico qualificado podem elevar a produtividade, reduzir custos de insumos e transformar a vida no campo.
             </p>
           </div>
           
@@ -126,7 +126,7 @@ export default function AboutUs() {
           </div>
           <h2 className="text-4xl md:text-6xl font-display font-bold">Faça parte da nossa <br />comunidade de sucesso.</h2>
           <button className="bg-primary hover:bg-primary-dark text-white px-12 py-5 rounded-2xl font-bold text-lg transition-all shadow-xl shadow-primary/20">
-            Juntar-se ao Bananal PRO
+            Juntar-se ao Banana PRO
           </button>
         </section>
       </div>

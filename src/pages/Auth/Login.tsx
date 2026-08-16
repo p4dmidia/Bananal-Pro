@@ -77,7 +77,7 @@ export default function Login() {
             <div className="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-600/20">
               <Sprout className="text-white w-8 h-8" />
             </div>
-            <span className="text-3xl font-bold tracking-tight text-white">Bananal PRO</span>
+            <span className="text-3xl font-bold tracking-tight text-white">Banana PRO</span>
           </Link>
 
           <div className="space-y-6">
@@ -86,7 +86,7 @@ export default function Login() {
               animate={{ opacity: 1, x: 0 }}
               className="text-5xl font-bold leading-tight text-on-surface"
             >
-              Acesse sua conta no <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-600 font-extrabold">Bananal PRO</span>.
+              Acesse sua conta no <br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-600 font-extrabold">Banana PRO</span>.
             </motion.h1>
             <p className="text-on-surface-variant text-lg leading-relaxed">
               Faça a gestão da sua lavoura, use as calculadoras agrícolas e conecte-se com agrônomos e outros produtores.

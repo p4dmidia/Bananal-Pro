@@ -83,7 +83,7 @@ export default function SalesPage() {
           <div className="absolute inset-0 z-0">
             <img
               src={salesHeroImg}
-              alt="Bananal PRO Background"
+              alt="Banana PRO Background"
               className="w-full h-full object-cover object-right md:object-center brightness-[0.55] lg:brightness-[0.6]"
             />
             {/* Cinematic Gradient Overlays to ensure readability */}
@@ -138,7 +138,7 @@ export default function SalesPage() {
                 Nos próximos minutos, você vai descobrir como produtores estão deixando de depender de informações soltas e passando a administrar suas lavouras com método, acompanhamento técnico e ferramentas práticas para <span className="text-secondary-fixed font-bold">aumentar a produtividade e o lucro</span>.
               </p>
               <p className="font-sans text-base md:text-lg text-zinc-350 leading-relaxed">
-                O Bananal PRO não é apenas mais um curso. É o próximo passo para quem quer <span className="text-secondary-fixed font-bold">produzir melhor, gastar menos e tomar decisões com mais segurança</span>.
+                O Banana PRO não é apenas mais um curso. É o próximo passo para quem quer <span className="text-secondary-fixed font-bold">produzir melhor, gastar menos e tomar decisões com mais segurança</span>.
               </p>
             </div>
 
@@ -436,7 +436,7 @@ export default function SalesPage() {
               {/* Part 1: Foi para isso que criamos... */}
               <div className="space-y-4">
                 <h3 className="font-headline text-2xl md:text-3xl font-black text-white leading-tight">
-                  Foi para isso que criamos o <span className="text-secondary-fixed font-black">Bananal PRO</span>.
+                  Foi para isso que criamos o <span className="text-secondary-fixed font-black">Banana PRO</span>.
                 </h3>
                 <p className="text-lg md:text-xl text-zinc-300 font-sans leading-relaxed">
                   O primeiro ecossistema completo que une tecnologia de gestão agrícola, treinamentos práticos de manejo e acompanhamento técnico direto com engenheiros agrônomos na palma da sua mão.
@@ -470,7 +470,7 @@ export default function SalesPage() {
             <div className="space-y-8 pt-8 border-t border-outline-variant/10">
               <div className="space-y-2">
                 <h2 className="font-headline text-2xl md:text-3xl font-black text-white">
-                  O Método Bananal PRO
+                  O Método Banana PRO
                 </h2>
               </div>
 
@@ -678,7 +678,7 @@ export default function SalesPage() {
                 OFERTA FUNDADOR
               </h2>
               <p className="text-zinc-650 font-sans text-base md:text-lg leading-relaxed max-w-xl mx-auto">
-                Estamos abrindo as portas do Bananal PRO para os primeiros membros da comunidade. Esta condição especial não será disponibilizada novamente.
+                Estamos abrindo as portas do Banana PRO para os primeiros membros da comunidade. Esta condição especial não será disponibilizada novamente.
               </p>
             </div>
 
@@ -830,14 +830,14 @@ export default function SalesPage() {
           </div>
 
           <div className="space-y-4">
-            <span className="text-secondary-fixed font-bold uppercase tracking-widest text-xs font-inter block">Compromisso Bananal PRO</span>
+            <span className="text-secondary-fixed font-bold uppercase tracking-widest text-xs font-inter block">Compromisso Banana PRO</span>
             <h2 className="font-headline text-3xl md:text-4xl font-extrabold tracking-tight text-white">
               Sua Satisfação Garantida ou Seu Dinheiro de Volta
             </h2>
           </div>
 
           <p className="text-zinc-300 font-sans text-sm md:text-base leading-relaxed max-w-2xl mx-auto text-balance">
-            Você entra hoje. Explora toda a plataforma. Participa da comunidade. Assiste aos treinamentos. E se concluir que o Bananal PRO não entrega valor para sua propriedade, basta solicitar o cancelamento dentro do prazo de garantia de 7 dias. Risco zero.
+            Você entra hoje. Explora toda a plataforma. Participa da comunidade. Assiste aos treinamentos. E se concluir que o Banana PRO não entrega valor para sua propriedade, basta solicitar o cancelamento dentro do prazo de garantia de 7 dias. Risco zero.
           </p>
         </section>
 
@@ -850,7 +850,7 @@ export default function SalesPage() {
             </h2>
 
             <p className="text-sm md:text-base text-zinc-400 max-w-2xl mx-auto leading-relaxed text-balance">
-              Você pode continuar fazendo tudo da mesma forma e obtendo os mesmos resultados. Ou pode entrar para o Bananal PRO e fazer parte dos produtores que estão construindo uma nova forma de gerir a bananicultura.
+              Você pode continuar fazendo tudo da mesma forma e obtendo os mesmos resultados. Ou pode entrar para o Banana PRO e fazer parte dos produtores que estão construindo uma nova forma de gerir a bananicultura.
             </p>
 
             <div className="pt-4">

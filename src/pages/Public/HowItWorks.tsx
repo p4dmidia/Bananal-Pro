@@ -48,7 +48,7 @@ export default function HowItWorks() {
             animate={{ opacity: 1, y: 0 }}
             className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest text-primary"
           >
-            <Zap size={14} fill="currentColor" /> Ecossistema Bananal PRO
+            <Zap size={14} fill="currentColor" /> Ecossistema Banana PRO
           </motion.div>
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
@@ -64,7 +64,7 @@ export default function HowItWorks() {
             transition={{ delay: 0.2 }}
             className="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed"
           >
-            O Bananal PRO une gestão técnica, monitoramento de solo, previsão climática e educação especializada em um único lugar.
+            O Banana PRO une gestão técnica, monitoramento de solo, previsão climática e educação especializada em um único lugar.
           </motion.p>
         </section>
 
@@ -131,7 +131,7 @@ export default function HowItWorks() {
         <section className="max-w-7xl mx-auto px-6">
           <div className="text-center space-y-4 mb-20">
             <h2 className="text-4xl font-display font-bold">Ciclo de Produtividade</h2>
-            <p className="text-zinc-500">O caminho para o sucesso no Bananal PRO é simples e focado no campo.</p>
+            <p className="text-zinc-505">O caminho para o sucesso no Banana PRO é simples e focado no campo.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {steps.map((step, i) => (
@@ -162,7 +162,7 @@ export default function HowItWorks() {
               <div className="space-y-8">
                 <h2 className="text-4xl font-display font-bold">Economize na compra <br />de <span className="text-accent">Insumos Agrícolas</span></h2>
                 <p className="text-zinc-300 text-lg leading-relaxed">
-                  Ao fazer parte do Bananal PRO, você ganha acesso a convênios de descontos em fertilizantes, mudas certificadas, defensivos e caixas de papelão em distribuidores parceiros.
+                  Ao fazer parte do Banana PRO, você ganha acesso a convênios de descontos em fertilizantes, mudas certificadas, defensivos e caixas de papelão em distribuidores parceiros.
                 </p>
                 <div className="flex items-center gap-4 text-white font-bold">
                   <div className="flex -space-x-4">
@@ -189,7 +189,7 @@ export default function HowItWorks() {
                     <CreditCard className="text-zinc-500" />
                   </div>
                   <div className="space-y-2">
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-[0.3em] font-black">Cartão de Produtor Bananal PRO</p>
+                    <p className="text-[10px] text-zinc-550 uppercase tracking-[0.3em] font-black">Cartão de Produtor Banana PRO</p>
                     <p className="text-xl font-display font-bold tracking-widest text-white">PROD • 8842 • 9102 • 001</p>
                   </div>
                   <div className="mt-8 flex justify-between items-end">

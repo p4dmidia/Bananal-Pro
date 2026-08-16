@@ -148,7 +148,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-white">E-mail Comercial</h4>
-                      <p className="text-on-surface-variant text-xs">contato@bananalpro.com.br</p>
+                      <p className="text-on-surface-variant text-xs">contato@bananapro.com.br</p>
                     </div>
                   </div>
 

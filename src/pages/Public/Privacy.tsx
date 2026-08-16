@@ -8,7 +8,7 @@ export default function Privacy() {
     {
       icon: <ShieldCheck className="text-secondary-fixed w-5 h-5" />,
       title: "1. Introdução e Compromisso LGPD",
-      content: "O Bananal PRO está totalmente comprometido com a privacidade, segurança e proteção de dados de nossos usuários, em estrita conformidade com a Lei Geral de Proteção de Dados Pessoais (LGPD - Lei nº 13.709/2018). Como plataforma SaaS voltada para a bananicultura, entendemos que os dados de sua lavoura, relatórios de solo e informações financeiras constituem segredos comerciais e ativos cruciais do produtor rural. Esta política explica de forma clara e transparente como coletamos, armazenamos, tratamos e protegemos esses dados."
+      content: "O Banana PRO está totalmente comprometido com a privacidade, segurança e proteção de dados de nossos usuários, em estrita conformidade com a Lei Geral de Proteção de Dados Pessoais (LGPD - Lei nº 13.709/2018). Como plataforma SaaS voltada para a bananicultura, entendemos que os dados de sua lavoura, relatórios de solo e informações financeiras constituem segredos comerciais e ativos cruciais do produtor rural. Esta política explica de forma clara e transparente como coletamos, armazenamos, tratamos e protegemos esses dados."
     },
     {
       icon: <Database className="text-secondary-fixed w-5 h-5" />,
@@ -28,12 +28,12 @@ export default function Privacy() {
     {
       icon: <FileText className="text-secondary-fixed w-5 h-5" />,
       title: "5. Segurança e Armazenamento",
-      content: "Todos os dados transmitidos para o Bananal PRO são criptografados em trânsito usando protocolos de segurança HTTPS/SSL e armazenados em servidores de nuvem de alta segurança (Supabase/PostgreSQL) com backups automatizados periódicos. Implementamos rigorosos controles de acesso interno, garantindo que apenas usuários autenticados possam visualizar as informações de suas respectivas propriedades rurais."
+      content: "Todos os dados transmitidos para o Banana PRO são criptografados em trânsito usando protocolos de segurança HTTPS/SSL e armazenados em servidores de nuvem de alta segurança (Supabase/PostgreSQL) com backups automatizados periódicos. Implementamos rigorosos controles de acesso interno, garantindo que apenas usuários autenticados possam visualizar as informações de suas respectivas propriedades rurais."
     },
     {
       icon: <HelpCircle className="text-secondary-fixed w-5 h-5" />,
       title: "6. Seus Direitos como Titular",
-      content: "Conforme assegurado pela LGPD, você possui direito a: (i) Confirmar a existência de tratamento de dados; (ii) Acessar a totalidade dos dados operacionais e pessoais armazenados; (iii) Solicitar a correção de dados incompletos ou inexatos; (iv) Solicitar a exclusão definitiva de seus dados de nossa base ao encerrar a assinatura da plataforma. Para exercer quaisquer destes direitos, basta entrar em contato direto pelo e-mail contato@bananalpro.com.br."
+      content: "Conforme assegurado pela LGPD, você possui direito a: (i) Confirmar a existência de tratamento de dados; (ii) Acessar a totalidade dos dados operacionais e pessoais armazenados; (iii) Solicitar a correção de dados incompletos ou inexatos; (iv) Solicitar a exclusão definitiva de seus dados de nossa base ao encerrar a assinatura da plataforma. Para exercer quaisquer destes direitos, basta entrar em contato direto pelo e-mail contato@bananapro.com.br."
     }
   ];
 
@@ -103,15 +103,15 @@ export default function Privacy() {
             viewport={{ once: true }}
             className="p-8 rounded-[2rem] bg-gradient-to-br from-secondary-container/10 to-[#012214]/30 border border-white/10 text-center space-y-4"
           >
-            <h3 className="text-white font-bold text-sm">Dúvidas sobre a LGPD no Bananal PRO?</h3>
+            <h3 className="text-white font-bold text-sm">Dúvidas sobre a LGPD no Banana PRO?</h3>
             <p className="text-on-surface-variant text-xs max-w-xl mx-auto leading-relaxed">
               Dispomos de um Encarregado de Proteção de Dados (DPO) pronto para responder suas dúvidas sobre segurança digital no campo. Envie um e-mail com suas considerações.
             </p>
             <a 
-              href="mailto:contato@bananalpro.com.br"
+              href="mailto:contato@bananapro.com.br"
               className="inline-block text-secondary-fixed hover:underline text-xs font-bold"
             >
-              contato@bananalpro.com.br
+              contato@bananapro.com.br
             </a>
           </motion.div>
         </div>

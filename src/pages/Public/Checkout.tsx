@@ -333,7 +333,7 @@ export default function Checkout() {
         payment_method_id: selectedMethod,
         payer_email: profile?.email || user?.email || "",
         first_name: profile?.full_name?.split(" ")[0] || "Produtor",
-        last_name: profile?.full_name?.split(" ").slice(1).join(" ") || "Bananal",
+        last_name: profile?.full_name?.split(" ").slice(1).join(" ") || "Banana",
         cpf: selectedMethod === 'pix' ? cpf.replace(/\D/g, '') : undefined
       };
 
@@ -452,7 +452,7 @@ if (loading) {
               <div className="w-full relative bg-zinc-950/40">
                 <img 
                   src="/images/checkout-banner.png" 
-                  alt="Bananal PRO Checkout" 
+                  alt="Banana PRO Checkout" 
                   className="w-full h-auto block"
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
@@ -467,7 +467,7 @@ if (loading) {
                     Acesso Imediato
                   </span>
                   <h2 className="text-xl font-inter-extrabold text-white leading-tight uppercase mt-1.5">
-                    Adquirir Treinamento Bananal PRO
+                    Adquirir Treinamento Banana PRO
                   </h2>
                   <p className="text-xs text-zinc-300 max-w-md">
                     Seu cadastro foi realizado com sucesso! Conclua sua aquisição abaixo para liberar o acesso instantâneo.
@@ -770,7 +770,7 @@ if (loading) {
                 <div className="relative z-10 animate-float">
                   <img 
                     src="/images/product-box.png" 
-                    alt="Mockup Bananal PRO" 
+                    alt="Mockup Banana PRO" 
                     className="w-full h-auto object-contain max-h-[260px] mx-auto"
                     onError={(e) => {
                       e.currentTarget.style.display = "none";
@@ -785,7 +785,7 @@ if (loading) {
                       <Sprout size={28} />
                     </div>
                     <div>
-                      <h3 className="text-xs font-inter-extrabold text-[#021B13] uppercase tracking-tight">Comunidade Bananal PRO</h3>
+                      <h3 className="text-xs font-inter-extrabold text-[#021B13] uppercase tracking-tight">Comunidade Banana PRO</h3>
                       <span className="text-[8px] text-zinc-500 font-inter-extrabold uppercase tracking-widest block mt-1">Plataforma Premium</span>
                     </div>
                   </div>
@@ -801,7 +801,7 @@ if (loading) {
                   <Users size={16} />
                 </div>
                 <p className="text-xs text-slate-600 font-inter-medium">
-                  Mais de <strong className="text-[#021B13] font-inter-extrabold">1.500 produtores</strong> já fazem parte da comunidade <strong className="text-[#021B13]">Bananal PRO</strong>.
+                  Mais de <strong className="text-[#021B13] font-inter-extrabold">1.500 produtores</strong> já fazem parte da comunidade <strong className="text-[#021B13]">Banana PRO</strong>.
                 </p>
               </div>
 

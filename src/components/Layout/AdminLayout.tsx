@@ -53,7 +53,7 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
   const userTitle = profile?.role === 'admin' 
     ? 'Administrador Master' 
     : profile?.role === 'partner' 
-    ? 'Sócio Bananal PRO' 
+    ? 'Sócio Banana PRO' 
     : 'Prestador PJ';
 
   return (
@@ -74,7 +74,7 @@ const AdminSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
         <div className="py-6 px-6 flex items-center justify-between relative border-b border-emerald-950/30">
           <div className="relative">
             <Link to="/admin" className="flex items-center justify-center w-44 h-12 group hover:scale-[1.02] transition-transform">
-              <img src={logoTransparentImg} alt="Bananal PRO" className="h-full w-full object-contain" />
+              <img src={logoTransparentImg} alt="Banana PRO" className="h-full w-full object-contain" />
             </Link>
             <span className="absolute -top-2 -right-4 bg-emerald-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-md">Painel</span>
           </div>

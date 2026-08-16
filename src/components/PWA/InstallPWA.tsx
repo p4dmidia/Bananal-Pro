@@ -57,13 +57,13 @@ export default function InstallPWA() {
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full p-[3px] bg-gradient-to-tr from-emerald-500 to-yellow-500 overflow-hidden shrink-0">
                 <img
-                  alt="Bananal PRO logo"
+                  alt="Banana PRO logo"
                   className="w-full h-full rounded-full object-cover bg-white"
                   src="/favicon.png"
                 />
               </div>
               <div>
-                <h3 className="text-white font-bold text-lg leading-tight">Instalar Bananal PRO</h3>
+                <h3 className="text-white font-bold text-lg leading-tight">Instalar Banana PRO</h3>
                 <p className="text-slate-400 text-sm">Tenha acesso rápido à plataforma direto na sua tela inicial.</p>
               </div>
             </div>

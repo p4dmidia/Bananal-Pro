@@ -113,7 +113,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         {/* Header com Logotipo Transparente Anexado */}
         <div className="py-6 px-6 flex items-center justify-between relative border-b border-emerald-950/30">
           <Link to="/dashboard" className="flex items-center justify-center w-44 h-12 group hover:scale-[1.02] transition-transform">
-            <img src={logoTransparentImg} alt="Bananal PRO" className="h-full w-full object-contain" />
+            <img src={logoTransparentImg} alt="Banana PRO" className="h-full w-full object-contain" />
           </Link>
           <button onClick={onClose} className="lg:hidden text-white/80 hover:text-white cursor-pointer p-1">
             <LogOut className="w-5 h-5 rotate-180" />

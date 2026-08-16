@@ -8,27 +8,27 @@ export default function Terms() {
     {
       icon: <Scale className="text-secondary-fixed w-5 h-5" />,
       title: "1. Aceite dos Termos",
-      content: "Ao acessar, cadastrar-se ou utilizar a plataforma SaaS Bananal PRO (disponível via PWA/Web), você declara aceitar integralmente e sem reservas estes Termos de Uso. Caso discorde de qualquer cláusula ou regra disposta neste documento, recomendamos que não conclua o seu cadastro e interrompa a utilização da plataforma imediatamente."
+      content: "Ao acessar, cadastrar-se ou utilizar a plataforma SaaS Banana PRO (disponível via PWA/Web), você declara aceitar integralmente e sem reservas estes Termos de Uso. Caso discorde de qualquer cláusula ou regra disposta neste documento, recomendamos que não conclua o seu cadastro e interrompa a utilização da plataforma imediatamente."
     },
     {
       icon: <Award className="text-secondary-fixed w-5 h-5" />,
       title: "2. Licença de Uso do SaaS",
-      content: "O Bananal PRO concede ao usuário uma licença de uso individual, revogável, intransferível e não exclusiva da plataforma SaaS. Esta licença é fornecida sob a modalidade de assinatura mensal ou anual e destina-se estritamente à gestão de suas propriedades agrícolas pessoais ou familiares. É expressamente vedado: (i) copiar, modificar, distribuir, vender ou alugar qualquer parte do software; (ii) fazer engenharia reversa; (iii) usar robôs de mineração de dados ou compartilhar suas credenciais de login com terceiros."
+      content: "O Banana PRO concede ao usuário uma licença de uso individual, revogável, intransferível e não exclusiva da plataforma SaaS. Esta licença é fornecida sob a modalidade de assinatura mensal ou anual e destina-se estritamente à gestão de suas propriedades agrícolas pessoais ou familiares. É expressamente vedado: (i) copiar, modificar, distribuir, vender ou alugar qualquer parte do software; (ii) fazer engenharia reversa; (iii) usar robôs de mineração de dados ou compartilhar suas credenciais de login com terceiros."
     },
     {
       icon: <ShieldAlert className="text-secondary-fixed w-5 h-5" />,
       title: "3. Limitação de Responsabilidade Agronômica",
-      content: "As calculadoras do Bananal PRO (incluindo Calagem, Interpretação de Química de Solo e Alertas Climáticos de Sigatoka) operam com base em tabelas literárias agrícolas validadas e algoritmos agronômicos padrão. Estas ferramentas servem como orientações operacionais de suporte ao manejo rural. Elas NÃO substituem a consulta, o diagnóstico de campo presencial e a assinatura de uma Anotação de Responsabilidade Técnica (ART) por um Engenheiro Agrônomo habilitado, exigida legalmente para a compra e prescrição de defensivos e determinados corretivos de solo. A aplicação prática das dosagens sugeridas é de responsabilidade exclusiva do produtor rural."
+      content: "As calculadoras do Banana PRO (incluindo Calagem, Interpretação de Química de Solo e Alertas Climáticos de Sigatoka) operam com base em tabelas literárias agrícolas validadas e algoritmos agronômicos padrão. Estas ferramentas servem como orientações operacionais de suporte ao manejo rural. Elas NÃO substituem a consulta, o diagnóstico de campo presencial e a assinatura de uma Anotação de Responsabilidade Técnica (ART) por um Engenheiro Agrônomo habilitado, exigida legalmente para a compra e prescrição de defensivos e determinados corretivos de solo. A aplicação prática das dosagens sugeridas é de responsabilidade exclusiva do produtor rural."
     },
     {
       icon: <CreditCard className="text-secondary-fixed w-5 h-5" />,
       title: "4. Planos, Assinatura e Cancelamento",
-      content: "O acesso completo às ferramentas operacionais do Bananal PRO é condicionado à manutenção de uma assinatura ativa. Oferecemos dois planos básicos: (i) Plano Mensal por R$ 97,00/mês, com cobrança recorrente automática; (ii) Plano Anual por R$ 799,00/ano, parcelado em até 12x no cartão de crédito. O cancelamento da assinatura pode ser solicitado a qualquer momento pelo painel do usuário e interromperá as renovações automáticas futuras, mantendo o acesso liberado até o final do ciclo já pago."
+      content: "O acesso completo às ferramentas operacionais do Banana PRO é condicionado à manutenção de uma assinatura ativa. Oferecemos dois planos básicos: (i) Plano Mensal por R$ 97,00/mês, com cobrança recorrente automática; (ii) Plano Anual por R$ 799,00/ano, parcelado em até 12x no cartão de crédito. O cancelamento da assinatura pode ser solicitado a qualquer momento pelo painel do usuário e interromperá as renovações automáticas futuras, mantendo o acesso liberado até o final do ciclo já pago."
     },
     {
       icon: <FileSpreadsheet className="text-secondary-fixed w-5 h-5" />,
       title: "5. Uso do Fórum e Comunidade",
-      content: "O fórum da Comunidade Bananal PRO destina-se à troca saudável de experiências agrícolas, preços de cotação de banana e boas práticas de manejo no campo. O usuário compromete-se a não publicar conteúdos ofensivos, preconceituosos, difamatórios, propagandas políticas ou anúncios comerciais não autorizados de insumos. O Bananal PRO reserva-se o direito de moderar, ocultar comentários e suspender contas que violarem recorrentemente as diretrizes da comunidade."
+      content: "O fórum da Comunidade Banana PRO destina-se à troca saudável de experiências agrícolas, preços de cotação de banana e boas práticas de manejo no campo. O usuário compromete-se a não publicar conteúdos ofensivos, preconceituosos, difamatórios, propagandas políticas ou anúncios comerciais não autorizados de insumos. O Banana PRO reserva-se o direito de moderar, ocultar comentários e suspender contas que violarem recorrentemente as diretrizes da comunidade."
     },
     {
       icon: <AlertTriangle className="text-secondary-fixed w-5 h-5" />,
@@ -107,7 +107,7 @@ export default function Terms() {
             <div className="space-y-2">
               <h3 className="text-white font-bold text-sm">AVISO IMPORTANTE AOS PRODUTORES</h3>
               <p className="text-on-surface-variant text-xs leading-relaxed">
-                As dosagens e laudos de adubação e calagem calculados pela plataforma são estimativas teóricas aproximadas. O Bananal PRO não se responsabiliza por prejuízos na safra decorrentes de aplicações incorretas, falta de acompanhamento presencial do engenheiro agrônomo ou variações climáticas atípicas.
+                As dosagens e laudos de adubação e calagem calculados pela plataforma são estimativas teóricas aproximadas. O Banana PRO não se responsabiliza por prejuízos na safra decorrentes de aplicações incorretas, falta de acompanhamento presencial do engenheiro agrônomo ou variações climáticas atípicas.
               </p>
             </div>
           </motion.div>

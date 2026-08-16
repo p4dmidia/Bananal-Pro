@@ -28,50 +28,50 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       {/* TopNavBar */}
       <nav
         id="main-nav"
-        className="fixed top-0 w-full z-50 transition-all duration-300 h-20 sm:h-24 flex items-center bg-white shadow-sm border-b border-zinc-200/80"
+        className="fixed top-0 w-full z-50 transition-all duration-300 h-20 sm:h-24 flex items-center bg-[#00170F]/95 backdrop-blur-md border-b border-emerald-950/60 shadow-lg"
       >
         <div className="flex justify-between items-center w-full px-6 md:px-10 max-w-7xl mx-auto">
           <Link to="/" className="flex items-center gap-3">
             <img
-              alt="Bananal PRO Logo"
+              alt="Banana PRO Logo"
               className="h-[44px] sm:h-[60px] w-auto object-contain"
               src={logoImg}
             />
           </Link>
 
-          {/* Desktop Links (Dark text for white header) */}
+          {/* Desktop Links (Light text for premium dark header) */}
           <div className="hidden md:flex items-center gap-8">
             <Link
               to="/"
-              className="text-secondary border-b-2 border-secondary pb-1 text-xs font-semibold tracking-wider uppercase font-inter"
+              className="text-tertiary-fixed border-b-2 border-tertiary-fixed pb-1 text-xs font-semibold tracking-wider uppercase font-inter"
             >
               Home
             </Link>
             <a
               href="#ferramentas"
               onClick={(e) => handleNavClick(e, "#ferramentas")}
-              className="text-zinc-600 hover:text-primary transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
+              className="text-zinc-300 hover:text-tertiary-fixed transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
             >
               Soluções
             </a>
             <a
               href="#comunidade"
               onClick={(e) => handleNavClick(e, "#comunidade")}
-              className="text-zinc-600 hover:text-primary transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
+              className="text-zinc-300 hover:text-tertiary-fixed transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
             >
               Especialistas
             </a>
             <a
               href="#planos"
               onClick={(e) => handleNavClick(e, "#planos")}
-              className="text-zinc-600 hover:text-primary transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
+              className="text-zinc-300 hover:text-tertiary-fixed transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
             >
               Planos
             </a>
             <a
               href="#faq"
               onClick={(e) => handleNavClick(e, "#faq")}
-              className="text-zinc-600 hover:text-primary transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
+              className="text-zinc-300 hover:text-tertiary-fixed transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
             >
               FAQ
             </a>
@@ -80,20 +80,20 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           <div className="flex items-center gap-4">
             <Link
               to="/auth/login"
-              className="hidden md:block text-zinc-600 hover:text-primary transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
+              className="hidden md:block text-zinc-300 hover:text-tertiary-fixed transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
             >
               Login
             </Link>
             <Link
               to="/auth/register"
-              className="hidden sm:block bg-primary text-on-primary px-6 py-2.5 rounded-lg text-xs font-semibold tracking-wider uppercase font-inter active:scale-95 duration-200 transition-all hover:bg-secondary text-center"
+              className="hidden sm:block bg-secondary text-white border border-emerald-500/30 px-6 py-2.5 rounded-lg text-xs font-semibold tracking-wider uppercase font-inter active:scale-95 duration-200 transition-all hover:bg-secondary-fixed text-center"
             >
               Entrar para o Clube
             </Link>
 
             {/* Mobile menu toggle */}
             <button
-              className="md:hidden p-2 text-zinc-600"
+              className="md:hidden p-2 text-zinc-300 hover:text-tertiary-fixed"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -109,13 +109,13 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 z-40 bg-white pt-24 pb-8 px-6 md:hidden flex flex-col gap-6 overflow-y-auto"
+            className="fixed inset-0 z-40 bg-[#00170F] pt-24 pb-8 px-6 md:hidden flex flex-col gap-6 overflow-y-auto"
           >
             <div className="flex flex-col gap-6 py-4">
               <Link
                 to="/"
                 onClick={() => setIsMenuOpen(false)}
-                className="text-xl font-bold font-headline text-primary"
+                className="text-xl font-bold font-headline text-tertiary-fixed"
               >
                 Home
               </Link>
@@ -125,7 +125,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                   setIsMenuOpen(false);
                   handleNavClick(e, "#ferramentas");
                 }}
-                className="text-xl font-bold font-headline text-zinc-800"
+                className="text-xl font-bold font-headline text-zinc-300 hover:text-tertiary-fixed"
               >
                 Soluções
               </a>
@@ -135,7 +135,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                   setIsMenuOpen(false);
                   handleNavClick(e, "#comunidade");
                 }}
-                className="text-xl font-bold font-headline text-zinc-800"
+                className="text-xl font-bold font-headline text-zinc-300 hover:text-tertiary-fixed"
               >
                 Especialistas
               </a>
@@ -145,7 +145,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                   setIsMenuOpen(false);
                   handleNavClick(e, "#planos");
                 }}
-                className="text-xl font-bold font-headline text-zinc-800"
+                className="text-xl font-bold font-headline text-zinc-300 hover:text-tertiary-fixed"
               >
                 Planos
               </a>
@@ -155,22 +155,22 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                   setIsMenuOpen(false);
                   handleNavClick(e, "#faq");
                 }}
-                className="text-xl font-bold font-headline text-zinc-800"
+                className="text-xl font-bold font-headline text-zinc-300 hover:text-tertiary-fixed"
               >
                 FAQ
               </a>
-              <div className="h-px bg-zinc-200 my-2" />
+              <div className="h-px bg-emerald-950 my-2" />
               <Link
                 to="/auth/login"
                 onClick={() => setIsMenuOpen(false)}
-                className="text-lg font-semibold text-zinc-600"
+                className="text-lg font-semibold text-zinc-400 hover:text-tertiary-fixed"
               >
                 Login
               </Link>
               <Link
                 to="/auth/register"
                 onClick={() => setIsMenuOpen(false)}
-                className="bg-primary text-on-primary py-4 rounded-xl text-center font-bold text-sm tracking-wider uppercase font-inter"
+                className="bg-secondary text-white py-4 rounded-xl text-center font-bold text-sm tracking-wider uppercase font-inter hover:bg-secondary-fixed"
               >
                 Entrar para o Clube
               </Link>
@@ -191,11 +191,11 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             <div className="flex items-center gap-3">
               <img
                 alt="Logo"
-                className="h-8 w-auto"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6_pk1kW-eDecPhxDsRIHPt2LlxBMrjgw_9cp0rKZ0MgLAlK-EkH6qENcBG78Iuj2le5mfPRFwvmC8o9o7p-DcsVcrdalMm1sFyXxIYEbEqQt2mGVlRI-N8lONF1N2MveE4rUiLr2XHjyvOgxZK2i3Ow1vpERo_ivZAcbVzjMMpyIu9IVaHD6JzODGsxWEKSjAKBRj-Un5KaLzdOWDxXV6srT8Q-BQLAgtzu6J-Ou5mn2KkPhBm03MLqw-IxYWJQs6F58XfJ5z7A"
+                className="h-10 w-auto"
+                src={logoImg}
               />
               <span className="text-lg font-headline font-bold text-primary">
-                Bananal PRO
+                Banana PRO
               </span>
             </div>
             <p className="text-xs font-sans text-on-surface-variant leading-relaxed">
@@ -294,7 +294,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
         <div className="mt-12 pt-8 border-t border-outline-variant/10 text-center">
           <p className="text-xs text-on-surface-variant font-sans">
-            © 2026 Bananal PRO. Tecnologia de elite para o campo.
+            © 2026 Banana PRO. Tecnologia de elite para o campo.
           </p>
         </div>
       </footer>

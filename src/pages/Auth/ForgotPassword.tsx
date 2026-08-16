@@ -46,7 +46,7 @@ export default function ForgotPassword() {
           <div className="text-center space-y-4">
             <Link to="/" className="inline-flex items-center gap-2 mb-4">
               <Sprout className="text-primary w-8 h-8" />
-              <span className="text-2xl font-display font-bold text-on-surface">Bananal PRO</span>
+              <span className="text-2xl font-display font-bold text-on-surface">Banana PRO</span>
             </Link>
             
             <AnimatePresence mode="wait">
@@ -153,7 +153,7 @@ export default function ForgotPassword() {
         </div>
 
         <p className="mt-12 text-center text-on-surface-variant text-xs font-medium uppercase tracking-widest leading-loose">
-          Bananal PRO System <br /> Secure Authentication Layer
+          Banana PRO System <br /> Secure Authentication Layer
         </p>
       </motion.div>
     </div>

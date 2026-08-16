@@ -389,7 +389,7 @@ export default function SoilAnalysis() {
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(18);
-      doc.text("BANANAL PRO - RELATORIO TECNICO", 14, 18);
+      doc.text("BANANA PRO - RELATORIO TECNICO", 14, 18);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       doc.text("Interpretacao Quimica de Solo e Recomendacao de Calagem", 14, 26);
@@ -545,7 +545,7 @@ export default function SoilAnalysis() {
       doc.setTextColor(107, 114, 128); // #6b7280
       doc.text("Este relatorio contem recomendacoes orientativas baseadas nos valores inseridos pelo usuario.", 14, currentY);
       doc.text("Recomendamos a consulta a um Engenheiro Agronomo para prescricao do receituario agronomico.", 14, currentY + 4);
-      doc.text("Plataforma Bananal Pro - Tecnologias e Solucoes para a Bananicultura de Precisao.", 14, currentY + 8);
+      doc.text("Plataforma Banana PRO - Tecnologias e Solucoes para a Bananicultura de Precisao.", 14, currentY + 8);
 
       // Save document
       doc.save(`laudo_calagem_${gleba.toLowerCase().replace(/[^a-z0-9]/g, "_")}.pdf`);

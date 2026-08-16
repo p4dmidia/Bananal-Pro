@@ -49,7 +49,7 @@ const fallbackResources: LibraryResource[] = [
     category: "gestao",
     type: "xlsx",
     size: "1.2 MB",
-    author: "Bananal PRO Consultoria",
+    author: "Banana PRO Consultoria",
     year: "2026",
     file_url: "https://example.com/materials/gestao_financeira.xlsx"
   },
@@ -60,7 +60,7 @@ const fallbackResources: LibraryResource[] = [
     category: "nutricao",
     type: "pdf",
     size: "2.5 MB",
-    author: "Dr. Carlos Silva (Bananal PRO)",
+    author: "Dr. Carlos Silva (Banana PRO)",
     year: "2025",
     file_url: "https://example.com/materials/adubacao_calagem.pdf"
   },
@@ -93,7 +93,7 @@ const fallbackResources: LibraryResource[] = [
     category: "nutricao",
     type: "pdf",
     size: "950 KB",
-    author: "Dr. Carlos Silva (Bananal PRO)",
+    author: "Dr. Carlos Silva (Banana PRO)",
     year: "2025",
     file_url: "https://example.com/materials/calculadora_calagem.pdf"
   }
