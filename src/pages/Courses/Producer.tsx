@@ -882,7 +882,7 @@ export default function ProducerDashboard() {
                           <Type className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-primary transition-colors" size={20} />
                           <input 
                             type="text" 
-                            placeholder="Ex: Formação Expert Bananal PRO"
+                            placeholder="Ex: Formação Expert Banana PRO"
                             value={newCourse.title}
                             onChange={(e) => setNewCourse({...newCourse, title: e.target.value})}
                             className="w-full bg-zinc-900/50 border border-white/10 rounded-2xl pl-14 pr-5 py-5 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 font-bold" 

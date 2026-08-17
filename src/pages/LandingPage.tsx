@@ -660,32 +660,7 @@ export default function LandingPage() {
           </div>
 
           {/* Comparison of Value Table */}
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-16">
-            {/* Consultoria Tradicional */}
-            <div className="bg-[#021c12]/40 border border-emerald-950 p-8 rounded-[2.5rem] text-left space-y-4">
-              <h3 className="text-xl font-headline font-bold text-zinc-400 flex items-center gap-2">
-                Consultoria Tradicional
-              </h3>
-              <div className="text-2xl font-headline font-extrabold text-red-500">
-                R$ 2.000 a R$ 2.500
-                <span className="text-xs font-sans text-zinc-500 font-normal"> /visita</span>
-              </div>
-              <ul className="space-y-3.5 text-zinc-450 font-sans text-xs">
-                <li className="flex items-center gap-2">
-                  <span className="text-red-500 shrink-0 font-bold">✓</span>
-                  <span>Uma única visita presencial</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-red-500 shrink-0 font-bold">✓</span>
-                  <span>Diagnóstico pontual e isolado</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-red-500 shrink-0 font-bold">✓</span>
-                  <span>Exigência de novo pagamento para retornos e dúvidas</span>
-                </li>
-              </ul>
-            </div>
-
+          <div className="max-w-2xl mx-auto mb-16">
             {/* Banana PRO */}
             <div className="bg-[#021c12]/80 border border-tertiary-fixed/30 p-8 rounded-[2.5rem] text-left space-y-4 border-glow">
               <h3 className="text-xl font-headline font-bold text-tertiary-fixed flex items-center gap-2">

@@ -180,7 +180,7 @@ export default function Overview() {
           <div className="space-y-2">
             <h2 className="text-xl font-bold text-white font-display tracking-tight">Confirmando sua assinatura...</h2>
             <p className="text-sm text-slate-400">
-              Estamos validando o pagamento com o Mercado Pago para liberar o seu acesso ao painel do Bananal PRO. Isso pode levar alguns segundos.
+              Estamos validando o pagamento com o Mercado Pago para liberar o seu acesso ao painel do Banana PRO. Isso pode levar alguns segundos.
             </p>
           </div>
           

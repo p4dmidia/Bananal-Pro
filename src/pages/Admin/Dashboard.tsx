@@ -199,7 +199,7 @@ export default function AdminDashboard() {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Painel Administrativo</h1>
-            <p className="text-slate-500 dark:text-zinc-400 text-sm font-medium">Controle total da plataforma Bananal PRO</p>
+            <p className="text-slate-500 dark:text-zinc-400 text-sm font-medium">Controle total da plataforma Banana PRO</p>
           </div>
         </div>
 

@@ -81,7 +81,7 @@ export default function AppRoutes() {
         <Route path="/configuracoes" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
         <Route path="/notificacoes" element={<ProtectedRoute><NotificationsCenter /></ProtectedRoute>} />
         
-        {/* Novas Rotas Agrícolas do Bananal PRO */}
+        {/* Novas Rotas Agrícolas do Banana PRO */}
         <Route path="/solo" element={<ProtectedRoute><SoilAnalysis /></ProtectedRoute>} />
         <Route path="/estoque" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
         <Route path="/clima" element={<ProtectedRoute><Weather /></ProtectedRoute>} />

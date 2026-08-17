@@ -27,7 +27,10 @@ import {
   Trash2, 
   Percent,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  ArrowUpCircle,
+  ArrowDownCircle,
+  Wallet
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { toast } from "sonner";
@@ -144,9 +147,9 @@ const getWhatsAppLink = (fullName: string, whatsapp: string, status: string = 'c
   
   let msg = "";
   if (status === 'pending') {
-    msg = `Olá ${firstName}! Tudo bem? Vi que você iniciou a sua inscrição no Bananal PRO para o ${planName}, mas não chegou a concluir o pagamento. Ficou com alguma dúvida sobre as ferramentas, o suporte com agrônomos ou o acesso? Estou por aqui para te ajudar!`;
+    msg = `Olá ${firstName}! Tudo bem? Vi que você iniciou a sua inscrição no Banana PRO para o ${planName}, mas não chegou a concluir o pagamento. Ficou com alguma dúvida sobre as ferramentas, o suporte com agrônomos ou o acesso? Estou por aqui para te ajudar!`;
   } else {
-    msg = `Olá ${firstName}, tudo bem? Vimos que você solicitou o cancelamento da sua assinatura do Bananal PRO. Gostaríamos de entender o que houve e ver se podemos te ajudar com alguma condição ou suporte especial para você continuar conosco evoluindo sua produção!`;
+    msg = `Olá ${firstName}, tudo bem? Vimos que você solicitou o cancelamento da sua assinatura do Banana PRO. Gostaríamos de entender o que houve e ver se podemos te ajudar com alguma condição ou suporte especial para você continuar conosco evoluindo sua produção!`;
   }
   
   return `https://wa.me/${phoneClean}?text=${encodeURIComponent(msg)}`;
@@ -188,10 +191,24 @@ export default function AdminFinancial() {
   };
 
   // Estados adicionais para divisão de lucros e controle sócio/PJ
-  const [activeTab, setActiveTab] = useState<'orders' | 'earnings' | 'config'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'earnings' | 'config' | 'expenses'>('orders');
   const [partnerEarnings, setPartnerEarnings] = useState<any[]>([]);
   const [sharingConfigs, setSharingConfigs] = useState<any[]>([]);
   const [loadingSharing, setLoadingSharing] = useState(false);
+
+  // Estados para controle de gastos da empresa
+  const [companyTransactions, setCompanyTransactions] = useState<any[]>([]);
+  const [loadingExpenses, setLoadingExpenses] = useState(false);
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [expenseForm, setExpenseForm] = useState({
+    type: 'Despesa', // Despesa | Receita
+    category: 'Compra', // Compra | Saque de Sócio | Despesa Manual | Aporte de Sócio
+    partnerName: '', // Jean Carlos | Francisco | Jhonatan | Outro
+    amount: '',
+    description: '',
+    created_at: format(new Date(), "yyyy-MM-dd")
+  });
+  const [expenseLoading, setExpenseLoading] = useState(false);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [configForm, setConfigForm] = useState({ userId: "", roleType: "pj", percentage: 0 });
   const [userList, setUserList] = useState<any[]>([]);
@@ -279,6 +296,89 @@ export default function AdminFinancial() {
   const isPj = profile?.role === 'pj';
   const isPartner = profile?.role === 'partner';
   const isAdmin = profile?.role === 'admin';
+
+  const parseExpenseDescription = (desc: string, type: string) => {
+    const parts = desc?.split(' | ') || [];
+    if (parts.length >= 3) {
+      return {
+        category: parts[0],
+        detail: parts[1],
+        description: parts[2]
+      };
+    } else {
+      return {
+        category: type === 'Receita' ? 'Aporte de Sócio' : 'Despesa / Compra',
+        detail: 'Geral',
+        description: desc || ''
+      };
+    }
+  };
+
+  const computedExpenseStats = React.useMemo(() => {
+    let entradas = 0;
+    let saidas = 0;
+    
+    // 1. Add all-time paid subscription faturamento
+    const subscriptionFaturamento = subscriptions
+      .filter(s => s.status === 'paid')
+      .reduce((sum, s) => sum + Number(s.amount || 0), 0);
+
+    entradas += subscriptionFaturamento;
+
+    // 2. Identify partner transfers and separate from general transactions
+    const partnerTransactions: Record<string, { saques: number; aportes: number }> = {};
+    const generalTransactions: any[] = [];
+
+    companyTransactions.forEach(t => {
+      const parsed = parseExpenseDescription(t.description, t.type);
+      const isPartnerTx = parsed.category === 'Saque de Sócio' || 
+                          parsed.category === 'Saque dos Sócios' || 
+                          parsed.category === 'Aporte de Sócio' || 
+                          parsed.category === 'Aporte dos Sócios';
+
+      if (isPartnerTx && parsed.detail && parsed.detail !== 'Geral') {
+        const partnerKey = parsed.detail.trim().toLowerCase();
+        if (!partnerTransactions[partnerKey]) {
+          partnerTransactions[partnerKey] = { saques: 0, aportes: 0 };
+        }
+        if (t.type === 'Receita') {
+          partnerTransactions[partnerKey].aportes += Number(t.amount || 0);
+        } else {
+          partnerTransactions[partnerKey].saques += Number(t.amount || 0);
+        }
+      } else {
+        generalTransactions.push(t);
+      }
+    });
+
+    // 3. Process net partner transfers
+    Object.keys(partnerTransactions).forEach(partnerKey => {
+      const { saques, aportes } = partnerTransactions[partnerKey];
+      const net = saques - aportes;
+      if (net > 0) {
+        // Net withdrawal
+        saidas += net;
+      } else if (net < 0) {
+        // Net deposit (Aporte)
+        entradas += Math.abs(net);
+      }
+    });
+
+    // 4. Process general transactions
+    generalTransactions.forEach(t => {
+      if (t.type === 'Receita') {
+        entradas += Number(t.amount || 0);
+      } else {
+        saidas += Number(t.amount || 0);
+      }
+    });
+
+    return {
+      entradas,
+      saidas,
+      saldo: entradas - saidas
+    };
+  }, [companyTransactions, subscriptions]);
 
   const fetchSubscriptions = async () => {
     try {
@@ -413,6 +513,129 @@ export default function AdminFinancial() {
     }
   };
 
+  const fetchCompanyTransactions = async () => {
+    if (!isAdmin && !isPartner) return;
+    setLoadingExpenses(true);
+    try {
+      const token = session?.access_token;
+      if (!token) return;
+
+      const res = await fetch("/api/company-transactions", {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        throw new Error("Erro ao carregar transações da empresa.");
+      }
+
+      const data = await res.json();
+      setCompanyTransactions(data || []);
+    } catch (err: any) {
+      console.error('Error fetching company transactions:', err);
+    } finally {
+      setLoadingExpenses(false);
+    }
+  };
+
+  const handleCreateExpense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!expenseForm.amount || !expenseForm.description) {
+      toast.error("Por favor, preencha todos os campos obrigatórios.");
+      return;
+    }
+
+    const val = Number(expenseForm.amount);
+    if (isNaN(val) || val <= 0) {
+      toast.error("Por favor, insira um valor válido maior que zero.");
+      return;
+    }
+
+    setExpenseLoading(true);
+    try {
+      const token = session?.access_token;
+      if (!token) {
+        throw new Error("Sessão não encontrada.");
+      }
+
+      // Pack description with pipe: Category | Subcategory/Partner | Description
+      const subCat = (expenseForm.category === 'Saque de Sócio' || expenseForm.category === 'Aporte de Sócio')
+        ? (expenseForm.partnerName || 'Geral')
+        : 'Geral';
+      
+      const packedDescription = `${expenseForm.category} | ${subCat} | ${expenseForm.description}`;
+
+      const res = await fetch("/api/company-transactions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          type: expenseForm.type,
+          amount: val,
+          description: packedDescription,
+          created_at: expenseForm.created_at ? new Date(expenseForm.created_at).toISOString() : undefined
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Erro ao salvar transação.");
+      }
+
+      toast.success("Lançamento efetuado com sucesso!");
+      setIsExpenseModalOpen(false);
+      // Reset form
+      setExpenseForm({
+        type: 'Despesa',
+        category: 'Compra',
+        partnerName: '',
+        amount: '',
+        description: '',
+        created_at: format(new Date(), "yyyy-MM-dd")
+      });
+      await fetchCompanyTransactions();
+    } catch (err: any) {
+      console.error('Error creating company transaction:', err);
+      toast.error(err.message || "Erro ao realizar lançamento.");
+    } finally {
+      setExpenseLoading(false);
+    }
+  };
+
+  const handleDeleteExpense = async (id: number) => {
+    if (!window.confirm("Deseja realmente excluir este lançamento?")) return;
+
+    try {
+      const token = session?.access_token;
+      if (!token) {
+        throw new Error("Sessão não encontrada.");
+      }
+
+      const res = await fetch("/api/company-transactions", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ id })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Erro ao excluir lançamento.");
+      }
+
+      toast.success("Lançamento excluído com sucesso.");
+      await fetchCompanyTransactions();
+    } catch (err: any) {
+      console.error('Error deleting company transaction:', err);
+      toast.error(err.message || "Erro ao excluir lançamento.");
+    }
+  };
+
   const fetchAllData = async () => {
     setLoading(true);
     await fetchSubscriptions();
@@ -421,6 +644,7 @@ export default function AdminFinancial() {
     if (isAdmin) {
       await fetchUserList();
     }
+    await fetchCompanyTransactions();
     setLoading(false);
   };
 
@@ -726,6 +950,12 @@ export default function AdminFinancial() {
         
         return matchesSearch;
       });
+    } else if (activeTab === 'expenses') {
+      return companyTransactions.filter(t => {
+        const matchesSearch = (t.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              (t.type || '').toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesSearch;
+      });
     } else {
       // Filtra comissões
       return partnerEarnings.filter(e => {
@@ -735,7 +965,7 @@ export default function AdminFinancial() {
         return matchesSearch;
       });
     }
-  }, [subscriptions, partnerEarnings, activeTab, searchTerm, statusFilter]);
+  }, [subscriptions, partnerEarnings, companyTransactions, activeTab, searchTerm, statusFilter]);
 
   // Agrupamento inteligente para a aba de assinaturas
   interface GroupedSubscription {
@@ -936,7 +1166,7 @@ export default function AdminFinancial() {
               </h1>
               <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">
                 {isPj 
-                  ? "Acompanhe seus rendimentos e histórico de comissões no Bananal PRO." 
+                  ? "Acompanhe seus rendimentos e histórico de comissões no Banana PRO." 
                   : "Monitore a receita, controle a reserva e gerencie a divisão de dividendos da empresa."
                 }
               </p>
@@ -1161,16 +1391,28 @@ export default function AdminFinancial() {
                   Rateio / Distribuição
                 </button>
                 {(isAdmin || isPartner) && (
-                  <button
-                    onClick={() => { setActiveTab('config'); setCurrentPage(1); }}
-                    className={`px-4 py-2 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
-                      activeTab === 'config'
-                        ? "border-emerald-500 text-slate-800 dark:text-white font-bold"
-                        : "border-transparent text-slate-450 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-white"
-                    }`}
-                  >
-                    Regras de Rateio
-                  </button>
+                  <>
+                    <button
+                      onClick={() => { setActiveTab('config'); setCurrentPage(1); }}
+                      className={`px-4 py-2 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+                        activeTab === 'config'
+                          ? "border-emerald-500 text-slate-800 dark:text-white font-bold"
+                          : "border-transparent text-slate-450 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-white"
+                      }`}
+                    >
+                      Regras de Rateio
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('expenses'); setCurrentPage(1); }}
+                      className={`px-4 py-2 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
+                        activeTab === 'expenses'
+                          ? "border-emerald-500 text-slate-800 dark:text-white font-bold"
+                          : "border-transparent text-slate-450 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-white"
+                      }`}
+                    >
+                      Controle de Gastos
+                    </button>
+                  </>
                 )}
               </div>
             ) : (
@@ -1179,7 +1421,26 @@ export default function AdminFinancial() {
 
             {/* Filter controls */}
             {activeTab !== 'config' && (
-              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto items-center">
+                {activeTab === 'expenses' && (
+                  <button
+                    onClick={() => {
+                      setExpenseForm({
+                        type: 'Despesa',
+                        category: 'Compra',
+                        partnerName: '',
+                        amount: '',
+                        description: '',
+                        created_at: format(new Date(), "yyyy-MM-dd")
+                      });
+                      setIsExpenseModalOpen(true);
+                    }}
+                    className="p-3 bg-[#589c1c] hover:bg-emerald-600 dark:bg-[#10b981] dark:hover:bg-[#0d9468] text-white rounded-2xl font-bold text-xs cursor-pointer shadow-md flex items-center gap-2 transition-all shrink-0 w-full sm:w-auto justify-center"
+                  >
+                    <Plus size={16} />
+                    Lançar Gasto
+                  </button>
+                )}
                 <div className="relative group flex-1 sm:w-64">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-zinc-500 group-focus-within:text-emerald-500 transition-colors" />
                   <input
@@ -1678,6 +1939,271 @@ export default function AdminFinancial() {
           </div>
         )}
 
+        {/* Tab 4: Expense Control (Admins & Partners) */}
+        {activeTab === 'expenses' && (isAdmin || isPartner) && (
+          <div className="space-y-6">
+            {/* Expense Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 p-6 rounded-[2rem] shadow-sm relative overflow-hidden group flex flex-col justify-between">
+                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                  <ArrowUpCircle size={48} className="text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-slate-400 dark:text-zinc-500 text-[10px] font-black uppercase tracking-widest mb-1">Total Entradas (Receitas + Aportes)</p>
+                  <h3 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+                    R$ {computedExpenseStats.entradas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </h3>
+                </div>
+                <div className="mt-2 pt-2 border-t border-slate-50 dark:border-white/5">
+                  <p className="text-[10px] text-slate-450 dark:text-zinc-500 font-semibold">Assinaturas e aportes de capital</p>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 p-6 rounded-[2rem] shadow-sm relative overflow-hidden group flex flex-col justify-between">
+                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                  <ArrowDownCircle size={48} className="text-red-500" />
+                </div>
+                <div>
+                  <p className="text-slate-400 dark:text-zinc-500 text-[10px] font-black uppercase tracking-widest mb-1">Total Saídas (Despesas / Saques)</p>
+                  <h3 className="text-2xl font-black text-red-600 dark:text-red-500 tracking-tight">
+                    R$ {computedExpenseStats.saidas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </h3>
+                </div>
+                <div className="mt-2 pt-2 border-t border-slate-50 dark:border-white/5">
+                  <p className="text-[10px] text-slate-450 dark:text-zinc-500 font-semibold">Compras, pagamentos e saques dos sócios</p>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 p-6 rounded-[2rem] shadow-sm relative overflow-hidden group flex flex-col justify-between">
+                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                  <Wallet size={48} className={computedExpenseStats.saldo >= 0 ? "text-emerald-500" : "text-red-500"} />
+                </div>
+                <div>
+                  <p className="text-slate-400 dark:text-zinc-500 text-[10px] font-black uppercase tracking-widest mb-1">Saldo de Caixa da Empresa</p>
+                  <h3 className={`text-2xl font-black tracking-tight ${computedExpenseStats.saldo >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-500"}`}>
+                    R$ {computedExpenseStats.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </h3>
+                </div>
+                <div className="mt-2 pt-2 border-t border-slate-50 dark:border-white/5">
+                  <p className="text-[10px] text-slate-450 dark:text-zinc-500 font-semibold">Disponibilidade líquida atual</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Demonstrativo de Saldos dos Sócios/PJs */}
+            <div className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 rounded-[2rem] shadow-sm p-6 space-y-4">
+              <div>
+                <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Demonstrativo de Saldos e Retiradas</h3>
+                <p className="text-[11px] text-slate-400 dark:text-zinc-500 mt-1">
+                  Transparência de repasses: comparativo em tempo real entre o valor gerado (rateio), os aportes de capital depositados (+) e as retiradas/saques efetuados (-) para cada membro.
+                </p>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left font-sans text-xs">
+                  <thead className="bg-slate-50 dark:bg-white/5">
+                    <tr>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/5">Membro</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/5">Regra / Tipo</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/5">Total Gerado (Rateio)</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/5">Aportes (+)</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/5">Retiradas (-)</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/5">Saldo a Receber</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                    {sharingConfigs.map((member) => {
+                      const userId = member.user_id;
+                      const name = member.user_profiles?.full_name || 'Membro';
+                      
+                      // 1. Total Earned from partnerEarnings
+                      const totalEarned = partnerEarnings
+                        .filter(e => e.user_id === userId)
+                        .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+
+                      const firstName = name.split(' ')[0].toLowerCase();
+
+                      // 2. Total Deposited (Aporte de Sócio)
+                      const totalDeposited = companyTransactions
+                        .filter(t => {
+                          const parsed = parseExpenseDescription(t.description, t.type);
+                          if (parsed.category !== 'Aporte de Sócio' && parsed.category !== 'Aporte dos Sócios') return false;
+                          const detail = parsed.detail.toLowerCase();
+                          return detail.includes(firstName) || name.toLowerCase().includes(detail);
+                        })
+                        .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+                      // 3. Total Withdrawn/Paid (Saque de Sócio)
+                      const totalWithdrawn = companyTransactions
+                        .filter(t => {
+                          const parsed = parseExpenseDescription(t.description, t.type);
+                          if (parsed.category !== 'Saque de Sócio' && parsed.category !== 'Saque dos Sócios') return false;
+                          const detail = parsed.detail.toLowerCase();
+                          return detail.includes(firstName) || name.toLowerCase().includes(detail);
+                        })
+                        .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+                      const balance = totalEarned + totalDeposited - totalWithdrawn;
+
+                      return (
+                        <tr key={member.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-colors border-b border-slate-100 dark:border-white/5 last:border-0">
+                          <td className="px-6 py-4">
+                            <div>
+                              <p className="font-bold text-slate-800 dark:text-white text-sm">{name}</p>
+                              <p className="text-[10px] text-slate-400">{member.user_profiles?.email}</p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase border ${
+                              member.role_type === 'partner' 
+                                ? "bg-blue-500/10 text-blue-600 border-blue-500/20" 
+                                : "bg-zinc-500/10 text-zinc-650 border-zinc-500/20"
+                            }`}>
+                              {member.role_type === 'partner' ? `Sócio (${member.share_percentage}%)` : `PJ (${member.share_percentage}%)`}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 font-mono text-xs font-bold text-slate-700 dark:text-zinc-300">
+                            R$ {totalEarned.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td className="px-6 py-4 font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                            R$ {totalDeposited.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td className="px-6 py-4 font-mono text-xs font-bold text-red-600 dark:text-red-400">
+                            R$ {totalWithdrawn.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td className={`px-6 py-4 font-mono text-xs font-bold ${balance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-500'}`}>
+                            R$ {balance.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Expenses Table */}
+            <div className="bg-white dark:bg-zinc-900/40 border border-slate-100 dark:border-white/5 rounded-[2rem] shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left font-sans">
+                  <thead className="bg-slate-50 dark:bg-white/5">
+                    <tr>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/5">Data</th>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/5">Tipo</th>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/5">Categoria</th>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/5">Sócio / Detalhe</th>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/5">Descrição</th>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/5">Valor</th>
+                      <th className="px-8 py-5 text-[10px] font-black uppercase text-slate-500 dark:text-zinc-400 border-b border-slate-100 dark:border-white/5 text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                    {loadingExpenses ? (
+                      <tr>
+                        <td colSpan={7} className="px-8 py-20 text-center">
+                          <div className="flex flex-col items-center gap-3">
+                            <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+                            <p className="text-slate-400 dark:text-zinc-500 text-sm font-medium">Carregando movimentações...</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : paginated.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-8 py-20 text-center text-slate-400 dark:text-zinc-500">
+                          Nenhuma movimentação financeira encontrada.
+                        </td>
+                      </tr>
+                    ) : (
+                      paginated.map((tx: any, index) => {
+                        const parsed = parseExpenseDescription(tx.description, tx.type);
+                        const isEntry = tx.type === 'Receita';
+
+                        return (
+                          <motion.tr
+                            key={tx.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.01 }}
+                            className="hover:bg-slate-50/50 dark:hover:bg-white/[0.01] transition-colors border-b border-slate-100 dark:border-white/5 last:border-0"
+                          >
+                            <td className="px-8 py-6">
+                              <span className="text-xs text-slate-650 dark:text-zinc-450 font-semibold">
+                                {format(new Date(tx.created_at || tx.date), "dd/MM/yyyy", { locale: ptBR })}
+                              </span>
+                            </td>
+                            <td className="px-8 py-6">
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase border ${
+                                isEntry 
+                                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" 
+                                  : "bg-red-500/10 text-red-600 border-red-500/20"
+                              }`}>
+                                {isEntry ? <ArrowUpCircle size={10} /> : <ArrowDownCircle size={10} />}
+                                {isEntry ? "Entrada" : "Saída"}
+                              </span>
+                            </td>
+                            <td className="px-8 py-6">
+                              <span className="text-xs font-bold text-slate-700 dark:text-zinc-300">
+                                {parsed.category}
+                              </span>
+                            </td>
+                            <td className="px-8 py-6">
+                              <span className="text-xs font-medium text-slate-600 dark:text-zinc-400">
+                                {parsed.detail}
+                              </span>
+                            </td>
+                            <td className="px-8 py-6">
+                              <span className="text-xs text-slate-650 dark:text-zinc-450">
+                                {parsed.description}
+                              </span>
+                            </td>
+                            <td className={`px-8 py-6 font-mono text-xs font-bold ${isEntry ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-500"}`}>
+                              {isEntry ? "+" : "-"} R$ {Number(tx.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </td>
+                            <td className="px-8 py-6 text-right">
+                              <button
+                                onClick={() => handleDeleteExpense(tx.id)}
+                                className="p-2.5 bg-red-500/10 hover:bg-red-650 hover:text-white text-red-650 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center"
+                                title="Excluir Lançamento"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </td>
+                          </motion.tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="p-6 bg-slate-50 dark:bg-white/[0.01] border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
+                  <p className="text-xs text-slate-400 dark:text-zinc-500 font-medium">
+                    Página {currentPage} de {totalPages} ({filtered.length} itens no total)
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 text-slate-650 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 disabled:opacity-50 transition-all cursor-pointer"
+                    >
+                      Anterior
+                    </button>
+                    <button
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 text-slate-650 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 disabled:opacity-50 transition-all cursor-pointer"
+                    >
+                      Próximo
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* Modal - Nova Regra de Divisão */}
@@ -1905,6 +2431,173 @@ export default function AdminFinancial() {
         )}
       </AnimatePresence>
 
+      {/* Modal - Lançar Gasto da Empresa */}
+      <AnimatePresence>
+        {isExpenseModalOpen && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl relative"
+            >
+              <button
+                onClick={() => setIsExpenseModalOpen(false)}
+                className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 cursor-pointer"
+              >
+                <XCircle size={20} />
+              </button>
+
+              <h3 className="text-lg font-black text-slate-850 dark:text-white mb-6 uppercase tracking-wider">Lançar Gasto / Movimentação</h3>
+
+              <form onSubmit={handleCreateExpense} className="space-y-5 font-sans">
+                
+                {/* Tipo de Lançamento */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Tipo de Lançamento:</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setExpenseForm(prev => ({ 
+                        ...prev, 
+                        type: 'Despesa', 
+                        category: 'Compra' 
+                      }))}
+                      className={`py-3 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                        expenseForm.type === 'Despesa'
+                          ? "bg-red-500/10 text-red-600 border-red-500/30"
+                          : "bg-slate-50 dark:bg-zinc-800 text-slate-655 dark:text-zinc-400 border-transparent hover:bg-slate-100 dark:hover:bg-zinc-700"
+                      }`}
+                    >
+                      Saída / Despesa
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setExpenseForm(prev => ({ 
+                        ...prev, 
+                        type: 'Receita', 
+                        category: 'Aporte de Sócio' 
+                      }))}
+                      className={`py-3 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                        expenseForm.type === 'Receita'
+                          ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
+                          : "bg-slate-50 dark:bg-zinc-800 text-slate-655 dark:text-zinc-400 border-transparent hover:bg-slate-100 dark:hover:bg-zinc-700"
+                      }`}
+                    >
+                      Entrada / Receita
+                    </button>
+                  </div>
+                </div>
+
+                {/* Categoria */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Categoria:</label>
+                  <select
+                    value={expenseForm.category}
+                    onChange={(e) => setExpenseForm(prev => ({ 
+                      ...prev, 
+                      category: e.target.value,
+                      partnerName: (e.target.value === 'Saque de Sócio' || e.target.value === 'Aporte de Sócio') ? (prev.partnerName || 'Jean Carlos') : ''
+                    }))}
+                    className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  >
+                    {expenseForm.type === 'Despesa' ? (
+                      <>
+                        <option value="Compra">Compra (Insumos, Equipamentos)</option>
+                        <option value="Saque de Sócio">Saque dos Sócios (Retirada)</option>
+                        <option value="Despesa Manual">Despesa Manual (Marketing, Geral)</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="Aporte de Sócio">Aporte dos Sócios (Depósito)</option>
+                        <option value="Outras Receitas">Outras Receitas</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+
+                {/* Sócio (Só se Saque ou Aporte) */}
+                {(expenseForm.category === 'Saque de Sócio' || expenseForm.category === 'Aporte de Sócio') && (
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Sócio Associado:</label>
+                    <select
+                      value={expenseForm.partnerName}
+                      onChange={(e) => setExpenseForm(prev => ({ ...prev, partnerName: e.target.value }))}
+                      className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    >
+                      <option value="Jean Carlos">Jean Carlos</option>
+                      <option value="Francisco">Francisco</option>
+                      <option value="Jhonatan">Jhonatan</option>
+                      <option value="Weider">Weider</option>
+                      <option value="Outro">Outro Sócio</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Valor */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Valor (R$):</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    placeholder="Ex: 250.00"
+                    value={expenseForm.amount}
+                    onChange={(e) => setExpenseForm(prev => ({ ...prev, amount: e.target.value }))}
+                    className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+
+                {/* Data */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Data do Lançamento:</label>
+                  <input
+                    type="date"
+                    required
+                    value={expenseForm.created_at}
+                    onChange={(e) => setExpenseForm(prev => ({ ...prev, created_at: e.target.value }))}
+                    className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+
+                {/* Descrição */}
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Descrição / Detalhe:</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Compra de adubo no distribuidor Yara"
+                    value={expenseForm.description}
+                    onChange={(e) => setExpenseForm(prev => ({ ...prev, description: e.target.value }))}
+                    className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-semibold text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+
+                <div className="pt-4 flex gap-3">
+                  <button
+                    type="button"
+                    disabled={expenseLoading}
+                    onClick={() => setIsExpenseModalOpen(false)}
+                    className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-655 dark:text-zinc-300 font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl cursor-pointer disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={expenseLoading}
+                    className="flex-1 bg-[#589c1c] hover:bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider py-3.5 rounded-xl cursor-pointer shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {expenseLoading && <Loader2 size={14} className="animate-spin" />}
+                    Confirmar
+                  </button>
+                </div>
+
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </LayoutComponent>
   );
 }

@@ -226,7 +226,7 @@ export default function CourseDetail() {
                   </span>
                 </div>
                 <p className="text-on-surface-variant text-sm leading-relaxed font-medium">
-                  Com anos de experiência prática no campo, Jean Carlos desenvolveu métodos e estratégias que ajudam produtores a aumentar a produtividade, melhorar a qualidade da produção e alcançar melhores resultados na bananicultura. No Bananal PRO, ele compartilha conhecimento real, aplicado diariamente em propriedades rurais e validado pela experiência prática.
+                  Com anos de experiência prática no campo, Jean Carlos desenvolveu métodos e estratégias que ajudam produtores a aumentar a produtividade, melhorar a qualidade da produção e alcançar melhores resultados na bananicultura. No Banana PRO, ele compartilha conhecimento real, aplicado diariamente em propriedades rurais e validado pela experiência prática.
                 </p>
               </div>
             </section>
@@ -243,7 +243,7 @@ export default function CourseDetail() {
                   Acesso Liberado para Produtores
                 </h3>
                 <p className="text-on-surface-variant text-sm">
-                  Este conteúdo faz parte da formação oficial do **Bananal PRO**.
+                  Este conteúdo faz parte da formação oficial do **Banana PRO**.
                 </p>
                 <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10">
                   <p className="text-on-surface text-xs font-medium">

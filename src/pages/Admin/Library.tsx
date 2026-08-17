@@ -165,7 +165,7 @@ export default function AdminLibrary() {
         category: formData.category,
         type: formData.type,
         size: formData.size || "1.0 MB",
-        author: formData.author || "Bananal PRO",
+        author: formData.author || "Banana PRO",
         year: formData.year || new Date().getFullYear().toString(),
         file_url: formData.file_url
       };

@@ -36,7 +36,7 @@ const getWhatsAppLink = (fullName: string, phone: string) => {
   }
   
   const firstName = fullName.trim().split(' ')[0];
-  const msg = `Olá ${firstName}! Tudo bem? Vi que você fez seu cadastro na Comunidade Bananal PRO, mas ainda não concluiu a assinatura. Ficou com alguma dúvida sobre as ferramentas, suporte de agrônomos ou acesso? Estou à disposição para ajudar!`;
+  const msg = `Olá ${firstName}! Tudo bem? Vi que você fez seu cadastro na Comunidade Banana PRO, mas ainda não concluiu a assinatura. Ficou com alguma dúvida sobre as ferramentas, suporte de agrônomos ou acesso? Estou à disposição para ajudar!`;
   
   return `https://wa.me/${phoneClean}?text=${encodeURIComponent(msg)}`;
 };
@@ -480,7 +480,7 @@ export default function AdminUsers() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Gestão de Usuários</h1>
-              <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">Gerencie todos os membros da plataforma Bananal PRO.</p>
+              <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">Gerencie todos os membros da plataforma Banana PRO.</p>
             </div>
           </div>
           <button 

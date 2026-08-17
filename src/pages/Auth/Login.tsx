@@ -114,7 +114,7 @@ export default function Login() {
         <div className="md:hidden absolute top-10 left-10">
           <Link to="/" className="flex items-center gap-2">
             <Sprout className="text-emerald-500 w-8 h-8" />
-            <span className="text-xl font-bold text-on-surface">Bananal PRO</span>
+            <span className="text-xl font-bold text-on-surface">Banana PRO</span>
           </Link>
         </div>
 

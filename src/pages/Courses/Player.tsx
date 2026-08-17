@@ -1113,9 +1113,9 @@ export default function CoursePlayer() {
         isOpen={showCertificate}
         onClose={() => setShowCertificate(false)}
         studentName={getUserDisplayName(profile, user)}
-        courseTitle={course?.title || "Treinamento Bananal PRO"}
+        courseTitle={course?.title || "Treinamento Banana PRO"}
         completionDate={new Date().toLocaleDateString('pt-BR')}
-        instructorName="Bananal PRO"
+        instructorName="Banana PRO"
       />
 
       {/* Mobile Drawer (Conteúdo do Curso) */}

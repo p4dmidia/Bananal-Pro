@@ -115,7 +115,7 @@ export default function AdminModeration() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Moderação de Comentários</h1>
-              <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">Modere as interações dos alunos nas aulas do Bananal PRO.</p>
+              <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">Modere as interações dos alunos nas aulas do Banana PRO.</p>
             </div>
           </div>
           <button 

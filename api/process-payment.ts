@@ -59,7 +59,7 @@ export default async function handler(req: any, res: any) {
 
       const payload = {
         transaction_amount: finalAmount,
-        description: `Assinatura Bananal Pro - Plano ${plan === 'mensal' ? 'Mensal' : 'Anual'}`,
+        description: `Assinatura Banana PRO - Plano ${plan === 'mensal' ? 'Mensal' : 'Anual'}`,
         payment_method_id: 'pix',
         payer: {
           email: email,
@@ -125,7 +125,7 @@ export default async function handler(req: any, res: any) {
       const backUrl = `${cleanOrigin}/dashboard`;
 
       const preapprovalPayload = {
-        reason: `Assinatura Bananal Pro - Plano ${plan === 'mensal' ? 'Mensal' : 'Anual'}`,
+        reason: `Assinatura Banana PRO - Plano ${plan === 'mensal' ? 'Mensal' : 'Anual'}`,
         auto_recurring: {
           frequency: frequency,
           frequency_type: 'months',

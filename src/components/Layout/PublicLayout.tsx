@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import logoImg from "../../assets/logo.png";
+import logoFooter from "../../assets/logo_footer.png";
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -188,15 +189,12 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <footer className="reveal active bg-surface-container-lowest w-full py-12 border-t border-outline-variant/30 mt-20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 px-6 md:px-10 max-w-7xl mx-auto">
           <div className="col-span-2 md:col-span-1 space-y-6">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center">
               <img
-                alt="Logo"
-                className="h-10 w-auto"
-                src={logoImg}
+                alt="Banana PRO Logo"
+                className="h-20 w-auto object-contain"
+                src={logoFooter}
               />
-              <span className="text-lg font-headline font-bold text-primary">
-                Banana PRO
-              </span>
             </div>
             <p className="text-xs font-sans text-on-surface-variant leading-relaxed">
               Tecnologia de elite para o campo. Do plantio à comercialização, sua fazenda em alta performance.
@@ -292,9 +290,20 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-outline-variant/10 text-center">
+        <div className="mt-12 pt-8 border-t border-outline-variant/10 text-center space-y-2">
           <p className="text-xs text-on-surface-variant font-sans">
-            © 2026 Banana PRO. Tecnologia de elite para o campo.
+            © 2026 Banana PRO®. Tecnologia de elite para o campo. Todos os direitos reservados.
+          </p>
+          <p className="text-[11px] text-on-surface-variant/75 font-sans">
+            Desenvolvido por{" "}
+            <a
+              href="https://www.p4dmidia.com.br/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-secondary hover:underline transition-all font-semibold"
+            >
+              P4D Mídia
+            </a>
           </p>
         </div>
       </footer>

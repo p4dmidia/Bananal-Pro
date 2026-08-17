@@ -410,7 +410,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                       </div>
                       <p className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-wider">Suporte Técnico</p>
                       <p className="text-xs text-zinc-300 leading-normal">
-                        Dúvidas sobre o funcionamento da plataforma Bananal Pro, problemas de acesso, erros ou faturamento? Fale com Weider.
+                        Dúvidas sobre o funcionamento da plataforma Banana PRO, problemas de acesso, erros ou faturamento? Fale com Weider.
                       </p>
                     </div>
                   </div>

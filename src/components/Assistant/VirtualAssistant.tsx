@@ -320,7 +320,7 @@ export default function VirtualAssistant() {
     if (path.includes("/dashboard")) {
       return {
         title: "Início (Painel Geral)",
-        description: "Aqui você acompanha o coração da sua fazenda. O Bananal PRO resume suas informações para facilitar sua gestão diária.",
+        description: "Aqui você acompanha o coração da sua fazenda. O Banana PRO resume suas informações para facilitar sua gestão diária.",
         tips: [
           "Área Monitorada: O tamanho total de todas as suas glebas cadastradas.",
           "Custo e Lucro Estimados: Calculados cruzando seus gastos lançados no Financeiro com a produção teórica dos seus pés de banana.",
@@ -415,7 +415,7 @@ export default function VirtualAssistant() {
     switch (tourStep) {
       case 1:
         return {
-          title: "👋 Bem-vindo ao Bananal PRO!",
+          title: "👋 Bem-vindo ao Banana PRO!",
           desc: "Olá! Sou o Chico, seu parceiro no bananal. Vamos fazer uma rápida caminhada de 4 passos pelas ferramentas essenciais para aumentar sua produtividade.",
           nextText: "Começar Tour",
           backText: "Agora Não"

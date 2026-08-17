@@ -414,7 +414,7 @@ export default function Catalog() {
           <div className="space-y-2">
             <h2 className="text-3xl font-headline font-black text-on-surface">Formação Indisponível</h2>
             <p className="text-on-surface-variant leading-relaxed">
-              O treinamento principal do Bananal PRO está temporariamente em manutenção. Por favor, tente novamente mais tarde.
+              O treinamento principal do Banana PRO está temporariamente em manutenção. Por favor, tente novamente mais tarde.
             </p>
           </div>
         </div>
@@ -514,7 +514,7 @@ export default function Catalog() {
             <img 
               src={course.thumbnail_url || "https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?auto=format&fit=crop&q=80&w=1600"} 
               className="w-full h-full object-cover opacity-100 brightness-[1.08]"
-              alt="Capa Bananal PRO"
+              alt="Capa Banana PRO"
             />
             {/* Gradientes controlados para dar contraste aos textos sem apagar a imagem */}
             <div className="absolute inset-0 gradient-t-custom" />
@@ -537,7 +537,7 @@ export default function Catalog() {
             {/* Título Principal & Subtítulo */}
             <div className="space-y-4">
               <h1 className="text-5xl md:text-7xl font-display font-black tracking-tight leading-none force-white">
-                {course.title === 'grilo' || course.title === 'rick' || course.title === ' girino   adulto ' ? 'BANANAL PRO' : course.title.toUpperCase()}
+                {course.title === 'grilo' || course.title === 'rick' || course.title === ' girino   adulto ' ? 'BANANA PRO' : course.title.toUpperCase()}
               </h1>
               <p className="text-lg md:text-xl font-medium max-w-2xl leading-relaxed force-white">
                 Formação completa para produtores que desejam aumentar produtividade, melhorar gestão e obter mais resultados.
@@ -602,7 +602,7 @@ export default function Catalog() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="space-y-1.5">
               <h2 className="text-3xl font-display font-black text-on-surface tracking-tight">Sua Jornada de Aprendizado</h2>
-              <p className="text-on-surface-variant text-sm font-medium">Explore todos os módulos da formação Bananal PRO.</p>
+              <p className="text-on-surface-variant text-sm font-medium">Explore todos os módulos da formação Banana PRO.</p>
             </div>
           </div>
 

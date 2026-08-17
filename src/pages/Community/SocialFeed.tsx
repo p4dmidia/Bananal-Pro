@@ -549,7 +549,7 @@ export default function SocialFeed() {
 
           <div className="relative z-10 max-w-3xl text-left">
             <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-2 flex items-center gap-3">
-              <span className="!text-white">Comunidade</span> <span className="text-[#589c1c] dark:text-[#6ee7b7]">Bananal PRO</span>
+              <span className="!text-white">Comunidade</span> <span className="text-[#589c1c] dark:text-[#6ee7b7]">Banana PRO</span>
               <Users className="text-[#589c1c] dark:text-[#6ee7b7] w-8 h-8 shrink-0 animate-pulse" />
             </h1>
             <p className="!text-white text-sm md:text-base font-medium leading-relaxed opacity-95">
@@ -772,7 +772,7 @@ export default function SocialFeed() {
                       <div className="bg-amber-500/[0.03] border border-amber-500/10 p-5 rounded-2xl space-y-3 mt-4 relative">
                         <div className="flex items-center gap-2 text-amber-600 font-bold text-xs">
                           <Sprout size={14} />
-                          Resposta do Agrônomo Bananal PRO
+                          Resposta do Agrônomo Banana PRO
                         </div>
                         <p className="text-on-surface-variant text-xs leading-relaxed">
                           {post.agronomistAnswer}

@@ -1315,12 +1315,12 @@ export default function UserProfile() {
                   Confirmar Cancelamento
                 </h3>
                 <p className="text-zinc-400 text-xs leading-relaxed max-w-sm mx-auto">
-                  Você continuará tendo acesso irrestrito ao Bananal PRO até o final do período de carência em <strong className="text-white">{subscription?.nextBilling}</strong>.
+                  Você continuará tendo acesso irrestrito ao Banana PRO até o final do período de carência em <strong className="text-white">{subscription?.nextBilling}</strong>.
                 </p>
                 <div className="p-4 bg-white/5 rounded-2xl text-left border border-white/5 space-y-2 mt-4">
                   <h4 className="text-[10px] font-black uppercase text-amber-500 tracking-wider">Atenção sobre cobrança externa</h4>
                   <p className="text-[10px] text-zinc-400 leading-relaxed font-medium">
-                    Como o Bananal PRO processa pagamentos via checkout da **InfinitePay**, lembre-se de conferir e cancelar a recorrência automática do cartão em seu aplicativo bancário ou fatura caso tenha habilitado assinatura automática.
+                    Como o Banana PRO processa pagamentos via checkout da **InfinitePay**, lembre-se de conferir e cancelar a recorrência automática do cartão em seu aplicativo bancário ou fatura caso tenha habilitado assinatura automática.
                   </p>
                 </div>
               </div>

@@ -19,7 +19,7 @@ export default function CertificateModal({
   studentName, 
   courseTitle, 
   completionDate,
-  instructorName = "Bananal PRO"
+  instructorName = "Banana PRO"
 }: CertificateModalProps) {
   const certificateRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);

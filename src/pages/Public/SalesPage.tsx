@@ -466,7 +466,7 @@ export default function SalesPage() {
               </div>
             </div>
 
-            {/* O Método Bananal PRO (Cleaned) */}
+            {/* O Método Banana PRO (Cleaned) */}
             <div className="space-y-8 pt-8 border-t border-outline-variant/10">
               <div className="space-y-2">
                 <h2 className="font-headline text-2xl md:text-3xl font-black text-white">

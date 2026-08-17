@@ -432,7 +432,7 @@ export default function Partners() {
                       <div className="w-8 h-8 rounded-full p-[4px] bg-gradient-to-tr from-emerald-500 to-yellow-500">
                         <div className="w-full h-full rounded-full bg-black" />
                       </div>
-                      <span className="font-display font-black tracking-tight text-sm">BANANAL PRO</span>
+                      <span className="font-display font-black tracking-tight text-sm">BANANA PRO</span>
                     </div>
                     {/* Glowing active status */}
                     <div className="bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[9px] font-black px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
@@ -451,7 +451,7 @@ export default function Partners() {
                     
                     <div className="text-right">
                       <p className="text-[8px] text-white/50 uppercase tracking-widest font-black">{t("card_modal.card_type")}</p>
-                      <p className="text-xs font-black tracking-widest text-primary/80">#BANANAL-{profile.id.toString().padStart(6, '0')}</p>
+                      <p className="text-xs font-black tracking-widest text-primary/80">#BANANA-{profile.id.toString().padStart(6, '0')}</p>
                     </div>
                   </div>
 
@@ -463,7 +463,7 @@ export default function Partners() {
                         Membro
                       </p>
                       <h4 className="text-base font-black uppercase tracking-wide truncate max-w-[240px]">
-                        {profile.full_name || "Membro Bananal PRO"}
+                        {profile.full_name || "Membro Banana PRO"}
                       </h4>
                     </div>
                     

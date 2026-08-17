@@ -1,6 +1,7 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import fs from 'fs';
 import {defineConfig, loadEnv} from 'vite';
 
 export default defineConfig(({mode}) => {
@@ -17,62 +18,35 @@ export default defineConfig(({mode}) => {
       react(), 
       tailwindcss(),
       {
-        name: 'mercado-pago-api-local',
+        name: 'local-serverless-api-proxy',
         configureServer(server) {
           server.middlewares.use((req, res, next) => {
-            if (req.url?.startsWith('/api/process-payment') && req.method === 'POST') {
-              let body = '';
-              req.on('data', chunk => { body += chunk; });
-              req.on('end', async () => {
-                try {
-                  const payload = JSON.parse(body);
-                  const processPaymentModule = await server.ssrLoadModule('/api/process-payment.ts');
-                  
-                  const mockReq = {
-                    method: 'POST',
-                    body: payload,
-                    headers: req.headers
-                  };
-                  
-                  const mockRes = {
-                    status(code: number) {
-                      res.statusCode = code;
-                      return this;
-                    },
-                    json(data: any) {
-                      res.setHeader('Content-Type', 'application/json');
-                      res.end(JSON.stringify(data));
-                      return this;
-                    },
-                    setHeader(name: string, value: string) {
-                      res.setHeader(name, value);
-                      return this;
-                    },
-                    end(val: string) {
-                      res.end(val);
-                      return this;
-                    }
-                  };
+            if (req.url?.startsWith('/api/')) {
+              const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+              const pathname = urlObj.pathname;
+              const apiName = pathname.substring(5); // remove '/api/'
+              
+              const apiFilePath = path.resolve(__dirname, 'api', `${apiName}.ts`);
+              
+              if (!fs.existsSync(apiFilePath)) {
+                return next();
+              }
 
-                  await processPaymentModule.default(mockReq, mockRes);
-                } catch (err: any) {
-                  console.error('Local process-payment error:', err);
-                  res.statusCode = 500;
-                  res.setHeader('Content-Type', 'application/json');
-                  res.end(JSON.stringify({ error: err.message || 'Internal dev server error' }));
-                }
+              // Parse query parameters
+              const query: Record<string, string> = {};
+              urlObj.searchParams.forEach((value, key) => {
+                query[key] = value;
               });
-            } else if (req.url?.startsWith('/api/webhook') && req.method === 'POST') {
-              let body = '';
-              req.on('data', chunk => { body += chunk; });
-              req.on('end', async () => {
+
+              // Helper function to run the SSR module
+              const executeModule = async (bodyPayload?: any) => {
                 try {
-                  const payload = JSON.parse(body);
-                  const webhookModule = await server.ssrLoadModule('/api/webhook.ts');
+                  const apiModule = await server.ssrLoadModule(`/api/${apiName}.ts`);
                   
                   const mockReq = {
-                    method: 'POST',
-                    body: payload,
+                    method: req.method,
+                    body: bodyPayload,
+                    query,
                     headers: req.headers
                   };
                   
@@ -95,58 +69,33 @@ export default defineConfig(({mode}) => {
                       return this;
                     }
                   };
-
-                  await webhookModule.default(mockReq, mockRes);
+                  
+                  await apiModule.default(mockReq, mockRes);
                 } catch (err: any) {
-                  console.error('Local webhook error:', err);
+                  console.error(`Local API error for /api/${apiName}:`, err);
                   res.statusCode = 500;
                   res.setHeader('Content-Type', 'application/json');
                   res.end(JSON.stringify({ error: err.message || 'Internal dev server error' }));
                 }
-              });
-            } else if (req.url?.startsWith('/api/check-payment-status') && req.method === 'GET') {
-              (async () => {
-                try {
-                  const urlObj = new URL(req.url || '', `http://${req.headers.host || 'localhost'}`);
-                  const payment_id = urlObj.searchParams.get('payment_id');
-                  const user_id = urlObj.searchParams.get('user_id');
-                  
-                  const checkStatusModule = await server.ssrLoadModule('/api/check-payment-status.ts');
-                  
-                  const mockReq = {
-                    method: 'GET',
-                    query: { payment_id, user_id },
-                    headers: req.headers
-                  };
-                  
-                  const mockRes = {
-                    status(code: number) {
-                      res.statusCode = code;
-                      return this;
-                    },
-                    json(data: any) {
-                      res.setHeader('Content-Type', 'application/json');
-                      res.end(JSON.stringify(data));
-                      return this;
-                    },
-                    setHeader(name: string, value: string) {
-                      res.setHeader(name, value);
-                      return this;
-                    },
-                    end(val: string) {
-                      res.end(val);
-                      return this;
+              };
+
+              if (req.method === 'POST' || req.method === 'PUT' || req.method === 'DELETE') {
+                let body = '';
+                req.on('data', chunk => { body += chunk; });
+                req.on('end', () => {
+                  let payload = {};
+                  try {
+                    if (body) {
+                      payload = JSON.parse(body);
                     }
-                  };
-
-                  await checkStatusModule.default(mockReq, mockRes);
-                } catch (err: any) {
-                  console.error('Local check-payment-status error:', err);
-                  res.statusCode = 500;
-                  res.setHeader('Content-Type', 'application/json');
-                  res.end(JSON.stringify({ error: err.message || 'Internal dev server error' }));
-                }
-              })();
+                  } catch (e) {
+                    payload = body;
+                  }
+                  executeModule(payload);
+                });
+              } else {
+                executeModule();
+              }
             } else {
               next();
             }

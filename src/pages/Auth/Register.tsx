@@ -124,7 +124,7 @@ export default function Register() {
             <div className="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-600/20">
               <Sprout className="text-white w-8 h-8" />
             </div>
-            <span className="text-3xl font-bold tracking-tight text-on-surface">Bananal PRO</span>
+            <span className="text-3xl font-bold tracking-tight text-on-surface">Banana PRO</span>
           </Link>
 
           <div className="space-y-6">
@@ -161,7 +161,7 @@ export default function Register() {
         <div className="md:hidden absolute top-10 left-10">
           <Link to="/" className="flex items-center gap-2">
             <Sprout className="text-emerald-500 w-8 h-8" />
-            <span className="text-xl font-bold text-on-surface">Bananal PRO</span>
+            <span className="text-xl font-bold text-on-surface">Banana PRO</span>
           </Link>
         </div>
         <div className="absolute top-10 right-10 hidden md:flex items-center gap-2 text-on-surface-variant text-xs font-bold uppercase tracking-widest cursor-pointer hover:text-on-surface transition-colors">
@@ -317,7 +317,7 @@ export default function Register() {
             <div className="flex items-start gap-2 px-1 pt-2">
               <input type="checkbox" id="terms" className="accent-emerald-600 w-4 h-4 rounded border-outline/10 mt-1 cursor-pointer" required />
               <label htmlFor="terms" className="text-xs text-on-surface-variant leading-relaxed cursor-pointer select-none">
-                Ao clicar aqui, concordo com os <Link to="/termos-de-uso" target="_blank" className="text-emerald-500 hover:underline font-semibold">Termos de Uso</Link> e <Link to="/politica-de-privacidade" target="_blank" className="text-emerald-500 hover:underline font-semibold">Políticas de Privacidade</Link> do Bananal PRO.
+                Ao clicar aqui, concordo com os <Link to="/termos-de-uso" target="_blank" className="text-emerald-500 hover:underline font-semibold">Termos de Uso</Link> e <Link to="/politica-de-privacidade" target="_blank" className="text-emerald-500 hover:underline font-semibold">Políticas de Privacidade</Link> do Banana PRO.
               </label>
             </div>
 
