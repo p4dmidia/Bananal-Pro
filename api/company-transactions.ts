@@ -6,8 +6,9 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req: any, res: any) {
   // CORS configuration
+  const origin = req.headers.origin || '*';
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 

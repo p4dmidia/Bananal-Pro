@@ -12,8 +12,9 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS Headers
+  const origin = req.headers.origin || '*';
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader(
     'Access-Control-Allow-Headers',
@@ -28,6 +29,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Não autorizado. Token ausente.' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
   const { email, phone } = req.body;
 
   if (!email || !phone) {
@@ -35,6 +43,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // Validate session token with Supabase
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !authUser) {
+      return res.status(401).json({ error: 'Sessão inválida ou expirada.' });
+    }
+
     console.log(`Updating phone/WhatsApp for user email: ${email} to: ${phone}`);
 
     // Wait up to 3 seconds for the Supabase Auth trigger to create the profile row
@@ -44,7 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     while (retries > 0) {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id')
+        .select('id, mocha_user_id, role')
         .eq('email', email.trim().toLowerCase())
         .maybeSingle();
 
@@ -60,6 +74,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!profile) {
       return res.status(404).json({ error: 'Perfil do usuário não encontrado no sistema.' });
+    }
+
+    // Verify if the authenticated user has permission (is owner or is admin)
+    const isOwner = profile.mocha_user_id === authUser.id;
+    let isAdmin = false;
+    
+    if (!isOwner) {
+      const { data: callerProfile } = await supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('mocha_user_id', authUser.id)
+        .maybeSingle();
+      if (callerProfile?.role === 'admin') {
+        isAdmin = true;
+      }
+    }
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ error: 'Acesso negado. Você só pode atualizar o seu próprio perfil.' });
     }
 
     // Update the phone/WhatsApp number
@@ -80,3 +113,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: error.message || 'Erro interno no servidor.' });
   }
 }
+

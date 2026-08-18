@@ -81,11 +81,15 @@ export default function Register() {
 
       // Update phone number in user_profiles via our backend API
       try {
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+        if (data.session?.access_token) {
+          headers['Authorization'] = `Bearer ${data.session.access_token}`;
+        }
         await fetch('/api/update-profile-phone', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify({
             email: formData.email,
             phone: formData.phone

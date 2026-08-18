@@ -19,7 +19,7 @@ import {
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { Tables } from "../../types/database";
-import jeanImg from "../../assets/jean.png";
+import jeanImg from "../../assets/jean.jpg";
 
 type Course = Tables<'courses'> & {
   instructor?: { full_name: string } | null;

@@ -282,7 +282,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   <div className="flex gap-4">
                     <div className="w-14 h-14 rounded-2xl border border-emerald-500/25 p-[2px] bg-emerald-900/10 overflow-hidden shrink-0">
                       <img 
-                        src="/images/francisco.jpeg" 
+                        src="/images/francisco.jpg" 
                         alt="Francisco" 
                         className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-300"
                         onError={(e) => {
@@ -319,7 +319,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   <div className="flex gap-4">
                     <div className="w-14 h-14 rounded-2xl border border-emerald-500/25 p-[2px] bg-emerald-900/10 overflow-hidden shrink-0">
                       <img 
-                        src="/images/jhonatan.jpeg" 
+                        src="/images/jhonatan.jpg" 
                         alt="Jhonatan" 
                         className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-300"
                         onError={(e) => {
@@ -356,7 +356,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   <div className="flex gap-4">
                     <div className="w-14 h-14 rounded-2xl border border-emerald-500/25 p-[2px] bg-emerald-900/10 overflow-hidden shrink-0">
                       <img 
-                        src="/images/jean.png" 
+                        src="/images/jean.jpg" 
                         alt="Jean Carlos" 
                         className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-300"
                         onError={(e) => {

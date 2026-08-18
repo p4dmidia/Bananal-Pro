@@ -92,7 +92,7 @@ export default function LandingPage() {
       icon: <Leaf className="w-8 h-8" />,
       title: "Mudas de Qualidade",
       impactPhrase: "O sucesso da sua lavoura começa na escolha da muda.",
-      image: "/images/banana_pillar_seedlings.jpg",
+      image: "/images/banana_pillar_seedlings.png",
       features: [
         "Seleção das melhores cultivares agrícolas",
         "Prevenção rigorosa de pragas e nematoides",
@@ -495,7 +495,7 @@ export default function LandingPage() {
                 {
                   title: "Manejo",
                   desc: "Execução periódica de desbaste (mantendo mãe, filha e neta), desfolha sanitária, eliminação do coração (inflorescência masculina) e escoramento das plantas para suportar o peso dos cachos.",
-                  image: "/images/manejo.png",
+                  image: "/images/manejo.jpg",
                 },
                 {
                   title: "Controle de doenças",
@@ -510,12 +510,12 @@ export default function LandingPage() {
                 {
                   title: "Colheita",
                   desc: "Determinação do ponto ideal de corte pelo calibre dos frutos. Operação cuidadosa de corte da bananeira e transporte suspenso ou acolchoado do cacho para a casa de embalagem sem ferir os frutos.",
-                  image: "/images/colheita.png",
+                  image: "/images/colheita.jpg",
                 },
                 {
                   title: "Comercialização",
                   desc: "Lavagem, despencamento, classificação rigorosa, embalagem em caixas padronizadas e logística de escoamento para garantir o melhor valor de venda no mercado interno ou exportação.",
-                  image: "/images/comercializacao.png",
+                  image: "/images/comercializacao.jpg",
                 }
               ].map((step, idx) => {
                 const isEven = idx % 2 === 0;
@@ -578,21 +578,21 @@ export default function LandingPage() {
                 name: "Jean Carlos",
                 role: "Produtor de Banana",
                 bio: "Produtor atuante com mais de 5 anos de experiência diária na lavoura. Especialista em técnicas de condução de alta produtividade e manejo de campo. Traduz a teoria científica em soluções simples, práticas e direto ao ponto para o produtor rural.",
-                image: "/images/jean.png",
+                image: "/images/jean.jpg",
                 position: "object-center"
               },
               {
                 name: "Jhonatan",
                 role: "Engenheiro Agrônomo",
                 bio: "Engenheiro Agrônomo especializado em fertilidade de solo, sanidade vegetal e nutrição de alta precisão para bananeiras. Focado em balancear nutrientes para maximizar o enchimento dos cachos e otimizar os custos com adubação.",
-                image: "/images/jhonatan.jpeg",
+                image: "/images/jhonatan.jpg",
                 position: "object-top"
               },
               {
                 name: "Francisco",
                 role: "Especialista em Biológicos",
                 bio: "Consultor de campo com mais de 20 anos de dedicação exclusiva à fitossanidade e ao controle biológico na bananicultura. Referência em manejo integrado de pragas, controle estratégico da Sigatoka e redução sustentável do uso de defensivos químicos.",
-                image: "/images/francisco.jpeg",
+                image: "/images/francisco.jpg",
                 position: "object-center"
               }
             ].map((spec, idx) => (
