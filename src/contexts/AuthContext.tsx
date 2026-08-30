@@ -34,26 +34,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfileLoading(true);
     try {
       console.log('Auth: Fetching profile for', userId, 'with email', email);
-      let { data, error } = await supabase
-        .from('user_profiles')
+      let { data, error } = await (supabase as any)
+        .from('my_profile')
         .select('*')
-        .eq('mocha_user_id', userId)
-        .maybeSingle();
+        .maybeSingle() as any;
 
       console.log('Auth: Direct fetch data:', data, 'error:', error);
 
       if (!data && email) {
         console.log('Auth: Fallback fetch using email:', email);
-        const { data: emailData, error: emailError } = await supabase
+        const { data: emailData, error: emailError } = await (supabase as any)
           .from('user_profiles')
-          .select('*')
+          .select('id, mocha_user_id, email, full_name, avatar_url, role, city, state, is_active, created_at')
           .ilike('email', email)
-          .maybeSingle();
+          .maybeSingle() as any;
         console.log('Auth: Fallback fetch data:', emailData, 'error:', emailError);
         data = emailData;
         if (data) {
           console.log('Auth: Updating mocha_user_id to', userId, 'for profile ID', data.id);
-          supabase.from('user_profiles').update({ mocha_user_id: userId }).eq('id', data.id).then(({ error: updateError }) => {
+          (supabase as any).from('user_profiles').update({ mocha_user_id: userId }).eq('id', data.id).then(({ error: updateError }: any) => {
             if (updateError) console.error('Auth: Error updating mocha_user_id:', updateError);
           });
         }

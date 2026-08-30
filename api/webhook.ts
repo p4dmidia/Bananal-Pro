@@ -54,7 +54,11 @@ export default async function handler(req: any, res: any) {
       body = {
         type: queryTopic,
         topic: queryTopic,
-        resource: `https://api.mercadolibre.com/v1/payments/${queryId}`,
+        resource: queryTopic === 'preapproval' 
+          ? `https://api.mercadopago.com/preapproval/${queryId}`
+          : queryTopic === 'authorized_payment'
+            ? `https://api.mercadopago.com/authorized_payments/${queryId}`
+            : `https://api.mercadolibre.com/v1/payments/${queryId}`,
         data: { id: queryId }
       };
     }
@@ -67,18 +71,37 @@ export default async function handler(req: any, res: any) {
     console.log('Webhook do Mercado Pago recebido:', JSON.stringify(body));
 
     let paymentId = '';
+    let preapprovalId = '';
+    let authorizedPaymentId = '';
 
-    // Extrai o ID do pagamento de acordo com o formato de notificação do Mercado Pago
-    if (body.type === 'payment' && body.data && body.data.id) {
-      paymentId = body.data.id.toString();
-    } else if (body.topic === 'payment' && body.resource) {
-      // O formato antigo envia a URL no "resource", ex: "https://api.mercadolibre.com/v1/payments/12345678"
+    // 1. Extração por topic/resource (formato IPN clássico/antigo)
+    if (body.topic === 'payment' && body.resource) {
       const parts = body.resource.split('/');
       paymentId = parts[parts.length - 1];
-    } else if (body.action?.startsWith('payment.') && body.data && body.data.id) {
-      paymentId = body.data.id.toString();
-    } else if ((body.type === 'subscription_authorized_payment' || body.type === 'authorized_payment' || body.action?.startsWith('subscription_authorized_payment.') || body.action?.startsWith('authorized_payment.')) && body.data && body.data.id) {
-      const authorizedPaymentId = body.data.id.toString();
+    } else if (body.topic === 'preapproval' && body.resource) {
+      const parts = body.resource.split('/');
+      preapprovalId = parts[parts.length - 1];
+    } else if (body.topic === 'authorized_payment' && body.resource) {
+      const parts = body.resource.split('/');
+      authorizedPaymentId = parts[parts.length - 1];
+    }
+    // 2. Extração por type/action e data.id (formato Webhook novo)
+    else if (body.data && body.data.id) {
+      const entityId = body.data.id.toString();
+      const type = body.type || body.topic || '';
+      const action = body.action || '';
+
+      if (type === 'payment' || action.startsWith('payment.')) {
+        paymentId = entityId;
+      } else if (type === 'subscription_preapproval' || type === 'preapproval' || action.startsWith('subscription_preapproval.') || action.startsWith('preapproval.')) {
+        preapprovalId = entityId;
+      } else if (type === 'subscription_authorized_payment' || type === 'authorized_payment' || action.startsWith('subscription_authorized_payment.') || action.startsWith('authorized_payment.')) {
+        authorizedPaymentId = entityId;
+      }
+    }
+
+    // Se identificamos um pagamento de assinatura autorizado, buscamos o ID do pagamento real
+    if (authorizedPaymentId) {
       console.log(`Webhook: Buscando detalhes do pagamento autorizado de assinatura: ${authorizedPaymentId}`);
       try {
         const authRes = await fetch(`https://api.mercadopago.com/authorized_payments/${authorizedPaymentId}`, {
@@ -97,8 +120,9 @@ export default async function handler(req: any, res: any) {
       } catch (err) {
         console.error(`Webhook: Erro de rede ao buscar pagamento autorizado de assinatura ${authorizedPaymentId}:`, err);
       }
-    } else if ((body.type === 'subscription_preapproval' || body.type === 'preapproval' || body.action?.startsWith('subscription_preapproval.') || body.action?.startsWith('preapproval.')) && body.data && body.data.id) {
-      const preapprovalId = body.data.id.toString();
+    }
+    // Se identificamos uma assinatura/preapproval, buscamos seu pagamento mais recente
+    else if (preapprovalId) {
       console.log(`Webhook: Recebida notificação de assinatura (preapproval): ${preapprovalId}. Buscando pagamentos associados...`);
       try {
         const payRes = await fetch(`https://api.mercadopago.com/authorized_payments/search?preapproval_id=${preapprovalId}`, {

@@ -423,10 +423,10 @@ export default function AdminUsers() {
     setLoading(true);
     try {
       // Fetch users
-      const { data, error } = await supabase
-        .from('user_profiles')
+      const { data, error } = await (supabase as any)
+        .from('admin_user_profiles')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any;
 
       if (error) throw error;
       setUsers(data || []);
