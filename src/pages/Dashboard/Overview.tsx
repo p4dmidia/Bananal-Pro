@@ -26,7 +26,8 @@ import {
   AlertTriangle,
   FileText,
   ArrowUpRight,
-  Plus
+  Plus,
+  Sparkles
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../contexts/AuthContext";
@@ -125,7 +126,11 @@ export default function Overview() {
           const data = await res.json();
 
           if (res.ok && data.status === "approved") {
-            toast.success("Pagamento confirmado! Acesso liberado.");
+            if (data.is_trial) {
+              toast.success("Teste de 7 dias ativado! Bem-vindo ao Banana PRO!");
+            } else {
+              toast.success("Pagamento confirmado! Acesso liberado.");
+            }
             await refreshProfile();
             // Limpa parâmetros da URL
             const cleanUrl = window.location.pathname;
@@ -788,7 +793,6 @@ export default function Overview() {
 
         {/* Conteúdo do Dashboard (KPIs, Solo, etc.) */}
         <div className="max-w-[1300px] mx-auto px-4 md:px-8 space-y-6 pb-20 -mt-10 relative z-20">
-          
           {/* Seletor de Glebas/Talhões */}
           <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-50/80 backdrop-blur border border-slate-100 rounded-2xl w-fit">
             <button

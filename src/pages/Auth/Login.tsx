@@ -17,18 +17,35 @@ export default function Login() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Se o usuário já estiver logado, redireciona
+  React.useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        if (offerSlug) {
+          const plan = searchParams.get("plan") || "anual";
+          navigate(`/checkout/${offerSlug}?plan=${plan}`, { replace: true });
+        } else {
+          navigate("/dashboard", { replace: true });
+        }
+      }
+    });
+  }, [navigate, offerSlug, searchParams]);
+
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     setError(null);
     try {
       const plan = searchParams.get("plan") || "anual";
-      const redirectTo = offerSlug 
-        ? `${window.location.origin}/checkout/${offerSlug}?plan=${plan}` 
-        : `${window.location.origin}/dashboard`;
+      const targetUrl = offerSlug 
+        ? `/checkout/${offerSlug}?plan=${plan}` 
+        : `/dashboard`;
+
+      localStorage.setItem("auth_redirect_target", targetUrl);
+      sessionStorage.setItem("auth_redirect_target", targetUrl);
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo },
+        options: { redirectTo: `${window.location.origin}${targetUrl}` },
       });
 
       if (error) throw error;

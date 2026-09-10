@@ -40,71 +40,49 @@ export default async function handler(req: any, res: any) {
     let realPaymentId = payment_id;
 
     // Tenta consultar os detalhes como pagamento direto (Pix ou Cartão avulso)
-    const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${payment_id}`, {
+    let mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${payment_id}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`
       }
     });
 
-    let paymentData = await mpRes.json();
+    let paymentData: any = null;
 
     if (mpRes.ok) {
+      paymentData = await mpRes.json();
       status = paymentData.status;
       console.log(`Status do pagamento ${payment_id} via consulta direta: ${status}`);
     } else {
-      // Se não encontrou (404), tenta consultar como assinatura (Preapproval)
-      console.log(`Payment ID ${payment_id} não encontrado como pagamento direto. Tentando como assinatura/preapproval...`);
-      const subRes = await fetch(`https://api.mercadopago.com/authorized_payments/search?preapproval_id=${payment_id}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`
+      // Se não encontrou como payment avulso direto (pode ser preference_id), busca pagamentos associados à preferência ou merchant order
+      console.log(`Payment ID ${payment_id} não encontrado diretamente em /v1/payments. Buscando pagamentos da preferência...`);
+      try {
+        const searchRes = await fetch(`https://api.mercadopago.com/v1/payments/search?external_reference=${user_id || ''}&sort=date_created&criteria=desc`, {
+          headers: { 'Authorization': `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}` }
+        });
+        if (searchRes.ok) {
+          const searchData = await searchRes.json();
+          const approvedPayment = searchData.results?.find((p: any) => p.status === 'approved');
+          if (approvedPayment) {
+            paymentData = approvedPayment;
+            status = 'approved';
+            realPaymentId = approvedPayment.id.toString();
+            console.log(`Pagamento aprovado encontrado via busca: ${realPaymentId}`);
+          }
         }
-      });
-      const subData = await subRes.json();
-      if (subRes.ok && subData.results && subData.results.length > 0) {
-        // Encontra o pagamento recorrente aprovado ou processado
-        const approvedPayment = subData.results.find((p: any) => p.payment?.status === 'approved' || p.status === 'processed');
-        if (approvedPayment) {
-          status = 'approved';
-          realPaymentId = approvedPayment.payment?.id || payment_id;
-          console.log(`Assinatura ativa e paga encontrada! ID do pagamento real: ${realPaymentId}`);
-        } else {
-          console.log(`Nenhum pagamento aprovado encontrado para a assinatura ${payment_id}.`);
-        }
-      } else {
-        console.error(`Erro ao consultar assinatura ${payment_id} no Mercado Pago:`, subData);
-        return res.status(400).json({ error: 'Erro ao validar pagamento/assinatura no Mercado Pago.' });
+      } catch (err) {
+        console.error(`Erro ao buscar pagamentos por external_reference:`, err);
       }
     }
 
-    if (status === 'approved') {
-      // Se for uma assinatura e achamos o ID do pagamento real, busca os detalhes completos dele
-      if (realPaymentId && realPaymentId.toString() !== payment_id.toString()) {
-        console.log(`Buscando detalhes do pagamento real ${realPaymentId} para a assinatura ${payment_id}...`);
-        try {
-          const mpRealRes = await fetch(`https://api.mercadopago.com/v1/payments/${realPaymentId}`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`
-            }
-          });
-          if (mpRealRes.ok) {
-            paymentData = await mpRealRes.json();
-            console.log(`Detalhes do pagamento real obtidos com sucesso.`);
-          } else {
-            console.error(`Erro ao buscar detalhes do pagamento real ${realPaymentId}:`, await mpRealRes.json());
-          }
-        } catch (err) {
-          console.error(`Erro de rede ao buscar detalhes do pagamento real ${realPaymentId}:`, err);
-        }
-      }
-
+    if (status === 'approved' && paymentData) {
       // 1. Busca o pedido correspondente no Supabase
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .select('*')
-        .eq('tracking_code', payment_id.toString())
+        .or(`tracking_code.eq.${payment_id},tracking_code.eq.${realPaymentId}`)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (orderError) {
@@ -146,11 +124,10 @@ export default async function handler(req: any, res: any) {
             updated_at: new Date().toISOString()
           })
           .eq('id', order.id)
-          .neq('status', 'paid')
           .select('*');
 
         if (updateOrderError) {
-          console.error(`Erro ao atualizar pedido #${order.id} para pago:`, updateOrderError);
+          console.error(`Erro ao atualizar pedido #${order.id}:`, updateOrderError);
         } else if (updatedOrders && updatedOrders.length > 0) {
           console.log(`Pedido #${order.id} atualizado para 'paid' via consulta direta.`);
           
@@ -172,18 +149,15 @@ export default async function handler(req: any, res: any) {
             }
           }
 
-          // 3. Processa a divisão de lucros e a notificação do Telegram
+          // 3. Processa notificação e divisão de lucros
           try {
             await processProfitSharingAndNotifications(order, paymentData);
           } catch (err) {
-            console.error('Erro no processamento de divisão de lucros/notificação:', err);
+            console.error('Erro no processamento de notificações/comissões:', err);
           }
-        } else {
-          console.log(`Pedido #${order.id} já foi atualizado para 'paid' por outra requisição concorrente.`);
         }
-      } else if (order && order.status === 'paid') {
-        console.log(`Pedido #${order.id} já estava marcado como 'paid'.`);
-        // Garante que o perfil está ativo de qualquer forma
+      } else if (order) {
+        console.log(`Pedido #${order.id} já registrado.`);
         const targetUserId = order.user_id || user_id;
         if (targetUserId) {
           await supabase
@@ -194,7 +168,7 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    return res.status(200).json({ status });
+    return res.status(200).json({ status, payment_id: realPaymentId });
   } catch (error: any) {
     console.error('Erro inesperado ao verificar status de pagamento:', error);
     return res.status(500).json({ error: error.message || 'Internal Server Error' });
@@ -217,9 +191,10 @@ async function processProfitSharingAndNotifications(order: any, paymentData: any
 
     // 2. Notificação do Telegram
     if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
-      const planName = Number(order.total_amount) > 150 ? 'Anual' : 'Mensal';
+      const amount = Number(order.total_amount);
+      const planName = amount <= 250 ? 'Trimestral' : (amount <= 400 ? 'Semestral' : 'Anual');
       const paymentMethodName = paymentData.payment_method_id === 'pix' ? 'Pix' : 'Cartão de Crédito';
-      const formattedAmount = Number(order.total_amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      const formattedAmount = amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
       const messageText = `🔔 Nova Venda Aprovada!\n📦 Plano: ${planName}\n💰 Valor Bruto: ${formattedAmount}\n💳 Método de Pagamento: ${paymentMethodName}\nCliente ${buyerName}`;
 

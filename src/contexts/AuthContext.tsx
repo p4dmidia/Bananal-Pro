@@ -73,8 +73,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               const hasActiveOrder = orders.some(o => {
                 if (o.status !== 'paid' && o.status !== 'cancelled') return false;
                 
-                const isMonthly = o.total_amount <= 150;
-                const daysLimit = isMonthly ? 30 : 365;
+                const amount = Number(o.total_amount);
+                // Trimestral (<= 250): 90 dias, Semestral (<= 400): 180 dias, Anual (> 400): 365 dias
+                const daysLimit = amount <= 250 ? 90 : (amount <= 400 ? 180 : 365);
                 const orderDate = new Date(o.created_at);
                 const expiryDate = new Date(orderDate.getTime() + daysLimit * 24 * 60 * 60 * 1000);
                 

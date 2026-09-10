@@ -21,6 +21,16 @@ export default function Register() {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Se o usuário já estiver logado, redireciona diretamente para o checkout
+  React.useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        const plan = searchParams.get("plan") || "anual";
+        navigate(`/checkout/${offerSlug}?plan=${plan}`, { replace: true });
+      }
+    });
+  }, [navigate, offerSlug, searchParams]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -31,10 +41,16 @@ export default function Register() {
     setError(null);
     try {
       const plan = searchParams.get("plan") || "anual";
+      const targetUrl = `/checkout/${offerSlug}?plan=${plan}`;
+      
+      // Salva a intenção para o AuthCallbackHandler capturar mesmo se o Supabase redirecionar para a raiz
+      localStorage.setItem("auth_redirect_target", targetUrl);
+      sessionStorage.setItem("auth_redirect_target", targetUrl);
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/checkout/${offerSlug}?plan=${plan}`,
+          redirectTo: `${window.location.origin}${targetUrl}`,
         },
       });
 
@@ -63,11 +79,18 @@ export default function Register() {
       const firstName = nameParts[0] || "";
       const lastName = nameParts.slice(1).join(" ") || "";
 
+      const plan = searchParams.get("plan") || "anual";
+      const targetUrl = `/checkout/${offerSlug}?plan=${plan}`;
+
+      localStorage.setItem("auth_redirect_target", targetUrl);
+      sessionStorage.setItem("auth_redirect_target", targetUrl);
+
       // Proceed with Registration
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
+          emailRedirectTo: `${window.location.origin}${targetUrl}`,
           data: {
             full_name: formData.fullName,
             firstName: firstName,
@@ -101,9 +124,8 @@ export default function Register() {
 
       if (data.user) {
         toast.success("Cadastro realizado com sucesso!");
-        const plan = searchParams.get("plan") || "anual";
-        // Redirect directly to the checkout page with the offer slug
-        navigate(`/checkout/${offerSlug}?plan=${plan}`);
+        // Redireciona diretamente para a tela de checkout
+        navigate(targetUrl);
       } else {
         toast.success("Conta criada! Verifique seu e-mail.");
         navigate("/auth/login");

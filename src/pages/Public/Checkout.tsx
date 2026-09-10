@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { useNavigate, Link, useSearchParams, useParams } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../contexts/AuthContext";
 import { 
@@ -31,6 +31,7 @@ declare global {
 
 export default function Checkout() {
   const navigate = useNavigate();
+  const { slug } = useParams();
   const { refreshProfile } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [user, setUser] = useState<any>(null);
@@ -81,23 +82,62 @@ export default function Checkout() {
     };
   }, [exitPopupShown]);
 
+  type PlanType = 'trimestral' | 'semestral' | 'anual';
+
+  const PLAN_CONFIG: Record<PlanType, {
+    name: string;
+    price: number;
+    period: string;
+    installments: number;
+    badge?: string;
+    description: string;
+  }> = {
+    trimestral: {
+      name: 'Trimestral',
+      price: 197.00,
+      period: '3 meses',
+      installments: 3,
+      description: 'Até 3x no cartão ou Pix'
+    },
+    semestral: {
+      name: 'Semestral',
+      price: 357.00,
+      period: '6 meses',
+      installments: 6,
+      description: 'Até 6x no cartão ou Pix'
+    },
+    anual: {
+      name: 'Anual',
+      price: 497.00,
+      period: '1 ano',
+      installments: 12,
+      badge: 'Mais Escolhido',
+      description: 'Até 12x no cartão ou Pix'
+    }
+  };
+
   // Estado para armazenar o plano selecionado (inicia a partir da URL)
-  const [selectedPlan, setSelectedPlan] = useState<'mensal' | 'anual'>(
-    searchParams.get("plan") === "mensal" ? "mensal" : "anual"
-  );
+  const [selectedPlan, setSelectedPlan] = useState<PlanType>(() => {
+    const planParam = searchParams.get("plan");
+    if (planParam === 'trimestral' || planParam === 'semestral' || planParam === 'anual') {
+      return planParam;
+    }
+    return 'anual';
+  });
 
   // Sincroniza o estado do plano com as mudanças de parâmetro de busca na URL
   useEffect(() => {
     const planParam = searchParams.get("plan");
-    if (planParam === "mensal" || planParam === "anual") {
+    if (planParam === 'trimestral' || planParam === 'semestral' || planParam === 'anual') {
       setSelectedPlan(planParam);
     }
   }, [searchParams]);
 
-  // Preço oficial de produção (R$ 97 mensal / R$ 497 anual)
-  const planPrice = selectedPlan === 'mensal' ? 97.00 : 497.00;
+  // Preço oficial do plano selecionado
+  const currentPlan = PLAN_CONFIG[selectedPlan] || PLAN_CONFIG['anual'];
+  const planPrice = currentPlan.price;
 
-  const handlePlanChange = (plan: 'mensal' | 'anual') => {
+  const handlePlanChange = (plan: PlanType) => {
     setSelectedPlan(plan);
     setSearchParams({ plan });
     setPixData(null);
@@ -246,7 +286,9 @@ export default function Checkout() {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) {
         toast.error("Identifique-se primeiro para realizar a assinatura.");
-        navigate("/auth/register");
+        const currentOffer = slug || "padrao";
+        const currentPlan = searchParams.get("plan") || selectedPlan || "anual";
+        navigate(`/auth/register?offer=${currentOffer}&plan=${currentPlan}`);
         return;
       }
       setUser(authUser);
@@ -255,7 +297,7 @@ export default function Checkout() {
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, slug, searchParams, selectedPlan]);
 
   // Auto-remoção do Service Worker na tela de checkout para evitar qualquer interceptação de requisições de pagamento
   useEffect(() => {
@@ -484,48 +526,79 @@ if (loading) {
                     Escolha o seu plano de acesso:
                   </label>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {/* Plano Trimestral */}
+                    <button
+                      type="button"
+                      onClick={() => handlePlanChange('trimestral')}
+                      className={`relative p-4 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between min-h-[135px] ${
+                        selectedPlan === 'trimestral' 
+                          ? 'bg-[#f0fdf4] border-[#22C55E] text-[#021B13] ring-1 ring-[#22C55E] shadow-[0_4px_20px_rgba(34,197,94,0.08)]' 
+                          : 'bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-800'
+                      }`}
+                    >
+                      <div className="space-y-1.5">
+                        <span className="text-xs font-inter-extrabold uppercase tracking-wider block">Trimestral</span>
+                        <span className="text-[10px] text-zinc-500 block font-inter-medium">3 meses de acesso</span>
+                        <span className="inline-flex items-center gap-1 bg-[#22C55E]/15 border border-[#22C55E]/30 text-[#15803d] font-inter-extrabold text-[10px] px-2 py-0.5 rounded-md">
+                          <CreditCard size={11} className="shrink-0" />
+                          Até 3x no cartão
+                        </span>
+                      </div>
+                      <div className="mt-3 pt-2 border-t border-zinc-150 w-full flex items-baseline gap-1">
+                        <span className="text-base font-inter-extrabold text-zinc-800">R$ 197,00</span>
+                        <span className="text-[9px] text-zinc-400 font-inter-medium">/ 3 meses</span>
+                      </div>
+                    </button>
+
+                    {/* Plano Semestral */}
+                    <button
+                      type="button"
+                      onClick={() => handlePlanChange('semestral')}
+                      className={`relative p-4 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between min-h-[135px] ${
+                        selectedPlan === 'semestral' 
+                          ? 'bg-[#f0fdf4] border-[#22C55E] text-[#021B13] ring-1 ring-[#22C55E] shadow-[0_4px_20px_rgba(34,197,94,0.08)]' 
+                          : 'bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-800'
+                      }`}
+                    >
+                      <div className="space-y-1.5">
+                        <span className="text-xs font-inter-extrabold uppercase tracking-wider block">Semestral</span>
+                        <span className="text-[10px] text-zinc-500 block font-inter-medium">6 meses de acesso</span>
+                        <span className="inline-flex items-center gap-1 bg-[#22C55E]/15 border border-[#22C55E]/30 text-[#15803d] font-inter-extrabold text-[10px] px-2 py-0.5 rounded-md">
+                          <CreditCard size={11} className="shrink-0" />
+                          Até 6x no cartão
+                        </span>
+                      </div>
+                      <div className="mt-3 pt-2 border-t border-zinc-150 w-full flex items-baseline gap-1">
+                        <span className="text-base font-inter-extrabold text-zinc-800">R$ 357,00</span>
+                        <span className="text-[9px] text-zinc-400 font-inter-medium">/ 6 meses</span>
+                      </div>
+                    </button>
+
                     {/* Plano Anual (Mais Escolhido) */}
                     <button
                       type="button"
                       onClick={() => handlePlanChange('anual')}
-                      className={`relative p-5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between min-h-[120px] ${
+                      className={`relative p-4 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between min-h-[135px] ${
                         selectedPlan === 'anual' 
-                          ? 'bg-[#f0fdf4] border-[#22C55E] text-[#021B13] ring-1 ring-[#22C55E] shadow-[0_4px_20px_rgba(34,197,94,0.08)]' 
+                          ? 'bg-[#f0fdf4] border-[#22C55E] text-[#021B13] ring-2 ring-[#22C55E] shadow-[0_4px_25px_rgba(34,197,94,0.15)]' 
                           : 'bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-800'
                       }`}
                     >
-                      <span className="absolute -top-2.5 right-4 bg-[#22C55E] text-white text-[8px] font-inter-extrabold px-2.5 py-1 rounded-full uppercase tracking-widest shadow-md">
+                      <span className="absolute -top-2.5 right-3 bg-[#22C55E] text-white text-[8px] font-inter-extrabold px-2 py-0.5 rounded-full uppercase tracking-widest shadow-md">
                         MAIS ESCOLHIDO
                       </span>
-                      <div className="space-y-0.5">
-                        <span className="text-xs font-inter-extrabold uppercase tracking-wider block">Plano Anual</span>
-                        <span className="text-[9px] text-[#16a34a] font-bold block">Economize 57%</span>
+                      <div className="space-y-1.5">
+                        <span className="text-xs font-inter-extrabold uppercase tracking-wider block">Anual</span>
+                        <span className="text-[10px] text-zinc-500 block font-inter-medium">1 ano completo</span>
+                        <span className="inline-flex items-center gap-1 bg-[#22C55E] text-white font-inter-extrabold text-[10px] px-2.5 py-0.5 rounded-md shadow-xs animate-pulse">
+                          <CreditCard size={12} className="shrink-0" />
+                          Até 12x no cartão
+                        </span>
                       </div>
-                      <div className="mt-4 pt-2 border-t border-zinc-150 w-full flex items-baseline gap-1">
-                        <span className="text-[9px] text-zinc-500 font-medium font-inter-medium">12x de</span>
-                        <span className="text-base font-inter-extrabold text-[#16a34a]">R$ 49,70</span>
-                        <span className="text-[9px] text-zinc-400 font-inter-medium">ou R$ 497 à vista</span>
-                      </div>
-                    </button>
-
-                    {/* Plano Mensal */}
-                    <button
-                      type="button"
-                      onClick={() => handlePlanChange('mensal')}
-                      className={`p-5 rounded-2xl text-left border transition-all cursor-pointer flex flex-col justify-between min-h-[120px] ${
-                        selectedPlan === 'mensal' 
-                          ? 'bg-[#f0fdf4] border-[#22C55E] text-[#021B13] ring-1 ring-[#22C55E] shadow-[0_4px_20px_rgba(34,197,94,0.08)]' 
-                          : 'bg-white border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-800'
-                      }`}
-                    >
-                      <div className="space-y-0.5">
-                        <span className="text-xs font-inter-extrabold uppercase tracking-wider block">Plano Mensal</span>
-                        <span className="text-[9px] text-zinc-500 block font-inter-medium">Sem fidelidade, cancele quando quiser</span>
-                      </div>
-                      <div className="mt-4 pt-2 border-t border-zinc-150 w-full flex items-baseline gap-1">
-                        <span className="text-base font-inter-extrabold text-zinc-800">R$ 97,00</span>
-                        <span className="text-[9px] text-zinc-500 font-inter-medium">/ mês</span>
+                      <div className="mt-3 pt-2 border-t border-zinc-150 w-full flex items-baseline gap-1">
+                        <span className="text-base font-inter-extrabold text-[#16a34a]">R$ 497,00</span>
+                        <span className="text-[9px] text-zinc-400 font-inter-medium">/ ano</span>
                       </div>
                     </button>
                   </div>
@@ -541,13 +614,13 @@ if (loading) {
                     <div className="bg-amber-500/10 border border-amber-500/20 text-amber-800 p-5 rounded-2xl mb-4 text-xs font-inter-semibold flex flex-col gap-2 shadow-[0_4px_12px_rgba(245,158,11,0.03)]">
                       <div className="flex items-center gap-2 font-inter-bold text-[13px]">
                         <AlertCircle size={18} className="shrink-0 text-amber-600" />
-                        Aviso sobre sua assinatura
+                        Aviso sobre seu pagamento
                       </div>
                       <p className="text-zinc-650 leading-relaxed font-inter-medium">
-                        O seu banco recusou a cobrança inicial da sua assinatura no valor de <strong>R$ {selectedPlan === 'mensal' ? '97,00' : '497,00'}</strong> devido a limite insuficiente ou bloqueio temporário do cartão.
+                        O seu banco recusou a cobrança da sua compra no valor de <strong>R$ {planPrice.toFixed(2).replace('.', ',')}</strong> devido a limite insuficiente ou bloqueio temporário do cartão.
                       </p>
                       <p className="text-zinc-650 font-inter-medium">
-                        Por favor, <strong>tente com outro cartão de crédito</strong> ou faça o pagamento via <strong>PIX</strong> para ativar sua assinatura agora.
+                        Por favor, <strong>tente com outro cartão de crédito</strong> ou faça o pagamento via <strong>PIX</strong> para liberar o seu acesso agora.
                       </p>
                       <div className="mt-2 pt-3 border-t border-amber-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <span className="text-[11px] text-zinc-500 font-inter-medium">
@@ -670,11 +743,28 @@ if (loading) {
 
                     {selectedMethod === 'credit_card' ? (
                       /* Cartão de Crédito Section */
-                      <div className="bg-zinc-50 border border-zinc-200 rounded-3xl p-6 space-y-4">
-                        <div className="flex gap-3 text-xs text-zinc-600 leading-relaxed font-inter-medium">
-                          <ShieldCheck size={18} className="text-[#22C55E] shrink-0 mt-0.5" />
+                      <div className="bg-[#f0fdf4] border border-[#22C55E]/30 rounded-3xl p-6 space-y-4">
+                        {/* Pricing Breakdown */}
+                        <div className="bg-white/90 border border-[#22C55E]/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                          <div>
+                            <span className="text-[10px] font-inter-extrabold text-[#16a34a] uppercase tracking-wider block">Plano Selecionado</span>
+                            <span className="text-xl font-inter-extrabold text-[#021B13]">Banana PRO {currentPlan.name}</span>
+                            <span className="text-[10px] text-[#16a34a] font-inter-semibold block">Vigência de {currentPlan.period}</span>
+                          </div>
+                          <div className="sm:text-right flex flex-col sm:items-end">
+                            <span className="text-[10px] font-inter-extrabold text-zinc-500 uppercase tracking-wider block">Total à Vista / Base</span>
+                            <span className="text-xl font-inter-extrabold text-zinc-850">R$ {planPrice.toFixed(2).replace('.', ',')}</span>
+                            <span className="inline-flex items-center gap-1.5 bg-[#22C55E] text-white font-inter-extrabold text-[11px] px-2.5 py-0.5 rounded-full shadow-xs mt-1">
+                              <CreditCard size={12} className="shrink-0" />
+                              Em até {currentPlan.installments}x no cartão de crédito
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3 text-xs text-zinc-600 leading-relaxed font-inter-medium bg-white/70 p-3.5 rounded-2xl border border-[#22C55E]/20">
+                          <ShieldCheck size={20} className="text-[#22C55E] shrink-0 mt-0.5" />
                           <p>
-                            Você será redirecionado com segurança para o ambiente oficial do <strong>Mercado Pago</strong> para preencher os dados do seu cartão. Sua assinatura é processada em um ambiente blindado contra fraudes.
+                            Você será redirecionado para o ambiente seguro do <strong>Mercado Pago</strong> para inserir os dados do seu cartão e escolher o parcelamento em <strong className="text-[#021B13] bg-[#22C55E]/25 px-2 py-0.5 rounded-md border border-[#22C55E]/30 font-inter-extrabold inline-block mt-0.5">até {currentPlan.installments}x no cartão de crédito</strong>. Os juros do parcelamento da operadora são calculados e exibidos na tela de pagamento por conta do comprador.
                           </p>
                         </div>
                         
@@ -687,12 +777,12 @@ if (loading) {
                           {submittingPayment ? (
                             <>
                               <Loader2 size={16} className="animate-spin" />
-                              Processando...
+                              Preparando Pagamento Seguro...
                             </>
                           ) : (
                             <>
-                              <Lock size={14} />
-                              Ir para o Pagamento Seguro
+                              <Lock size={15} />
+                              <span>Pagar em até {currentPlan.installments}x no Cartão (R$ {planPrice.toFixed(2).replace('.', ',')})</span>
                             </>
                           )}
                         </button>
@@ -700,6 +790,13 @@ if (loading) {
                     ) : (
                       /* Pix Section */
                       <div className="bg-zinc-50 border border-zinc-200 rounded-3xl p-6 space-y-4">
+                        <div className="bg-[#22C55E]/10 border border-[#22C55E]/20 text-[#021B13] p-4 rounded-2xl text-xs font-inter-medium flex items-start gap-2.5">
+                          <Zap size={16} className="text-[#16a34a] shrink-0 mt-0.5" />
+                          <p>
+                            <strong>Aprovação Imediata:</strong> O pagamento via <strong>PIX</strong> é processado em segundos com liberação instantânea de todo o treinamento e ferramentas.
+                          </p>
+                        </div>
+
                         <div className="space-y-2">
                           <label className="text-[10px] font-inter-extrabold text-zinc-500 uppercase tracking-widest block">
                             CPF do Titular (obrigatório para gerar Pix):
@@ -735,7 +832,7 @@ if (loading) {
                           ) : (
                             <>
                               <QrCode size={14} />
-                              Gerar Código Pix
+                              Pagar com Pix (R$ {planPrice.toFixed(2).replace('.', ',')})
                             </>
                           )}
                         </button>
@@ -865,6 +962,21 @@ if (loading) {
               <div className="bg-white border border-zinc-200/80 p-4 rounded-xl flex items-center gap-2.5 shadow-sm">
                 <MessageCircle size={15} className="text-[#16a34a] shrink-0" />
                 <span className="text-[10px] font-inter-semibold text-slate-700 uppercase tracking-wider">Suporte especializado</span>
+              </div>
+            </div>
+
+            {/* Selo de Garantia de 7 Dias */}
+            <div className="bg-[#022318] border border-[#22C55E]/40 rounded-[2rem] p-5 text-left flex items-center gap-4 shadow-md text-white">
+              <div className="w-12 h-12 rounded-2xl bg-[#22C55E]/20 border border-[#22C55E]/40 flex items-center justify-center text-[#4ade80] shrink-0">
+                <Award size={26} />
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs font-inter-extrabold uppercase tracking-wider text-[#4ade80] block">
+                  Garantia Incondicional de 7 Dias
+                </span>
+                <p className="text-xs text-zinc-100 font-inter-medium leading-snug">
+                  Se você não ficar 100% satisfeito, devolvemos integralmente o valor investido sem complicações.
+                </p>
               </div>
             </div>
 

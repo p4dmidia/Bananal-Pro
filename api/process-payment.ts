@@ -37,10 +37,17 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes: plan, user_id e payment_method_id.' });
     }
 
-    // Preço oficial de produção (R$ 97 mensal / R$ 497 anual)
-    const finalAmount = plan === 'mensal' ? 97.00 : 497.00;
+    // Configuração dos 3 planos de produção
+    const planConfigs: Record<string, { amount: number; installments: number; title: string }> = {
+      trimestral: { amount: 197.00, installments: 3, title: 'Banana PRO - Plano Trimestral' },
+      semestral: { amount: 357.00, installments: 6, title: 'Banana PRO - Plano Semestral' },
+      anual: { amount: 497.00, installments: 12, title: 'Banana PRO - Plano Anual' }
+    };
 
-    // Normaliza informações do pagador para suportar tanto o formulário simplificado quanto o antigo Payment Brick
+    const selectedConfig = planConfigs[plan] || planConfigs['anual'];
+    const finalAmount = selectedConfig.amount;
+
+    // Normaliza informações do pagador
     const email = payer_email || formData?.payer?.email;
     const clientCpf = cpf || formData?.payer?.identification?.number;
     const clientFirstName = first_name || formData?.payer?.first_name || 'Produtor';
@@ -60,7 +67,7 @@ export default async function handler(req: any, res: any) {
 
       const payload = {
         transaction_amount: finalAmount,
-        description: `Assinatura Banana PRO - Plano ${plan === 'mensal' ? 'Mensal' : 'Anual'}`,
+        description: selectedConfig.title,
         payment_method_id: 'pix',
         payer: {
           email: email,
@@ -117,48 +124,61 @@ export default async function handler(req: any, res: any) {
       });
 
     // ----------------------------------------------------
-    // FLUXO DE ASSINATURA NO CARTÃO DE CRÉDITO (CHECKOUT PRO REDIRECT)
+    // FLUXO DE CARTÃO DE CRÉDITO (CHECKOUT PRO COM PREFERÊNCIA)
     // ----------------------------------------------------
     } else {
-      const frequency = plan === 'mensal' ? 1 : 12;
-      const origin = req.headers.origin || req.headers.referer || 'https://bananalpro.com.br';
+      const origin = req.headers.origin || req.headers.referer || 'https://www.bananapro.com.br';
       const cleanOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
-      const backUrl = `${cleanOrigin}/dashboard`;
+      
+      // O Mercado Pago exige obrigatoriamente protocolo HTTPS e domínio público para aceitar auto_return
+      const isHttps = cleanOrigin.startsWith('https://');
+      const publicBaseUrl = isHttps ? cleanOrigin : 'https://www.bananapro.com.br';
+      const backUrl = `${publicBaseUrl}/dashboard?payment_confirmed=true`;
 
-      const preapprovalPayload = {
-        reason: `Assinatura Banana PRO - Plano ${plan === 'mensal' ? 'Mensal' : 'Anual'}`,
-        auto_recurring: {
-          frequency: frequency,
-          frequency_type: 'months',
-          transaction_amount: finalAmount,
-          currency_id: 'BRL'
+      const preferencePayload = {
+        items: [
+          {
+            title: selectedConfig.title,
+            quantity: 1,
+            unit_price: finalAmount,
+            currency_id: 'BRL'
+          }
+        ],
+        payer: {
+          email: email
         },
-        payer_email: email,
-        status: 'pending',
-        back_url: backUrl
+        payment_methods: {
+          installments: selectedConfig.installments
+        },
+        external_reference: user_id.toString(),
+        back_urls: {
+          success: backUrl,
+          failure: `${publicBaseUrl}/checkout?plan=${plan}`,
+          pending: backUrl
+        },
+        auto_return: 'approved'
       };
 
-      const preRes = await fetch('https://api.mercadopago.com/preapproval', {
+      const prefRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(preapprovalPayload)
+        body: JSON.stringify(preferencePayload)
       });
 
-      const preData = await preRes.json();
+      const prefData = await prefRes.json();
       
-      if (!preRes.ok || !preData.id) {
-        console.error('Erro ao criar assinatura Preapproval:', preData);
-        const errMsg = preData.error === 'internal_error' || !preData.message
-          ? 'Erro temporário nos servidores de teste do Mercado Pago. Por favor, tente novamente.'
-          : preData.message;
+      if (!prefRes.ok || !prefData.id) {
+        console.error('Erro ao criar preferência de pagamento no Mercado Pago:', prefData);
+        const errMsg = prefData.error === 'internal_error' || !prefData.message
+          ? 'Erro temporário nos servidores do Mercado Pago. Por favor, tente novamente.'
+          : prefData.message;
         return res.status(400).json({ error: errMsg });
       }
 
-      // Assinatura pendente criada com sucesso! Atualiza o banco de dados.
-      // 1. Cria o registro de ordem pendente
+      // Cria o registro de ordem pendente no Supabase associando o preference ID
       const { error: insertError } = await supabase
         .from('orders')
         .insert({
@@ -166,20 +186,17 @@ export default async function handler(req: any, res: any) {
           total_amount: finalAmount,
           status: 'pending',
           payment_method: 'Cartão de Crédito',
-          tracking_code: preData.id.toString(),
+          tracking_code: prefData.id.toString(),
         });
 
       if (insertError) {
         console.error('Erro ao criar ordem pendente no Supabase:', insertError);
       }
 
-      // NOTA: O perfil do usuário NÃO é ativado aqui. O Webhook fará isso de forma segura
-      // assim que receber a notificação do pagamento aprovado (primeiro ciclo da assinatura).
-
       return res.status(200).json({
         payment_method_id: 'credit_card',
-        subscription_id: preData.id,
-        init_point: preData.init_point,
+        preference_id: prefData.id,
+        init_point: prefData.init_point,
         status: 'pending'
       });
     }

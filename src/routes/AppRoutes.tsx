@@ -1,4 +1,6 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React, { useEffect } from "react";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import LandingPage from "../pages/LandingPage";
 import DashboardOverview from "../pages/Dashboard/Overview";
 import FinancialStatement from "../pages/Financial/Statement";
@@ -38,9 +40,47 @@ import Library from "../pages/Library/Library";
 import UserProfile from "../pages/Dashboard/UserProfile";
 import NotificationsCenter from "../pages/Dashboard/NotificationsCenter";
 
+function AuthCallbackHandler() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && (hash.includes("access_token=") || hash.includes("type=signup") || hash.includes("type=recovery"))) {
+      console.log("AuthCallbackHandler: Token de autenticação detectado no hash:", hash);
+
+      const cleanPath = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanPath);
+
+      const savedTarget = localStorage.getItem("auth_redirect_target") || sessionStorage.getItem("auth_redirect_target");
+      if (savedTarget) {
+        localStorage.removeItem("auth_redirect_target");
+        sessionStorage.removeItem("auth_redirect_target");
+        console.log("AuthCallbackHandler: Navegando para o destino salvo:", savedTarget);
+        navigate(savedTarget, { replace: true });
+        return;
+      }
+
+      // Se não havia rota salva e caiu na raiz, direciona para o checkout
+      if (location.pathname === "/" || location.pathname === "") {
+        console.log("AuthCallbackHandler: Redirecionando usuário para /checkout");
+        navigate("/checkout", { replace: true });
+      }
+    } else if (hash && hash.includes("error_description=")) {
+      const params = new URLSearchParams(hash.replace("#", "?"));
+      const errorMsg = params.get("error_description") || "Erro na autenticação.";
+      toast.error(decodeURIComponent(errorMsg));
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [navigate, location]);
+
+  return null;
+}
+
 export default function AppRoutes() {
   return (
     <BrowserRouter>
+      <AuthCallbackHandler />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/vendas" element={<SalesPage />} />
@@ -91,4 +131,3 @@ export default function AppRoutes() {
     </BrowserRouter>
   );
 }
-

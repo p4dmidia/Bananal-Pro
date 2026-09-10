@@ -141,11 +141,21 @@ export default function UserProfile() {
       if (error) throw error;
 
       if (data && data.length > 0) {
+        const getPlanInfo = (totalAmount: number) => {
+          const amount = Number(totalAmount);
+          if (amount <= 250) {
+            return { daysLimit: 90, planName: 'Plano Trimestral', value: 'R$ 197,00 (3 meses)' };
+          }
+          if (amount <= 400) {
+            return { daysLimit: 180, planName: 'Plano Semestral', value: 'R$ 357,00 (6 meses)' };
+          }
+          return { daysLimit: 365, planName: 'Plano Anual (Membro Fundador)', value: 'R$ 497,00 (1 ano)' };
+        };
+
         // Prioritize finding a valid paid order
         let latestOrder = data.find(o => {
           if (o.status !== 'paid') return false;
-          const isMonthly = o.total_amount <= 150;
-          const daysLimit = isMonthly ? 30 : 365;
+          const { daysLimit } = getPlanInfo(o.total_amount);
           const orderDate = new Date(o.created_at);
           const expiryDate = new Date(orderDate.getTime() + daysLimit * 24 * 60 * 60 * 1000);
           return new Date() <= expiryDate;
@@ -155,8 +165,7 @@ export default function UserProfile() {
         if (!latestOrder) {
           latestOrder = data.find(o => {
             if (o.status !== 'cancelled') return false;
-            const isMonthly = o.total_amount <= 150;
-            const daysLimit = isMonthly ? 30 : 365;
+            const { daysLimit } = getPlanInfo(o.total_amount);
             const orderDate = new Date(o.created_at);
             const expiryDate = new Date(orderDate.getTime() + daysLimit * 24 * 60 * 60 * 1000);
             return new Date() <= expiryDate;
@@ -169,8 +178,7 @@ export default function UserProfile() {
         }
         
         if (latestOrder) {
-          const isMonthly = latestOrder.total_amount <= 150;
-          const daysLimit = isMonthly ? 30 : 365;
+          const { daysLimit, planName, value } = getPlanInfo(latestOrder.total_amount);
           const orderDate = new Date(latestOrder.created_at);
           const expiryDate = new Date(orderDate.getTime() + daysLimit * 24 * 60 * 60 * 1000);
           
@@ -182,8 +190,8 @@ export default function UserProfile() {
 
           setSubscription({
             id: latestOrder.id,
-            planName: isMonthly ? "Plano Mensal" : "Plano Anual (Membro Fundador)",
-            value: isMonthly ? "R$ 97,00/mês" : "R$ 497,00/ano",
+            planName,
+            value,
             status: latestOrder.status === 'cancelled' 
               ? 'Cancelamento Solicitado' 
               : isProcessingPayment 

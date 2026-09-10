@@ -142,16 +142,35 @@ export default async function handler(req: any, res: any) {
             console.warn(`Webhook: Nenhum pagamento aprovado/processado encontrado para preapproval ${preapprovalId}`);
           }
         } else {
-          console.error(`Webhook: Erro ao buscar pagamentos para preapproval ${preapprovalId}:`, payData);
+          console.log(`Webhook: Nenhum pagamento em authorized_payments para preapproval ${preapprovalId}. Verificando status da assinatura diretamente...`);
         }
       } catch (err) {
         console.error(`Webhook: Erro de rede ao buscar pagamentos para preapproval ${preapprovalId}:`, err);
       }
+
+      // Se não há pagamento financeiro gerado (ex: cliente acabou de cadastrar cartão no trial de 7 dias ou cancelou)
+      if (!paymentId) {
+        try {
+          const preRes = await fetch(`https://api.mercadopago.com/preapproval/${preapprovalId}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${MERCADO_PAGO_ACCESS_TOKEN}`
+            }
+          });
+          const preData = await preRes.json();
+          if (preRes.ok && preData.id) {
+            console.log(`Webhook: Preapproval direto ${preapprovalId} obtido. Status: ${preData.status}`);
+            return await handlePreapprovalDirect(preData, res);
+          }
+        } catch (err) {
+          console.error(`Webhook: Erro ao buscar preapproval direto ${preapprovalId}:`, err);
+        }
+      }
     }
 
     if (!paymentId) {
-      console.warn('ID do pagamento não encontrado no corpo do Webhook.');
-      return res.status(200).json({ status: 'ignored', message: 'No payment ID found in webhook.' });
+      console.warn('ID do pagamento ou assinatura ativa não processada no corpo do Webhook.');
+      return res.status(200).json({ status: 'ignored', message: 'No payment ID or actionable preapproval found in webhook.' });
     }
 
     // Consulta os detalhes do pagamento diretamente na API do Mercado Pago para segurança
@@ -353,8 +372,9 @@ export default async function handler(req: any, res: any) {
             const now = new Date();
             for (const o of activePaidOrders) {
               const createdDate = new Date(o.created_at);
-              // Plano Anual (> R$ 150): 365 dias, Plano Mensal: 30 dias
-              const daysLimit = Number(o.total_amount) > 150 ? 365 : 30;
+              // Trimestral (<= 250): 90 dias, Semestral (<= 400): 180 dias, Anual (> 400): 365 dias
+              const amount = Number(o.total_amount);
+              const daysLimit = amount <= 250 ? 90 : (amount <= 400 ? 180 : 365);
               const expirationDate = new Date(createdDate.getTime() + daysLimit * 24 * 60 * 60 * 1000);
               if (now <= expirationDate) {
                 hasActiveSubscription = true;
@@ -409,9 +429,10 @@ async function processProfitSharingAndNotifications(order: any, paymentData: any
 
     // 2. Notificação do Telegram
     if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
-      const planName = Number(order.total_amount) > 150 ? 'Anual' : 'Mensal';
+      const amount = Number(order.total_amount);
+      const planName = amount <= 250 ? 'Trimestral' : (amount <= 400 ? 'Semestral' : 'Anual');
       const paymentMethodName = paymentData.payment_method_id === 'pix' ? 'Pix' : 'Cartão de Crédito';
-      const formattedAmount = Number(order.total_amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      const formattedAmount = amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
       const messageText = `🔔 Nova Venda Aprovada!\n📦 Plano: ${planName}\n💰 Valor Bruto: ${formattedAmount}\n💳 Método de Pagamento: ${paymentMethodName}\nCliente ${buyerName}`;
 
@@ -473,5 +494,150 @@ async function processProfitSharingAndNotifications(order: any, paymentData: any
     }
   } catch (err) {
     console.error('Erro no processamento de divisão de lucros/notificação:', err);
+  }
+}
+
+async function handlePreapprovalDirect(preData: any, res: any) {
+  try {
+    const preapprovalId = preData.id.toString();
+    const status = preData.status;
+    const payerEmail = preData.payer_email;
+    const externalRef = preData.external_reference;
+    const nextPaymentDate = preData.next_payment_date;
+
+    console.log(`handlePreapprovalDirect: ID ${preapprovalId}, Status: ${status}, Email: ${payerEmail}, ExtRef: ${externalRef}`);
+
+    // 1. Localiza a ordem pelo tracking_code
+    let { data: orders } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('tracking_code', preapprovalId)
+      .order('created_at', { ascending: false });
+
+    let order = orders && orders.length > 0 ? orders[0] : null;
+
+    // Se não achou ordem, tenta vincular usuário via external_reference ou payer_email
+    let targetUserId = order?.user_id || (externalRef ? Number(externalRef) : null);
+
+    if (!targetUserId && payerEmail) {
+      const { data: userProfile } = await supabase
+        .from('user_profiles')
+        .select('id, full_name')
+        .eq('email', payerEmail)
+        .maybeSingle();
+
+      if (userProfile) {
+        targetUserId = userProfile.id;
+      }
+    }
+
+    if (!order && targetUserId) {
+      const { data: newOrder, error: createOrderErr } = await supabase
+        .from('orders')
+        .insert({
+          user_id: targetUserId,
+          total_amount: Number(preData.auto_recurring?.transaction_amount || 97.00),
+          status: status === 'authorized' ? 'authorized' : 'cancelled',
+          payment_method: 'Cartão de Crédito',
+          tracking_code: preapprovalId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select('*')
+        .maybeSingle();
+
+      if (!createOrderErr && newOrder) {
+        order = newOrder;
+      }
+    }
+
+    if (status === 'authorized') {
+      // Atualiza o pedido para 'authorized'
+      if (order && order.status !== 'paid' && order.status !== 'authorized') {
+        await supabase
+          .from('orders')
+          .update({ status: 'authorized', updated_at: new Date().toISOString() })
+          .eq('id', order.id);
+      }
+
+      // Ativa o usuário e define o trial_ends_at
+      if (targetUserId) {
+        const updatePayload: any = {
+          is_active: true,
+          updated_at: new Date().toISOString()
+        };
+        if (nextPaymentDate) {
+          updatePayload.trial_ends_at = nextPaymentDate;
+        }
+
+        const { error: profileErr } = await supabase
+          .from('user_profiles')
+          .update(updatePayload)
+          .eq('id', targetUserId);
+
+        if (profileErr && (profileErr.message?.includes('trial_ends_at') || profileErr.code === '42703')) {
+          await supabase
+            .from('user_profiles')
+            .update({ is_active: true, updated_at: new Date().toISOString() })
+            .eq('id', targetUserId);
+          console.log(`Webhook: Perfil ID ${targetUserId} ativado sem coluna trial_ends_at.`);
+        } else {
+          console.log(`Webhook: Perfil ID ${targetUserId} ativado com sucesso. Trial até: ${nextPaymentDate || 'N/A'}`);
+        }
+
+        // Notificação no Telegram sobre o início do Trial
+        try {
+          const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+          const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+          if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
+            const { data: profile } = await supabase
+              .from('user_profiles')
+              .select('full_name')
+              .eq('id', targetUserId)
+              .maybeSingle();
+
+            const clientName = profile?.full_name || payerEmail || 'Novo Assinante';
+            const trialDateFormatted = nextPaymentDate 
+              ? new Date(nextPaymentDate).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+              : 'em 7 dias';
+
+            const planName = Number(preData.auto_recurring?.transaction_amount || 97) > 150 ? 'Anual' : 'Mensal';
+
+            const msg = `🌱 Novo Teste Grátis de 7 Dias!\n📦 Plano: ${planName}\n💳 Cartão Validado com Sucesso\n👤 Cliente: ${clientName}\n🗓️ Primeira Cobrança: ${trialDateFormatted}\n💡 As comissões serão geradas na data da primeira cobrança.`;
+
+            await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg })
+            });
+          }
+        } catch (teleErr) {
+          console.error('Erro ao enviar notificação de trial no Telegram via webhook:', teleErr);
+        }
+      }
+
+      return res.status(200).json({ status: 'success', message: 'Preapproval trial authorized and user activated' });
+    } else if (status === 'cancelled' || status === 'paused') {
+      console.log(`Webhook: Assinatura ${preapprovalId} cancelada/pausada. Desativando usuário...`);
+      if (order) {
+        await supabase
+          .from('orders')
+          .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+          .eq('id', order.id);
+      }
+      if (targetUserId) {
+        await supabase
+          .from('user_profiles')
+          .update({ is_active: false, updated_at: new Date().toISOString() })
+          .eq('id', targetUserId);
+      }
+      return res.status(200).json({ status: 'success', message: `Preapproval ${status} processed` });
+    }
+
+    return res.status(200).json({ status: 'ignored', message: `Preapproval status ${status} not actionable` });
+  } catch (err: any) {
+    console.error('Erro ao processar preapproval direto no Webhook:', err);
+    return res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
 }

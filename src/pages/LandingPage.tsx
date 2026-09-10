@@ -691,59 +691,99 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {/* Mensal */}
-            <div className="bg-[#021c12]/60 backdrop-blur-md border border-emerald-900/40 rounded-[2.5rem] p-8 md:p-10 relative flex flex-col justify-between shadow-sm hover:shadow-xl hover:border-emerald-800 transition-all duration-300 text-left border-glow">
+          <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {/* Trimestral */}
+            <div className="bg-[#021c12]/60 backdrop-blur-md border border-emerald-900/40 rounded-[2.5rem] p-7 md:p-8 relative flex flex-col justify-between shadow-sm hover:shadow-xl hover:border-emerald-800 transition-all duration-300 text-left border-glow">
               <div>
                 <span className="text-zinc-400 text-[11px] font-bold tracking-wider uppercase font-inter block">
-                  Acesso Mensal Recorrente
+                  Acesso Trimestral
                 </span>
                 
                 <div className="mt-3">
                   <span className="bg-emerald-950 text-emerald-400 border border-emerald-900/30 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider font-inter inline-block">
-                    Flexibilidade Total
+                    3 Meses de Acesso
                   </span>
                 </div>
                 
-                <p className="text-zinc-400 text-[11px] font-bold uppercase tracking-wider mt-8">
+                <p className="text-zinc-400 text-[11px] font-bold uppercase tracking-wider mt-6">
                   Por apenas:
                 </p>
                 
                 <div className="mt-2 mb-1 flex items-baseline gap-1">
-                  <span className="text-5xl font-black text-tertiary-fixed tracking-tight font-headline">R$ 97</span>
-                  <span className="text-zinc-400 font-sans text-sm">/mês</span>
+                  <span className="text-4xl font-black text-tertiary-fixed tracking-tight font-headline">R$ 197</span>
+                  <span className="text-zinc-400 font-sans text-xs">à vista</span>
                 </div>
                 
-                <p className="text-zinc-300 font-sans text-sm font-semibold mb-6">
-                  Acesso mensal sem fidelidade
+                <p className="text-zinc-300 font-sans text-xs font-semibold mb-4">
+                  ou em até 3x no cartão de crédito
                 </p>
                 
-                <div className="inline-block border border-emerald-950 bg-emerald-950/30 px-4 py-1.5 rounded-xl text-xs text-zinc-450 font-medium font-sans">
-                  Ideal para testar os recursos.
+                <div className="inline-block border border-emerald-950 bg-emerald-950/30 px-3 py-1 rounded-xl text-[11px] text-zinc-400 font-medium font-sans">
+                  Ideal para testar na safra.
                 </div>
               </div>
               
-              <div className="mt-10">
+              <div className="mt-8">
                 <Link
-                  to="/auth/register?offer=padrao&plan=mensal"
-                  className="w-full bg-[#006d3b] hover:bg-emerald-600 text-white py-4.5 rounded-2xl font-headline font-bold text-xs tracking-wider uppercase transition-all duration-300 active:scale-95 block text-center cursor-pointer"
+                  to="/auth/register?offer=padrao&plan=trimestral"
+                  className="w-full bg-[#006d3b] hover:bg-emerald-600 text-white py-3.5 rounded-2xl font-headline font-bold text-xs tracking-wider uppercase transition-all duration-300 active:scale-95 block text-center cursor-pointer"
                 >
-                  Assinar Plano Mensal
+                  Assinar Trimestral
                 </Link>
-                <p className="text-[10px] text-zinc-500 mt-4 text-center font-sans">
-                  ✓ Acesso imediato • Cancele quando quiser • Sem fidelidade
-                </p>
-                <p className="text-[10px] text-zinc-400 mt-6 font-sans leading-relaxed text-left">
-                  Tenha acesso a todas as ferramentas de solo, suporte técnico dos agrônomos e comunidade VIP mês a mês.
+                <p className="text-[10px] text-zinc-500 mt-3 text-center font-sans">
+                  ✓ Acesso imediato • Pix ou Cartão
                 </p>
               </div>
             </div>
 
-            {/* Anual */}
-            <div className="bg-[#021c12]/80 backdrop-blur-md border-2 border-tertiary-fixed rounded-[2.5rem] p-8 md:p-10 relative flex flex-col justify-between overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 text-left border-glow">
-              {/* Slanted banner top-right */}
-              <div className="absolute top-0 right-0 bg-tertiary-fixed text-[#00170F] text-[10px] font-black uppercase tracking-widest px-6 py-2 rounded-bl-2xl">
-                Poucas Vagas
+            {/* Semestral */}
+            <div className="bg-[#021c12]/60 backdrop-blur-md border border-emerald-900/40 rounded-[2.5rem] p-7 md:p-8 relative flex flex-col justify-between shadow-sm hover:shadow-xl hover:border-emerald-800 transition-all duration-300 text-left border-glow">
+              <div>
+                <span className="text-zinc-400 text-[11px] font-bold tracking-wider uppercase font-inter block">
+                  Acesso Semestral
+                </span>
+                
+                <div className="mt-3">
+                  <span className="bg-emerald-950 text-emerald-400 border border-emerald-900/30 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider font-inter inline-block">
+                    6 Meses de Acesso
+                  </span>
+                </div>
+                
+                <p className="text-zinc-400 text-[11px] font-bold uppercase tracking-wider mt-6">
+                  Por apenas:
+                </p>
+                
+                <div className="mt-2 mb-1 flex items-baseline gap-1">
+                  <span className="text-4xl font-black text-tertiary-fixed tracking-tight font-headline">R$ 357</span>
+                  <span className="text-zinc-400 font-sans text-xs">à vista</span>
+                </div>
+                
+                <p className="text-zinc-300 font-sans text-xs font-semibold mb-4">
+                  ou em até 6x no cartão de crédito
+                </p>
+                
+                <div className="inline-block border border-emerald-950 bg-emerald-950/30 px-3 py-1 rounded-xl text-[11px] text-zinc-400 font-medium font-sans">
+                  Acompanhamento contínuo da lavoura.
+                </div>
+              </div>
+              
+              <div className="mt-8">
+                <Link
+                  to="/auth/register?offer=padrao&plan=semestral"
+                  className="w-full bg-[#006d3b] hover:bg-emerald-600 text-white py-3.5 rounded-2xl font-headline font-bold text-xs tracking-wider uppercase transition-all duration-300 active:scale-95 block text-center cursor-pointer"
+                >
+                  Assinar Semestral
+                </Link>
+                <p className="text-[10px] text-zinc-500 mt-3 text-center font-sans">
+                  ✓ Acesso imediato • Pix ou Cartão
+                </p>
+              </div>
+            </div>
+
+            {/* Anual (Destaque) */}
+            <div className="bg-[#021c12]/80 backdrop-blur-md border-2 border-tertiary-fixed rounded-[2.5rem] p-7 md:p-8 relative flex flex-col justify-between overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 text-left border-glow">
+              <div className="absolute top-0 right-0 bg-tertiary-fixed text-[#00170F] text-[9px] font-black uppercase tracking-widest px-4 py-1.5 rounded-bl-xl">
+                Mais Escolhido
               </div>
               
               <div>
@@ -751,43 +791,40 @@ export default function LandingPage() {
                   Acesso Completo de 1 Ano
                 </span>
                 
-                <div className="mt-3 flex items-center gap-3">
+                <div className="mt-3 flex items-center gap-2">
                   <span className="text-zinc-500 line-through text-xs font-medium">De R$ 797/ano</span>
-                  <span className="bg-emerald-950 text-tertiary-fixed border border-emerald-900/30 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider font-inter inline-block">
+                  <span className="bg-emerald-950 text-tertiary-fixed border border-emerald-900/30 text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider font-inter inline-block">
                     Desconto Especial
                   </span>
                 </div>
                 
-                <p className="text-zinc-400 text-[11px] font-bold uppercase tracking-wider mt-8">
+                <p className="text-zinc-400 text-[11px] font-bold uppercase tracking-wider mt-6">
                   Por apenas:
                 </p>
                 
-                <div className="mt-2 mb-1 flex items-baseline gap-1.5 font-headline">
-                  <span className="text-lg font-bold text-tertiary-fixed">12x de</span>
-                  <span className="text-5xl font-black text-tertiary-fixed tracking-tight">R$ 49,70</span>
+                <div className="mt-2 mb-1 flex items-baseline gap-1 font-headline">
+                  <span className="text-4xl font-black text-tertiary-fixed tracking-tight">R$ 497</span>
+                  <span className="text-zinc-400 font-sans text-xs">à vista</span>
                 </div>
                 
-                <p className="text-zinc-300 font-sans text-sm font-semibold mb-6">
-                  ou <span className="font-bold text-tertiary-fixed">R$ 497 à vista</span> por um ano de acesso
+                <p className="text-zinc-300 font-sans text-xs font-semibold mb-4">
+                  ou em até 12x no cartão de crédito
                 </p>
                 
-                <div className="inline-block border border-emerald-950 bg-emerald-950/30 px-4 py-1.5 rounded-xl text-xs text-zinc-400 font-medium font-sans">
-                  Menos de um café por dia.
+                <div className="inline-block border border-emerald-950 bg-emerald-950/30 px-3 py-1 rounded-xl text-[11px] text-zinc-400 font-medium font-sans">
+                  Economia máxima anual.
                 </div>
               </div>
               
-              <div className="mt-10">
+              <div className="mt-8">
                 <Link
                   to="/auth/register?offer=padrao&plan=anual"
-                  className="w-full bg-[#006d3b] hover:bg-emerald-600 text-white py-4.5 rounded-2xl font-headline font-bold text-xs tracking-wider uppercase transition-all duration-300 shadow-md hover:shadow-lg active:scale-95 block text-center cursor-pointer font-sans"
+                  className="w-full bg-[#006d3b] hover:bg-emerald-600 text-white py-3.5 rounded-2xl font-headline font-bold text-xs tracking-wider uppercase transition-all duration-300 shadow-md hover:shadow-lg active:scale-95 block text-center cursor-pointer font-sans"
                 >
-                  Quero Garantir Meu Acesso Fundador Agora!
+                  Garantir Acesso Anual
                 </Link>
-                <p className="text-[10px] text-zinc-500 mt-4 text-center font-sans">
-                  ✓ Acesso imediato • Pagamento 100% seguro • Cancele quando quiser
-                </p>
-                <p className="text-[10px] text-zinc-400 mt-6 font-sans leading-relaxed text-left">
-                  Esta oferta de lançamento é por tempo limitado e exclusiva para quem fechar primeiro. Quando estas poucas vagas terminarem, o lote será encerrado e o valor será reajustado.
+                <p className="text-[10px] text-zinc-500 mt-3 text-center font-sans">
+                  ✓ Acesso imediato • 7 dias de garantia
                 </p>
               </div>
             </div>
