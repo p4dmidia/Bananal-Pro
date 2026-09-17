@@ -8,6 +8,7 @@ import CourseCatalog from "../pages/Courses/Catalog";
 import Login from "../pages/Auth/Login";
 import Register from "../pages/Auth/Register";
 import ForgotPassword from "../pages/Auth/ForgotPassword";
+import ResetPassword from "../pages/Auth/ResetPassword";
 import CoursePlayer from "../pages/Courses/Player";
 import ProducerDashboard from "../pages/Courses/Producer";
 import CourseDetail from "../pages/Courses/CourseDetail";
@@ -48,24 +49,40 @@ function AuthCallbackHandler() {
     const hash = window.location.hash;
     if (hash && (hash.includes("access_token=") || hash.includes("type=signup") || hash.includes("type=recovery"))) {
       console.log("AuthCallbackHandler: Token de autenticação detectado no hash:", hash);
+      const isRecovery = hash.includes("type=recovery") || location.pathname === "/auth/reset-password";
 
-      const cleanPath = window.location.pathname;
-      window.history.replaceState({}, document.title, cleanPath);
+      const timer = setTimeout(() => {
+        const cleanPath = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanPath);
 
-      const savedTarget = localStorage.getItem("auth_redirect_target") || sessionStorage.getItem("auth_redirect_target");
-      if (savedTarget) {
-        localStorage.removeItem("auth_redirect_target");
-        sessionStorage.removeItem("auth_redirect_target");
-        console.log("AuthCallbackHandler: Navegando para o destino salvo:", savedTarget);
-        navigate(savedTarget, { replace: true });
-        return;
-      }
+        if (isRecovery) {
+          console.log("AuthCallbackHandler: Redirecionando para formulário de redefinição de senha");
+          navigate("/auth/reset-password", { replace: true });
+          return;
+        }
 
-      // Se não havia rota salva e caiu na raiz, direciona para o checkout
-      if (location.pathname === "/" || location.pathname === "") {
-        console.log("AuthCallbackHandler: Redirecionando usuário para /checkout");
-        navigate("/checkout", { replace: true });
-      }
+        const savedTarget = localStorage.getItem("auth_redirect_target") || sessionStorage.getItem("auth_redirect_target");
+        if (savedTarget) {
+          localStorage.removeItem("auth_redirect_target");
+          sessionStorage.removeItem("auth_redirect_target");
+          console.log("AuthCallbackHandler: Navegando para o destino salvo:", savedTarget);
+          navigate(savedTarget, { replace: true });
+          return;
+        }
+
+        // Se estiver em telas de auth ou na raiz, direciona para o dashboard
+        if (
+          location.pathname === "/" || 
+          location.pathname === "" || 
+          location.pathname === "/auth/login" || 
+          location.pathname === "/auth/register"
+        ) {
+          console.log("AuthCallbackHandler: Redirecionando usuário para /dashboard");
+          navigate("/dashboard", { replace: true });
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
     } else if (hash && hash.includes("error_description=")) {
       const params = new URLSearchParams(hash.replace("#", "?"));
       const errorMsg = params.get("error_description") || "Erro na autenticação.";
@@ -93,6 +110,7 @@ export default function AppRoutes() {
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/register" element={<Register />} />
         <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+        <Route path="/auth/reset-password" element={<ResetPassword />} />
         <Route path="/checkout/:slug?" element={<Checkout />} />
         
         {/* Admin Routes */}

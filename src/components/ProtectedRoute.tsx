@@ -80,7 +80,7 @@ export function ProtectedRoute({
       profile?.is_active !== true && 
       !hasPaymentParams
     ) {
-      return <Navigate to="/checkout" replace />;
+      return <Navigate to="/checkout?reason=plan_required" replace />;
     }
   }
 

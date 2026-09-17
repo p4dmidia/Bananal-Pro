@@ -3,12 +3,14 @@ import { motion } from "motion/react";
 import { Mail, Lock, ArrowRight, Sprout, Globe, CheckCircle2, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "react-hot-toast";
 
 export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const offerSlug = searchParams.get("offer");
+  const { user, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,17 +21,15 @@ export default function Login() {
 
   // Se o usuário já estiver logado, redireciona
   React.useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        if (offerSlug) {
-          const plan = searchParams.get("plan") || "anual";
-          navigate(`/checkout/${offerSlug}?plan=${plan}`, { replace: true });
-        } else {
-          navigate("/dashboard", { replace: true });
-        }
+    if (!authLoading && user) {
+      if (offerSlug) {
+        const plan = searchParams.get("plan") || "anual";
+        navigate(`/checkout/${offerSlug}?plan=${plan}`, { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
       }
-    });
-  }, [navigate, offerSlug, searchParams]);
+    }
+  }, [user, authLoading, navigate, offerSlug, searchParams]);
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
@@ -76,7 +76,19 @@ export default function Login() {
         navigate("/dashboard");
       }
     } catch (err: any) {
-      setError(err.message || "Erro ao realizar login. Verifique suas credenciais.");
+      console.error("Login error:", err);
+      const rawMsg = (err.message || "").toLowerCase();
+      if (rawMsg.includes("invalid login credentials") || rawMsg.includes("invalid_grant")) {
+        setError(
+          "E-mail ou senha incorretos. Se a sua conta foi criada pelo Google, use o botão 'Entrar com o Google' acima. Se você esqueceu ou ainda não criou uma senha para este e-mail, clique em 'Esqueceu a senha?' abaixo para cadastrar uma."
+        );
+      } else if (rawMsg.includes("email not confirmed")) {
+        setError("Seu e-mail ainda não foi confirmado. Verifique a caixa de entrada do seu e-mail.");
+      } else if (rawMsg.includes("too many requests") || rawMsg.includes("rate limit")) {
+        setError("Muitas tentativas consecutivas de login. Por segurança, aguarde alguns instantes e tente novamente.");
+      } else {
+        setError(err.message || "Erro ao realizar login. Verifique suas credenciais e tente novamente.");
+      }
     } finally {
       setLoading(false);
     }

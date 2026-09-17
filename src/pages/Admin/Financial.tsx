@@ -638,14 +638,19 @@ export default function AdminFinancial() {
 
   const fetchAllData = async () => {
     setLoading(true);
-    await fetchSubscriptions();
-    await fetchPartnerEarnings();
-    await fetchSharingConfigs();
-    if (isAdmin) {
-      await fetchUserList();
+    try {
+      await Promise.all([
+        fetchSubscriptions(),
+        fetchPartnerEarnings(),
+        fetchSharingConfigs(),
+        isAdmin ? fetchUserList() : Promise.resolve(),
+        fetchCompanyTransactions(),
+      ]);
+    } catch (err) {
+      console.error("Erro ao carregar dados financeiros:", err);
+    } finally {
+      setLoading(false);
     }
-    await fetchCompanyTransactions();
-    setLoading(false);
   };
 
   useEffect(() => {

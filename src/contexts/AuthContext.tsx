@@ -34,33 +34,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfileLoading(true);
     try {
       console.log('Auth: Fetching profile for', userId, 'with email', email);
+      
+      // 1. Busca direta pelo mocha_user_id
       let { data, error } = await (supabase as any)
-        .from('my_profile')
+        .from('user_profiles')
         .select('*')
+        .eq('mocha_user_id', userId)
         .maybeSingle() as any;
 
-      console.log('Auth: Direct fetch data:', data, 'error:', error);
-
+      // 2. Fallback por email caso o mocha_user_id ainda não tenha sido vinculado
       if (!data && email) {
         console.log('Auth: Fallback fetch using email:', email);
-        const { data: emailData, error: emailError } = await (supabase as any)
+        const { data: emailData } = await (supabase as any)
           .from('user_profiles')
-          .select('id, mocha_user_id, email, full_name, avatar_url, role, city, state, is_active, created_at')
+          .select('*')
           .ilike('email', email)
           .maybeSingle() as any;
-        console.log('Auth: Fallback fetch data:', emailData, 'error:', emailError);
+        
         data = emailData;
         if (data) {
           console.log('Auth: Updating mocha_user_id to', userId, 'for profile ID', data.id);
-          (supabase as any).from('user_profiles').update({ mocha_user_id: userId }).eq('id', data.id).then(({ error: updateError }: any) => {
-            if (updateError) console.error('Auth: Error updating mocha_user_id:', updateError);
-          });
+          (supabase as any)
+            .from('user_profiles')
+            .update({ mocha_user_id: userId })
+            .eq('id', data.id)
+            .then();
         }
       }
 
       if (data) {
-        // Enforce Grace Period Check
-        if (data.is_active && data.role !== 'admin') {
+        // Enforce Grace Period Check only for regular subscribers (not admin, partner or pj)
+        if (data.is_active && data.role !== 'admin' && data.role !== 'partner' && data.role !== 'pj') {
           try {
             const { data: orders, error: ordersError } = await supabase
               .from('orders')
@@ -69,12 +73,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (!ordersError && orders && orders.length > 0) {
               const now = new Date();
-              // Check if there is at least one active order (either paid or cancelled) that is still within its validity period
               const hasActiveOrder = orders.some(o => {
                 if (o.status !== 'paid' && o.status !== 'cancelled') return false;
                 
                 const amount = Number(o.total_amount);
-                // Trimestral (<= 250): 90 dias, Semestral (<= 400): 180 dias, Anual (> 400): 365 dias
                 const daysLimit = amount <= 250 ? 90 : (amount <= 400 ? 180 : 365);
                 const orderDate = new Date(o.created_at);
                 const expiryDate = new Date(orderDate.getTime() + daysLimit * 24 * 60 * 60 * 1000);
@@ -112,20 +114,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setProfile(data);
+      return data;
     } catch (err) {
       console.error('Auth: Error fetching profile:', err);
       setProfile(null);
+      return null;
     } finally {
       setProfileLoading(false);
     }
   };
 
+  // Efeito para escutar mudanças de autenticação sem travar em mutex interno
   useEffect(() => {
     let isMounted = true;
 
-    // Confiamos apenas no onAuthStateChange para inicializar tudo
-    // Ele dispara INITIAL_SESSION automaticamente na montagem
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       console.log('Auth: State change event:', event);
       
       if (!isMounted) return;
@@ -134,31 +137,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(currentSession);
       setUser(currentUser);
 
-      if (currentUser && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED')) {
-        // Buscamos o perfil mas não bloqueamos o fluxo principal
-        fetchProfile(currentUser.id, currentUser.email);
-      } else if (event === 'SIGNED_OUT') {
+      if (!currentUser) {
         setProfile(null);
-      }
-
-      // IMPORTANTE: Liberamos o loading inicial assim que o usuário (ou falta dele) é identificado
-      setLoading(false);
-    });
-
-    // Segurança: Se nada acontecer em 6 segundos, libera a tela
-    const timeout = setTimeout(() => {
-      if (isMounted && loadingRef.current) {
-        console.warn('Auth: Timeout reached, forcing loading to false');
         setLoading(false);
       }
-    }, 6000);
+    });
 
     return () => {
       isMounted = false;
-      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, []);
+
+  // Efeito dedicado para carregar o perfil do usuário ativo
+  useEffect(() => {
+    let isCancelled = false;
+
+    if (user) {
+      fetchProfile(user.id, user.email).finally(() => {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      });
+    }
+
+    // Fallback de segurança para nunca travar tela
+    const timeout = setTimeout(() => {
+      if (!isCancelled && loadingRef.current) {
+        setLoading(false);
+      }
+    }, 4000);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [user?.id, user?.email]);
 
   const signOut = async () => {
     await supabase.auth.signOut();

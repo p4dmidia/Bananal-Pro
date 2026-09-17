@@ -239,13 +239,13 @@ export default function Checkout() {
         } catch (orderErr) {
           console.error("Erro ao buscar ordens canceladas:", orderErr);
         }
-        if (profileData.role === 'admin') {
+        if (profileData.role === 'admin' || profileData.role === 'partner' || profileData.role === 'pj') {
           setProfile((prev: any) => {
             if (prev?.id === profileData.id && prev?.role === profileData.role) return prev;
             return profileData;
           });
           sessionStorage.removeItem("pending_pix_data");
-          toast.success("Bem-vindo, Administrador!");
+          toast.success(`Bem-vindo, ${profileData.role === 'admin' ? 'Administrador' : 'Parceiro'}!`);
           await refreshProfile();
           navigate("/dashboard");
           return true;
@@ -520,6 +520,18 @@ if (loading) {
               {/* Plan Selector inside Card */}
               <div className="p-6 md:p-8 space-y-6 text-left">
                 
+                {searchParams.get("reason") === "plan_required" && (
+                  <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start gap-3 text-amber-900 text-xs font-semibold">
+                    <AlertCircle className="shrink-0 text-amber-600 mt-0.5" size={18} />
+                    <div>
+                      <p className="font-bold text-sm text-amber-950">Acesso Restrito: Assinatura Necessária</p>
+                      <p className="text-amber-800 mt-0.5">
+                        Sua assinatura anterior expirou ou você ainda não possui um plano ativo. Escolha uma das opções abaixo para desbloquear o acesso imediato a todas as ferramentas e cursos do Banana PRO.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Selector Header */}
                 <div className="space-y-3">
                   <label className="text-[10px] font-inter-extrabold text-zinc-500 uppercase tracking-widest block">

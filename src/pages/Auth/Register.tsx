@@ -3,12 +3,14 @@ import { motion } from "motion/react";
 import { Mail, Lock, ArrowRight, User, Sprout, Globe, CheckCircle2, Loader2, AlertCircle, Eye, EyeOff, Smartphone } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "react-hot-toast";
 
 export default function Register() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const offerSlug = searchParams.get("offer") || "padrao";
+  const { user, loading: authLoading } = useAuth();
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -23,13 +25,11 @@ export default function Register() {
 
   // Se o usuário já estiver logado, redireciona diretamente para o checkout
   React.useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        const plan = searchParams.get("plan") || "anual";
-        navigate(`/checkout/${offerSlug}?plan=${plan}`, { replace: true });
-      }
-    });
-  }, [navigate, offerSlug, searchParams]);
+    if (!authLoading && user) {
+      const plan = searchParams.get("plan") || "anual";
+      navigate(`/checkout/${offerSlug}?plan=${plan}`, { replace: true });
+    }
+  }, [user, authLoading, navigate, offerSlug, searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
