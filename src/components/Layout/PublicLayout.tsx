@@ -44,35 +44,35 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           <div className="hidden md:flex items-center gap-8">
             <Link
               to="/"
-              className="text-tertiary-fixed border-b-2 border-tertiary-fixed pb-1 text-xs font-semibold tracking-wider uppercase font-inter"
+              className="text-[#FFE17A] border-b-2 border-[#FFE17A] pb-1 text-xs font-bold tracking-wider uppercase font-inter"
             >
               Home
             </Link>
             <a
               href="#ferramentas"
               onClick={(e) => handleNavClick(e, "#ferramentas")}
-              className="text-zinc-300 hover:text-tertiary-fixed transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
+              className="text-white/90 hover:text-[#FFE17A] transition-colors text-xs font-bold tracking-wider uppercase font-inter"
             >
               Soluções
             </a>
             <a
               href="#comunidade"
               onClick={(e) => handleNavClick(e, "#comunidade")}
-              className="text-zinc-300 hover:text-tertiary-fixed transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
+              className="text-white/90 hover:text-[#FFE17A] transition-colors text-xs font-bold tracking-wider uppercase font-inter"
             >
               Especialistas
             </a>
             <a
               href="#planos"
               onClick={(e) => handleNavClick(e, "#planos")}
-              className="text-zinc-300 hover:text-tertiary-fixed transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
+              className="text-white/90 hover:text-[#FFE17A] transition-colors text-xs font-bold tracking-wider uppercase font-inter"
             >
               Planos
             </a>
             <a
               href="#faq"
               onClick={(e) => handleNavClick(e, "#faq")}
-              className="text-zinc-300 hover:text-tertiary-fixed transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
+              className="text-white/90 hover:text-[#FFE17A] transition-colors text-xs font-bold tracking-wider uppercase font-inter"
             >
               FAQ
             </a>
@@ -81,20 +81,21 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           <div className="flex items-center gap-4">
             <Link
               to="/auth/login"
-              className="hidden md:block text-zinc-300 hover:text-tertiary-fixed transition-colors text-xs font-semibold tracking-wider uppercase font-inter"
+              className="hidden md:block text-white/90 hover:text-[#FFE17A] transition-colors text-xs font-bold tracking-wider uppercase font-inter"
             >
               Login
             </Link>
             <Link
               to="/auth/register"
-              className="hidden sm:block bg-secondary text-white border border-emerald-500/30 px-6 py-2.5 rounded-lg text-xs font-semibold tracking-wider uppercase font-inter active:scale-95 duration-200 transition-all hover:bg-secondary-fixed text-center"
+              style={{ color: '#ffffff' }}
+              className="hidden sm:inline-flex items-center justify-center bg-gradient-to-r from-[#00874A] to-[#00A85C] hover:from-[#00A85C] hover:to-[#00C26B] !text-white border border-emerald-400/40 px-6 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase font-inter active:scale-95 duration-200 transition-all text-center shadow-lg shadow-emerald-950/40"
             >
               Entrar para o Clube
             </Link>
 
             {/* Mobile menu toggle */}
             <button
-              className="md:hidden p-2 text-zinc-300 hover:text-tertiary-fixed"
+              className="md:hidden p-2 text-white hover:text-[#FFE17A]"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -116,7 +117,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               <Link
                 to="/"
                 onClick={() => setIsMenuOpen(false)}
-                className="text-xl font-bold font-headline text-tertiary-fixed"
+                className="text-xl font-bold font-headline text-[#FFE17A]"
               >
                 Home
               </Link>
@@ -126,7 +127,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                   setIsMenuOpen(false);
                   handleNavClick(e, "#ferramentas");
                 }}
-                className="text-xl font-bold font-headline text-zinc-300 hover:text-tertiary-fixed"
+                className="text-xl font-bold font-headline text-white/90 hover:text-[#FFE17A]"
               >
                 Soluções
               </a>
@@ -136,7 +137,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                   setIsMenuOpen(false);
                   handleNavClick(e, "#comunidade");
                 }}
-                className="text-xl font-bold font-headline text-zinc-300 hover:text-tertiary-fixed"
+                className="text-xl font-bold font-headline text-white/90 hover:text-[#FFE17A]"
               >
                 Especialistas
               </a>
@@ -146,7 +147,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                   setIsMenuOpen(false);
                   handleNavClick(e, "#planos");
                 }}
-                className="text-xl font-bold font-headline text-zinc-300 hover:text-tertiary-fixed"
+                className="text-xl font-bold font-headline text-white/90 hover:text-[#FFE17A]"
               >
                 Planos
               </a>
@@ -156,7 +157,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                   setIsMenuOpen(false);
                   handleNavClick(e, "#faq");
                 }}
-                className="text-xl font-bold font-headline text-zinc-300 hover:text-tertiary-fixed"
+                className="text-xl font-bold font-headline text-white/90 hover:text-[#FFE17A]"
               >
                 FAQ
               </a>
@@ -164,14 +165,15 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               <Link
                 to="/auth/login"
                 onClick={() => setIsMenuOpen(false)}
-                className="text-lg font-semibold text-zinc-400 hover:text-tertiary-fixed"
+                className="text-lg font-semibold text-white/80 hover:text-[#FFE17A]"
               >
                 Login
               </Link>
               <Link
                 to="/auth/register"
                 onClick={() => setIsMenuOpen(false)}
-                className="bg-secondary text-white py-4 rounded-xl text-center font-bold text-sm tracking-wider uppercase font-inter hover:bg-secondary-fixed"
+                style={{ color: '#ffffff' }}
+                className="w-full bg-gradient-to-r from-[#00874A] to-[#00A85C] hover:from-[#00A85C] hover:to-[#00C26B] !text-white py-4 rounded-xl text-center font-bold text-sm tracking-wider uppercase font-inter border border-emerald-400/40 shadow-lg"
               >
                 Entrar para o Clube
               </Link>
@@ -275,16 +277,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 <Link to="/termos-de-uso" className="hover:text-secondary hover:underline transition-all">
                   Termos
                 </Link>
-              </li>
-              <li>
-                <a href="#" className="hover:text-secondary hover:underline transition-all">
-                  Suporte
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-secondary hover:underline transition-all">
-                  Vagas
-                </a>
               </li>
             </ul>
           </div>

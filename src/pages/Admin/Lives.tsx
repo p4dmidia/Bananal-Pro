@@ -221,7 +221,6 @@ export default function AdminLives() {
   const fetchLives = async () => {
     setLoading(true);
     try {
-      // Tenta carregar do Supabase. Se a tabela não existir, cai no bloco catch/fallback.
       const { data, error } = await supabase
         .from('lives')
         .select('*')
@@ -230,41 +229,8 @@ export default function AdminLives() {
       if (error) throw error;
       setLives(data || []);
     } catch (err: any) {
-      console.warn("Tabela 'lives' não encontrada ou inacessível. Utilizando fallback local.");
-      const local = localStorage.getItem("admin_lives_db");
-      if (local) {
-        setLives(JSON.parse(local));
-      } else {
-        const defaultLives: LiveItem[] = [
-          {
-            id: "1",
-            title: "Manejo Nutricional e Calagem da Banana Prata",
-            description: "Live técnica focada na interpretação da análise de solo e recomendações práticas para a região Sudeste.",
-            scheduled_at: new Date(Date.now() + 86400000 * 2).toISOString(), // 2 days from now
-            live_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-            status: "scheduled",
-            chat_enabled: true,
-            materials: [
-              { title: "Tabela de Nutrientes Recomendados.pdf", url: "https://example.com/materials/nutrientes.pdf" }
-            ]
-          },
-          {
-            id: "2",
-            title: "Prevenção do Mal do Panamá na Prática",
-            description: "Passo a passo com medidas de biossegurança contra a principal ameaça fúngica dos bananais.",
-            scheduled_at: new Date(Date.now() - 86400000).toISOString(), // Yesterday
-            live_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-            status: "finished",
-            chat_enabled: false,
-            replay_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-            materials: [
-              { title: "Manual de Biosseguranca.pdf", url: "https://example.com/materials/biosseguranca.pdf" }
-            ]
-          }
-        ];
-        setLives(defaultLives);
-        localStorage.setItem("admin_lives_db", JSON.stringify(defaultLives));
-      }
+      console.warn("Erro ao buscar lives do Supabase:", err);
+      toast.error("Erro ao carregar lista de lives: " + (err.message || "Erro de conexão"));
     } finally {
       setLoading(false);
     }
@@ -291,54 +257,51 @@ export default function AdminLives() {
         }
       }
 
-      const payload: LiveItem = {
-        id: editingId || crypto.randomUUID(),
-        title: formData.title,
-        description: formData.description,
-        scheduled_at: formData.scheduled_at,
-        live_url: formData.live_url,
-        status: formData.status,
-        chat_enabled: formData.chat_enabled,
-        replay_url: formData.replay_url || undefined,
-        materials: finalMaterials,
-        host: formData.host || undefined,
-        category: formData.category || undefined,
-        thumbnail_url: formData.thumbnail_url || undefined
-      };
-
-      // Tenta salvar no Supabase
+      // Converte data para ISO String válida
+      let scheduledIso: string;
       try {
-        if (editingId) {
-          const { error } = await supabase
-            .from('lives')
-            .update(payload)
-            .eq('id', editingId);
-          if (error) throw error;
-        } else {
-          const { error } = await supabase
-            .from('lives')
-            .insert([payload]);
-          if (error) throw error;
-        }
-      } catch (dbErr) {
-        // Fallback Local Storage
-        let currentLives = [...lives];
-        if (editingId) {
-          currentLives = currentLives.map(l => l.id === editingId ? payload : l);
-        } else {
-          currentLives = [payload, ...currentLives];
-        }
-        setLives(currentLives);
-        localStorage.setItem("admin_lives_db", JSON.stringify(currentLives));
+        scheduledIso = new Date(formData.scheduled_at).toISOString();
+      } catch {
+        scheduledIso = formData.scheduled_at;
       }
 
-      toast.success(editingId ? "Live atualizada com sucesso!" : "Live agendada com sucesso!");
+      // Payload estritamente compatível com o schema do Supabase
+      const dbPayload: any = {
+        title: formData.title.trim(),
+        description: formData.description?.trim() || "",
+        scheduled_at: scheduledIso,
+        live_url: formData.live_url?.trim() || "",
+        status: formData.status,
+        chat_enabled: formData.chat_enabled,
+        replay_url: formData.replay_url?.trim() || null,
+        materials: finalMaterials,
+        host: formData.host?.trim() || "Dr. Carlos Silva",
+        category: formData.category?.trim() || "Geral"
+      };
+
+      if (editingId) {
+        const { error } = await supabase
+          .from('lives')
+          .update(dbPayload)
+          .eq('id', editingId);
+
+        if (error) throw error;
+        toast.success("Live atualizada com sucesso!");
+      } else {
+        const { error } = await supabase
+          .from('lives')
+          .insert([dbPayload]);
+
+        if (error) throw error;
+        toast.success("Live agendada com sucesso!");
+      }
+
       setIsModalOpen(false);
       resetForm();
-      fetchLives();
+      await fetchLives();
     } catch (err: any) {
       console.error("Error saving live:", err);
-      toast.error("Erro ao salvar: " + err.message);
+      toast.error("Erro ao salvar live: " + (err.message || err));
     } finally {
       setIsSaving(false);
     }
@@ -348,14 +311,8 @@ export default function AdminLives() {
     if (!confirm("Tem certeza que deseja excluir esta transmissão?")) return;
 
     try {
-      try {
-        const { error } = await supabase.from('lives').delete().eq('id', id);
-        if (error) throw error;
-      } catch (dbErr) {
-        const updated = lives.filter(l => l.id !== id);
-        setLives(updated);
-        localStorage.setItem("admin_lives_db", JSON.stringify(updated));
-      }
+      const { error } = await supabase.from('lives').delete().eq('id', id);
+      if (error) throw error;
       toast.success("Transmissão excluída com sucesso!");
       fetchLives();
     } catch (err: any) {
@@ -375,8 +332,10 @@ export default function AdminLives() {
 
       toast.success(
         newStatus === 'live' 
-          ? "Live iniciada! Agora está visível para os assinantes." 
-          : "Live finalizada!"
+          ? "Live iniciada! Agora está visível como AO VIVO para os assinantes." 
+          : newStatus === 'finished'
+          ? "Live marcada como finalizada / gravação."
+          : "Live agendada."
       );
       fetchLives();
     } catch (err: any) {

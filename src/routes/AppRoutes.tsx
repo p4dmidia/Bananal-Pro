@@ -94,9 +94,12 @@ function AuthCallbackHandler() {
   return null;
 }
 
+import ScrollToTop from "../components/Layout/ScrollToTop";
+
 export default function AppRoutes() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AuthCallbackHandler />
       <Routes>
         <Route path="/" element={<LandingPage />} />

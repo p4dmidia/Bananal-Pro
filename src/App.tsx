@@ -3,6 +3,7 @@ import AppRoutes from "./routes/AppRoutes";
 import "./index.css";
 
 import InstallPWA from "./components/PWA/InstallPWA";
+import WhatsAppButton from "./components/Layout/WhatsAppButton";
 
 import { Toaster } from "react-hot-toast";
 
@@ -14,6 +15,7 @@ function App() {
   return (
     <>
       <AppRoutes />
+      <WhatsAppButton />
       <InstallPWA />
       <Toaster 
         position="top-right"
