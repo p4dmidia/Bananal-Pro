@@ -706,6 +706,23 @@
   .whatsapp-float:hover, .whatsapp-float:focus-visible{transform:scale(1.06);}
   .whatsapp-float svg{width:28px; height:28px; color:#fff;}
 </style>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1196011316008685');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1196011316008685&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 </head>
 <body>
 
@@ -962,14 +979,15 @@
    5) GATE_CTA_BY_WATCH_TIME → true = comportamento definitivo (oferta só aparece aos 5:55
                                 do vídeo). false = oferta aparece direto ao carregar a página,
                                 pra revisar o layout inteiro sem precisar assistir o vídeo.
-                                ESTÁ COMO false AGORA A PEDIDO DO USUÁRIO — voltar pra true
-                                quando os ajustes de layout/copy estiverem fechados.
+                                REATIVADO (true) A PEDIDO DO USUÁRIO EM 25/09/2026 — depoimentos,
+                                quadradinhos de conteúdo e planos só aparecem depois de 5:55 de
+                                vídeo assistido (ou aos 7min pelo failsafe, se o rastreamento falhar).
    ============================================================================ */
   const PANDA_VIDEO_ID        = "430afbbb-9532-498a-ae9b-eee82a57ce63";
   const PANDA_LIBRARY_HOST    = "https://player-vz-d1ffbf28-56a.tv.pandavideo.com.br";
   const CTA_REVEAL_SECONDS    = 355; // 5:55
   const CTA_FAILSAFE_SECONDS  = 420; // libera de qualquer forma aos 7min, como rede de segurança
-  const GATE_CTA_BY_WATCH_TIME  = false; // ver item 5 acima
+  const GATE_CTA_BY_WATCH_TIME  = true; // ver item 5 acima
   const CHECKOUT_URL_TRIMESTRAL = "https://www.bananapro.com.br/checkout/padrao?plan=trimestral";
   const CHECKOUT_URL_SEMESTRAL  = "https://www.bananapro.com.br/checkout/padrao?plan=semestral";
   const CHECKOUT_URL_ANUAL      = "https://www.bananapro.com.br/checkout/padrao?plan=anual";
