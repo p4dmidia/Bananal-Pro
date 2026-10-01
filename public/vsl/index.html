@@ -422,7 +422,8 @@
   }
 
   .offer-flag{
-    display:none;
+    display:flex;
+    justify-content:center;
     text-align:center;
     margin:18px 0 46px;
   }
@@ -503,18 +504,9 @@
     .testimonial-card{flex-basis:auto;}
   }
 
-  /* ---- CTA (revealed after watch threshold) ---- */
+  /* ---- CTA (sempre visível) ---- */
   #cta{
-    display:none;
-    opacity:0;
-    transform:translateY(14px);
-    transition:opacity .6s ease, transform .6s ease;
-    pointer-events:none;
-  }
-  #cta.is-visible{
-    opacity:1;
-    transform:translateY(0);
-    pointer-events:auto;
+    display:block;
   }
 
   .cta-card{
@@ -706,23 +698,6 @@
   .whatsapp-float:hover, .whatsapp-float:focus-visible{transform:scale(1.06);}
   .whatsapp-float svg{width:28px; height:28px; color:#fff;}
 </style>
-<!-- Meta Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1196011316008685');
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=1196011316008685&ev=PageView&noscript=1"
-/></noscript>
-<!-- End Meta Pixel Code -->
 </head>
 <body>
 
@@ -919,7 +894,7 @@ src="https://www.facebook.com/tr?id=1196011316008685&ev=PageView&noscript=1"
           </div>
           <span class="plan-installment">ou em até 12x no cartão de crédito</span>
           <span class="plan-sub">Menos de um café por dia.</span>
-          <a id="cta-anual" class="btn btn-primary" href="#" target="_blank" rel="noopener">Garantir minha vaga agora</a>
+          <a id="cta-anual" class="btn btn-primary" href="/auth/register?offer=padrao&plan=anual">Garantir minha vaga agora</a>
           <p class="plan-trust">✓ Acesso imediato • 7 dias de garantia</p>
         </div>
 
@@ -932,7 +907,7 @@ src="https://www.facebook.com/tr?id=1196011316008685&ev=PageView&noscript=1"
           </div>
           <span class="plan-installment">ou em até 6x no cartão de crédito</span>
           <span class="plan-sub">Acompanhamento contínuo.</span>
-          <a id="cta-semestral" class="btn btn-primary" href="#" target="_blank" rel="noopener">Quero começar agora</a>
+          <a id="cta-semestral" class="btn btn-primary" href="/auth/register?offer=padrao&plan=semestral">Quero começar agora</a>
           <p class="plan-trust">✓ Acesso imediato • Pix ou Cartão</p>
         </div>
 
@@ -941,11 +916,11 @@ src="https://www.facebook.com/tr?id=1196011316008685&ev=PageView&noscript=1"
           <span class="plan-tag">3 meses de acesso</span>
           <span class="plan-label">Por apenas:</span>
           <div class="plan-price-row">
-            <span class="plan-price">R$ 197<span>à vista</span></span>
+            <span class="plan-price">R$ 297<span>à vista</span></span>
           </div>
           <span class="plan-installment">ou em até 3x no cartão de crédito</span>
           <span class="plan-sub">Ideal para testar na safra.</span>
-          <a id="cta-trimestral" class="btn btn-primary" href="#" target="_blank" rel="noopener">Quero começar agora</a>
+          <a id="cta-trimestral" class="btn btn-primary" href="/auth/register?offer=padrao&plan=trimestral">Quero começar agora</a>
           <p class="plan-trust">✓ Acesso imediato • Pix ou Cartão</p>
         </div>
       </div>
@@ -966,101 +941,36 @@ src="https://www.facebook.com/tr?id=1196011316008685&ev=PageView&noscript=1"
 <script>
 /* ============================================================================
    CONFIGURAÇÃO — EDITE SOMENTE AQUI
-   1) PANDA_VIDEO_ID         → ID do vídeo na Panda Video (o que vem depois de "?v=" no link)
-   2) CTA_REVEAL_SECONDS     → tempo do vídeo (em segundos) em que a oferta é liberada.
-                                355 = 5min55s, como você pediu.
-   3) CTA_FAILSAFE_SECONDS   → tempo máximo de espera antes de liberar a oferta de qualquer
-                                forma, caso o rastreamento do vídeo falhe por algum motivo
-   4) CHECKOUT_URL_TRIMESTRAL / _SEMESTRAL / _ANUAL → links de checkout por plano.
-                                O ?plan=anual você confirmou. Os valores "trimestral" e
-                                "semestral" abaixo são uma suposição (mesmo padrão de nome
-                                usado no anual) — confirme se o checkout realmente aceita
-                                esses dois valores antes de publicar, e ajuste se precisar.
-   5) GATE_CTA_BY_WATCH_TIME → true = comportamento definitivo (oferta só aparece aos 5:55
-                                do vídeo). false = oferta aparece direto ao carregar a página,
-                                pra revisar o layout inteiro sem precisar assistir o vídeo.
-                                REATIVADO (true) A PEDIDO DO USUÁRIO EM 25/09/2026 — depoimentos,
-                                quadradinhos de conteúdo e planos só aparecem depois de 5:55 de
-                                vídeo assistido (ou aos 7min pelo failsafe, se o rastreamento falhar).
+   1) PANDA_VIDEO_ID         → ID do vídeo na Panda Video
+   2) Links dos botões de compra apontam para /auth/register preservando UTMs
    ============================================================================ */
   const PANDA_VIDEO_ID        = "430afbbb-9532-498a-ae9b-eee82a57ce63";
   const PANDA_LIBRARY_HOST    = "https://player-vz-d1ffbf28-56a.tv.pandavideo.com.br";
-  const CTA_REVEAL_SECONDS    = 355; // 5:55
-  const CTA_FAILSAFE_SECONDS  = 420; // libera de qualquer forma aos 7min, como rede de segurança
-  const GATE_CTA_BY_WATCH_TIME  = true; // ver item 5 acima
-  const CHECKOUT_URL_TRIMESTRAL = "https://www.bananapro.com.br/checkout/padrao?plan=trimestral";
-  const CHECKOUT_URL_SEMESTRAL  = "https://www.bananapro.com.br/checkout/padrao?plan=semestral";
-  const CHECKOUT_URL_ANUAL      = "https://www.bananapro.com.br/checkout/padrao?plan=anual";
-/* ========================================================================== */
 
-  document.getElementById("cta-trimestral").href = CHECKOUT_URL_TRIMESTRAL;
-  document.getElementById("cta-semestral").href  = CHECKOUT_URL_SEMESTRAL;
-  document.getElementById("cta-anual").href      = CHECKOUT_URL_ANUAL;
+  function getRegisterUrl(plan) {
+    const currentParams = new URLSearchParams(window.location.search);
+    currentParams.set("offer", "padrao");
+    currentParams.set("plan", plan);
+    return "/auth/register?" + currentParams.toString();
+  }
+
+  const ctaTrimestral = document.getElementById("cta-trimestral");
+  const ctaSemestral = document.getElementById("cta-semestral");
+  const ctaAnual = document.getElementById("cta-anual");
+
+  if (ctaTrimestral) ctaTrimestral.href = getRegisterUrl("trimestral");
+  if (ctaSemestral) ctaSemestral.href = getRegisterUrl("semestral");
+  if (ctaAnual) ctaAnual.href = getRegisterUrl("anual");
 
   // Depoimentos: os 7 vídeos já vêm com iframe real da Panda Video no HTML (loading="lazy"),
   // mostrando a thumbnail e os controles nativos do player — só carregam de fato quando o
-  // navegador aproxima esse trecho da tela (o usuário só rola até aqui depois dos 5:55 do
-  // vídeo principal, então isso não compete com o carregamento do vídeo de topo).
-
-  // disableForward=true impede clicar para avançar/voltar; excluir "progress" e as setas de
-  // avanço/retorno da lista de controles esconde a barra de arrastar (scrubber). Baseado na
-  // documentação da Panda Video (docs.pandavideo.com/reference/query-params) — teste no ar
-  // antes de rodar tráfego, pois não consegui testar isso neste ambiente.
+  // navegador aproxima esse trecho da tela.
   const iframe = document.getElementById("banana-video");
-  iframe.src = PANDA_LIBRARY_HOST + "/embed/?v=" + PANDA_VIDEO_ID +
-    "&disableForward=true" +
-    "&controls=play-large,play,current-time,volume,captions,settings,pip,cast,fullscreen,airplay";
-
-  let ctaRevealed = false;
-  function revealCTA(){
-    if (ctaRevealed) return;
-    ctaRevealed = true;
-    document.getElementById("offer-flag").classList.add("is-visible");
-    const cta = document.getElementById("cta");
-    cta.style.display = "block";
-    // não faz scroll automático: o vídeo continua no lugar, a oferta só aparece abaixo
-    window.requestAnimationFrame(function(){
-      window.requestAnimationFrame(function(){
-        cta.classList.add("is-visible");
-      });
-    });
+  if (iframe) {
+    iframe.src = PANDA_LIBRARY_HOST + "/embed/?v=" + PANDA_VIDEO_ID +
+      "&disableForward=true" +
+      "&controls=play-large,play,current-time,volume,captions,settings,pip,cast,fullscreen,airplay";
   }
-
-  if (GATE_CTA_BY_WATCH_TIME) {
-    // failsafe: se o rastreamento do vídeo falhar por qualquer motivo, libera a oferta mesmo assim
-    window.setTimeout(revealCTA, CTA_FAILSAFE_SECONDS * 1000);
-  } else {
-    // gate desativado: mostra a página inteira já no carregamento (modo de revisão)
-    revealCTA();
-  }
-
-  // Panda Video Player API — carrega e observa o progresso do vídeo
-  // Docs: https://docs.pandavideo.com/reference/player-api
-  const pandaScript = document.createElement("script");
-  pandaScript.async = true;
-  pandaScript.src = "https://player.pandavideo.com.br/api.v2.js";
-  document.head.appendChild(pandaScript);
-
-  window.pandascripttag = window.pandascripttag || [];
-  window.pandascripttag.push(function(){
-    const player = new PandaPlayer("banana-video", {
-      onReady: function(){
-        player.onEvent(function(e){
-          // evento principal de progresso do player Panda
-          if (e.message === "panda_timeupdate"){
-            const current = (typeof e.currentTime === "number") ? e.currentTime : player.getCurrentTime();
-            if (current >= CTA_REVEAL_SECONDS){
-              revealCTA();
-            }
-          }
-          // cobre variações no nome do evento de "vídeo terminou" entre versões do player
-          if (e.message === "panda_ended" || e.message === "panda_complete"){
-            revealCTA();
-          }
-        });
-      }
-    });
-  });
 </script>
 
 </body>

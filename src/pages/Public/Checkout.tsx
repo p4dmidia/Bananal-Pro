@@ -94,7 +94,7 @@ export default function Checkout() {
   }> = {
     trimestral: {
       name: 'Trimestral',
-      price: 197.00,
+      price: 297.00,
       period: '3 meses',
       installments: 3,
       description: 'Até 3x no cartão ou Pix'
@@ -558,7 +558,7 @@ if (loading) {
                         </span>
                       </div>
                       <div className="mt-3 pt-2 border-t border-zinc-150 w-full flex items-baseline gap-1">
-                        <span className="text-base font-inter-extrabold text-zinc-800">R$ 197,00</span>
+                        <span className="text-base font-inter-extrabold text-zinc-800">R$ 297,00</span>
                         <span className="text-[9px] text-zinc-400 font-inter-medium">/ 3 meses</span>
                       </div>
                     </button>

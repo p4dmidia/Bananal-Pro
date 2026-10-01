@@ -143,8 +143,8 @@ export default function UserProfile() {
       if (data && data.length > 0) {
         const getPlanInfo = (totalAmount: number) => {
           const amount = Number(totalAmount);
-          if (amount <= 250) {
-            return { daysLimit: 90, planName: 'Plano Trimestral', value: 'R$ 197,00 (3 meses)' };
+          if (amount <= 320) {
+            return { daysLimit: 90, planName: 'Plano Trimestral', value: 'R$ 297,00 (3 meses)' };
           }
           if (amount <= 400) {
             return { daysLimit: 180, planName: 'Plano Semestral', value: 'R$ 357,00 (6 meses)' };

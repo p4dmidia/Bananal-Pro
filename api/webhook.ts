@@ -372,9 +372,9 @@ export default async function handler(req: any, res: any) {
             const now = new Date();
             for (const o of activePaidOrders) {
               const createdDate = new Date(o.created_at);
-              // Trimestral (<= 250): 90 dias, Semestral (<= 400): 180 dias, Anual (> 400): 365 dias
+              // Trimestral (<= 320): 90 dias, Semestral (<= 400): 180 dias, Anual (> 400): 365 dias
               const amount = Number(o.total_amount);
-              const daysLimit = amount <= 250 ? 90 : (amount <= 400 ? 180 : 365);
+              const daysLimit = amount <= 320 ? 90 : (amount <= 400 ? 180 : 365);
               const expirationDate = new Date(createdDate.getTime() + daysLimit * 24 * 60 * 60 * 1000);
               if (now <= expirationDate) {
                 hasActiveSubscription = true;
@@ -430,7 +430,7 @@ async function processProfitSharingAndNotifications(order: any, paymentData: any
     // 2. Notificação do Telegram
     if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
       const amount = Number(order.total_amount);
-      const planName = amount <= 250 ? 'Trimestral' : (amount <= 400 ? 'Semestral' : 'Anual');
+      const planName = amount <= 320 ? 'Trimestral' : (amount <= 400 ? 'Semestral' : 'Anual');
       const paymentMethodName = paymentData.payment_method_id === 'pix' ? 'Pix' : 'Cartão de Crédito';
       const formattedAmount = amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 

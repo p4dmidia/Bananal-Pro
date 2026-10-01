@@ -39,7 +39,7 @@ export default async function handler(req: any, res: any) {
 
     // Configuração dos 3 planos de produção
     const planConfigs: Record<string, { amount: number; installments: number; title: string }> = {
-      trimestral: { amount: 197.00, installments: 3, title: 'Banana PRO - Plano Trimestral' },
+      trimestral: { amount: 297.00, installments: 3, title: 'Banana PRO - Plano Trimestral' },
       semestral: { amount: 357.00, installments: 6, title: 'Banana PRO - Plano Semestral' },
       anual: { amount: 497.00, installments: 12, title: 'Banana PRO - Plano Anual' }
     };

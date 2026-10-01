@@ -24,6 +24,7 @@ import Contact from "../pages/Public/Contact";
 import Privacy from "../pages/Public/Privacy";
 import Terms from "../pages/Public/Terms";
 import SalesPage from "../pages/Public/SalesPage";
+import VSLPage from "../pages/Public/VSLPage";
 import Checkout from "../pages/Public/Checkout";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import AdminDashboard from "../pages/Admin/Dashboard";
@@ -103,6 +104,7 @@ export default function AppRoutes() {
       <AuthCallbackHandler />
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/vsl" element={<VSLPage />} />
         <Route path="/vendas" element={<SalesPage />} />
         <Route path="/como-funciona" element={<HowItWorks />} />
         <Route path="/sobre" element={<AboutUs />} />

@@ -192,7 +192,7 @@ async function processProfitSharingAndNotifications(order: any, paymentData: any
     // 2. Notificação do Telegram
     if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
       const amount = Number(order.total_amount);
-      const planName = amount <= 250 ? 'Trimestral' : (amount <= 400 ? 'Semestral' : 'Anual');
+      const planName = amount <= 320 ? 'Trimestral' : (amount <= 400 ? 'Semestral' : 'Anual');
       const paymentMethodName = paymentData.payment_method_id === 'pix' ? 'Pix' : 'Cartão de Crédito';
       const formattedAmount = amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 

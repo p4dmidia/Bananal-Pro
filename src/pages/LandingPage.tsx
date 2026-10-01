@@ -710,7 +710,7 @@ export default function LandingPage() {
                 </p>
                 
                 <div className="mt-2 mb-1 flex items-baseline gap-1">
-                  <span className="text-4xl font-black text-tertiary-fixed tracking-tight font-headline">R$ 197</span>
+                  <span className="text-4xl font-black text-tertiary-fixed tracking-tight font-headline">R$ 297</span>
                   <span className="text-zinc-400 font-sans text-xs">à vista</span>
                 </div>
                 

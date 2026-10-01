@@ -21,6 +21,14 @@ export default defineConfig(({mode}) => {
         name: 'local-serverless-api-proxy',
         configureServer(server) {
           server.middlewares.use((req, res, next) => {
+            if (req.url === '/vsl' || req.url?.startsWith('/vsl?')) {
+              const vslPath = path.resolve(__dirname, 'public', 'vsl.html');
+              if (fs.existsSync(vslPath)) {
+                res.setHeader('Content-Type', 'text/html; charset=utf-8');
+                return res.end(fs.readFileSync(vslPath));
+              }
+            }
+
             if (req.url?.startsWith('/api/')) {
               const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
               const pathname = urlObj.pathname;

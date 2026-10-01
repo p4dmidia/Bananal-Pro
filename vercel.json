@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    { "source": "/vsl", "destination": "/vsl.html" },
+    { "source": "/vsl/", "destination": "/vsl.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

@@ -736,7 +736,7 @@ export default function SalesPage() {
                   <div className="space-y-2">
                     <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Por Apenas:</p>
                     <div className="flex items-baseline gap-1.5 leading-none">
-                      <span className="text-3xl md:text-4xl font-headline font-black text-secondary">R$ 197</span>
+                      <span className="text-3xl md:text-4xl font-headline font-black text-secondary">R$ 297</span>
                       <span className="text-zinc-500 font-sans text-xs">à vista</span>
                     </div>
                     <p className="text-xs text-zinc-500 font-medium font-sans">
